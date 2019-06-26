@@ -6,6 +6,42 @@ using System.Reflection;
 
 namespace GeometricAlgebra
 {
+    public abstract class Signature
+    {
+        public Signature()
+        {
+        }
+
+        // TODO: At some point I would like to be able to generalize from floating-point
+        //       scalars to symbolic scalars.  This would allow us to support symbolic vectors.
+        //       For now, all pairs of vectors taken in an inner product must give a numeric result.
+        public abstract double Evaluate(string vectorNameA, string vectorNameB);
+    }
+
+    public class Euclidean3D_Signature : Signature
+    {
+        public Euclidean3D_Signature() : base()
+        {
+        }
+
+        public override double Evaluate(string vectorNameA, string vectorNameB)
+        {
+            return 0.0;
+        }
+    }
+
+    public class Conformal3D_Signature : Signature
+    {
+        public Conformal3D_Signature() : base()
+        {
+        }
+
+        public override double Evaluate(string vectorNameA, string vectorNameB)
+        {
+            return 0.0;
+        }
+    }
+
     public abstract class Operand
     {
         public Operand()
@@ -15,9 +51,23 @@ namespace GeometricAlgebra
         public abstract Operand Copy();
         public abstract Operand New();
         
-        public virtual Operand Evaluate()
+        public virtual Operand Evaluate(Signature signature)
         {
             return null;
+        }
+
+        public static Operand FullyEvaluate(Operand operand, Signature signature)
+        {
+            while (true)
+            {
+                Operand newOperand = operand.Evaluate(signature);
+                if (newOperand != null)
+                    operand = newOperand;
+                else
+                    break;
+            }
+
+            return operand;
         }
     }
 
@@ -37,7 +87,7 @@ namespace GeometricAlgebra
             return clone;
         }
 
-        public override Operand Evaluate()
+        public override Operand Evaluate(Signature signature)
         {
             int count;
             
@@ -48,7 +98,7 @@ namespace GeometricAlgebra
                 for (int i = 0; i < operandList.Count; i++)
                 {
                     Operand oldOperand = operandList[i];
-                    Operand newOperand = oldOperand.Evaluate();
+                    Operand newOperand = oldOperand.Evaluate(signature);
 
                     if (newOperand != null)
                     {
@@ -77,16 +127,74 @@ namespace GeometricAlgebra
  	        return new Sum();
         }
 
-        public override Operand Evaluate()
+        public override Operand Evaluate(Signature signature)
         {
             if (operandList.Count == 0)
                 return new Blade(0.0);
 
-            Operand operand = base.Evaluate();
+            Operand operand = base.Evaluate(signature);
             if (operand != null)
                 return operand;
 
-            // TODO: Combine like terms.  At this point, we should be a collection of sorted blades.
+            for (int i = 0; i < operandList.Count; i++)
+            {
+                Blade blade = operandList[i] as Blade;
+                if (blade != null && blade.scalar == 0.0)
+                {
+                    operandList.RemoveAt(i);
+                    return this;
+                }
+            }
+
+            for (int i = 0; i < operandList.Count; i++)
+            {
+                Blade bladeA = operandList[i] as Blade;
+                if (bladeA == null)
+                    continue;
+
+                for (int j = i + 1; j < operandList.Count; i++)
+                {
+                    Blade bladeB = operandList[j] as Blade;
+                    if (bladeB == null)
+                        continue;
+
+                    if (Enumerable.SequenceEqual<string>(bladeA.vectorList, bladeB.vectorList))
+                    {
+                        operandList.RemoveAt(i);
+                        operandList.RemoveAt(j);
+                        Blade blade = new Blade(bladeA.scalar + bladeB.scalar);
+                        blade.vectorList = bladeA.vectorList;
+                        operandList.Add(blade);
+                        return this;
+                    }
+                }
+            }
+
+            for (int i = 0; i < operandList.Count - 1; i++)
+            {
+                Blade bladeA = operandList[i] as Blade;
+                Blade bladeB = operandList[i + 1] as Blade;
+
+                if (bladeA != null && bladeB != null)
+                {
+                    bool swapBlades = false;
+
+                    if (bladeA.vectorList.Count > bladeB.vectorList.Count)
+                        swapBlades = true;
+                    else if (bladeA.vectorList.Count == bladeB.vectorList.Count)
+                    {
+                        if (string.Compare(string.Join("", bladeA.vectorList), string.Join("", bladeB.vectorList)) > 0)
+                            swapBlades = true;
+                    }
+
+                    if (swapBlades)
+                    {
+                        operandList[i] = bladeB;
+                        operandList[i + 1] = bladeA;
+                        return this;
+                    }
+                }
+            }
 
             return null;
         }
@@ -98,12 +206,22 @@ namespace GeometricAlgebra
         {
         }
 
-        public override Operand Evaluate()
+        public override Operand Evaluate(Signature signature)
         {
             if (operandList.Count == 0)
                 return new Blade(1.0);
 
-            return base.Evaluate();
+            for (int i = 0; i < operandList.Count; i++)
+            {
+                Blade blade = operandList[i] as Blade;
+                if (blade != null && blade.scalar == 1.0 && blade.vectorList.Count == 0)
+                {
+                    operandList.RemoveAt(i);
+                    return this;
+                }
+            }
+
+            return base.Evaluate(signature);
         }
     }
 
@@ -118,9 +236,9 @@ namespace GeometricAlgebra
  	        return new GeometricProduct();
         }
 
-        public override Operand Evaluate()
+        public override Operand Evaluate(Signature signature)
         {
-            Operand operand = base.Evaluate();
+            Operand operand = base.Evaluate(signature);
             if (operand != null)
                 return operand;
 
@@ -141,9 +259,9 @@ namespace GeometricAlgebra
  	        return new InnerProduct();
         }
 
-        public override Operand Evaluate()
+        public override Operand Evaluate(Signature signature)
         {
-            Operand operand = base.Evaluate();
+            Operand operand = base.Evaluate(signature);
             if (operand != null)
                 return operand;
 
@@ -164,13 +282,24 @@ namespace GeometricAlgebra
             return new OuterProduct();
         }
 
-        public override Operand Evaluate()
+        public override Operand Evaluate(Signature signature)
         {
-            Operand operand = base.Evaluate();
+            Operand operand = base.Evaluate(signature);
             if (operand != null)
                 return operand;
 
-            // TODO: Take blades in the outer product.
+            for (int i = 0; i < operandList.Count - 1; i++)
+            {
+                Blade bladeA = operandList[i] as Blade;
+                Blade bladeB = operandList[i + 1] as Blade;
+
+                if (bladeA != null && bladeB != null)
+                {
+                    Blade blade = new Blade(bladeA.scalar * bladeB.scalar);
+                    blade.vectorList = bladeA.vectorList.Concat(bladeB.vectorList).ToList();
+                    return blade;
+                }
+            }
 
             return null;
         }
@@ -220,7 +349,7 @@ namespace GeometricAlgebra
             return clone;
         }
 
-        public override Operand Evaluate()
+        public override Operand Evaluate(Signature signature)
         {
             for (int i = 0; i < vectorList.Count; i++)
                 for (int j = i + 1; j < vectorList.Count; j++)
