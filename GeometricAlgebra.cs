@@ -59,6 +59,9 @@ namespace GeometricAlgebra
             }
             while (count > 0);
 
+            if (operandList.Count == 1)
+                return operandList[0];
+
             return null;
         }
     }
@@ -76,9 +79,14 @@ namespace GeometricAlgebra
 
         public override Operand Evaluate()
         {
-            base.Evaluate();
+            if (operandList.Count == 0)
+                return new Blade(0.0);
 
-            // TODO: Combine like terms.
+            Operand operand = base.Evaluate();
+            if (operand != null)
+                return operand;
+
+            // TODO: Combine like terms.  At this point, we should be a collection of sorted blades.
 
             return null;
         }
@@ -88,6 +96,14 @@ namespace GeometricAlgebra
     {
         public Product() : base()
         {
+        }
+
+        public override Operand Evaluate()
+        {
+            if (operandList.Count == 0)
+                return new Blade(1.0);
+
+            return base.Evaluate();
         }
     }
 
@@ -104,7 +120,9 @@ namespace GeometricAlgebra
 
         public override Operand Evaluate()
         {
-            base.Evaluate();
+            Operand operand = base.Evaluate();
+            if (operand != null)
+                return operand;
 
             // TODO: Take blades in the geometric product.
 
@@ -125,7 +143,9 @@ namespace GeometricAlgebra
 
         public override Operand Evaluate()
         {
-            base.Evaluate();
+            Operand operand = base.Evaluate();
+            if (operand != null)
+                return operand;
 
             // TODO: Take blades in the inner product.
 
@@ -146,7 +166,9 @@ namespace GeometricAlgebra
 
         public override Operand Evaluate()
         {
-            base.Evaluate();
+            Operand operand = base.Evaluate();
+            if (operand != null)
+                return operand;
 
             // TODO: Take blades in the outer product.
 
@@ -154,49 +176,45 @@ namespace GeometricAlgebra
         }
     }
 
-    public class Blade<T> : Operand
+    public class Blade : Operand
     {
-        public T scalar;
+        public double scalar;
         public List<string> vectorList;
 
         public Blade()
         {
             vectorList = new List<string>();
-            dynamic thisScalar = this.scalar;
-            thisScalar = 1.0;
+            this.scalar = 1.0;
         }
 
         public Blade(double scalar)
         {
             vectorList = new List<string>();
-            dynamic thisScalar = this.scalar;
-            thisScalar = scalar;
+            this.scalar = scalar;
         }
 
         public Blade(string vectorName)
         {
             vectorList = new List<string>();
             vectorList.Add(vectorName);
-            dynamic thisScalar = this.scalar;
-            thisScalar = 1.0;
+            this.scalar = 1.0;
         }
 
         public Blade(double scalar, string vectorName)
         {
             vectorList = new List<string>();
             vectorList.Add(vectorName);
-            dynamic thisScalar = this.scalar;
-            thisScalar = scalar;
+            this.scalar = scalar;
         }
 
         public override Operand New()
         {
-            return new Blade<T>();
+            return new Blade();
         }
 
         public override Operand Copy()
         {
-            Blade<T> clone = new Blade<T>();
+            Blade clone = new Blade();
             clone.scalar = this.scalar;
             clone.vectorList = (from vectorName in this.vectorList select vectorName).ToList();
             return clone;
@@ -204,8 +222,50 @@ namespace GeometricAlgebra
 
         public override Operand Evaluate()
         {
-            // TODO: First see if the blade goes to zero.  Second, sort the vectors by name, accounting for sign change, if any.
+            for (int i = 0; i < vectorList.Count; i++)
+                for (int j = i + 1; j < vectorList.Count; j++)
+                    if (vectorList[i] == vectorList[j])
+                        return new Blade(0.0);
+
+            int adjacentSwapCount = 0;
+            bool keepGoing = true;
+            while (keepGoing)
+            {
+                keepGoing = false;
+                for (int i = 0; i < vectorList.Count - 1; i++)
+                {
+                    string vectorNameA = vectorList[i];
+                    string vectorNameB = vectorList[i + 1];
+
+                    if (string.Compare(vectorNameA, vectorNameB) > 0)
+                    {
+                        vectorList[i] = vectorNameB;
+                        vectorList[i + 1] = vectorNameA;
+
+                        adjacentSwapCount++;
+                        keepGoing = true;
+                    }
+                }
+            }
+
+            if (adjacentSwapCount > 0)
+            {
+                if (adjacentSwapCount % 2 == 1)
+                    scalar = -scalar;
+
+                return this;
+            }
+
             return null;
+        }
+
+        public Blade MakeSubBlade(int i)
+        {
+            Blade subBlade = new Blade();
+            subBlade.scalar = this.scalar;
+            string removedVectorName = this.vectorList[i];
+            subBlade.vectorList = (from vectorName in this.vectorList where vectorName != removedVectorName select vectorName).ToList();
+            return subBlade;
         }
     }
 }
