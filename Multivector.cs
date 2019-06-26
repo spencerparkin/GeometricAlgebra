@@ -9,12 +9,23 @@ namespace GeometricAlgebra
     {
         public class Scalar
         {
-            public Scalar()
+            public Scalar(double value)
             {
-                //this.value = ;
+                dynamic this_value = this.value;
+                this_value = value;
+            }
+
+            public Scalar(T value)
+            {
+                this.value = value;
             }
             
             public T value;
+
+            public Scalar Copy()
+            {
+                return new Scalar(value);
+            }
 
             public void Add(Scalar scalarA, Scalar scalarB)
             {
@@ -81,6 +92,11 @@ namespace GeometricAlgebra
             {
                 this.name = name;
             }
+
+            public Vector Copy()
+            {
+                return new Vector(name);
+            }
         }
 
         public class Term
@@ -98,14 +114,47 @@ namespace GeometricAlgebra
             public Term()
             {
                 type = Type.BLADE;
-                scalar = new Scalar();
+                scalar = new Scalar(1.0);
                 productOfVectors = new List<Vector>();
+            }
+
+            Term Copy()
+            {
+                Term copy = new Term();
+                copy.type = this.type;
+                copy.scalar = this.scalar.Copy();
+                copy.productOfVectors = (from vector in productOfVectors select vector.Copy()).ToList();
+                return copy;
             }
 
             public Multivector<T> Transform()
             {
-                // TODO: Transform versor to sum of blades, or blade to sum of versors.
-                return null;
+                var result = new Multivector<T>();
+
+                if (productOfVectors.Count() < 2)
+                {
+                    Term term = this.Copy();
+
+                    if (type == Type.BLADE)
+                        term.type = Type.VERSOR;
+                    else if (type == Type.VERSOR)
+                        term.type = Type.BLADE;
+
+                    result.sumOfTerms.Add(term);
+                }
+                else
+                {
+                    if (type == Type.BLADE)
+                    {
+                        // TODO: v1^...^vN = v1(v2^...vN) - v1.(v2^...vN)
+                    }
+                    else if (type == Type.VERSOR)
+                    {
+                        // TODO: v1...vN = v1.(v2...vN) + v1^(v2...vN) - <v1...vN>
+                    }
+                }
+
+                return result;
             }
         }
 
@@ -119,6 +168,8 @@ namespace GeometricAlgebra
         public void Add(Multivector<T> multivectorA, Multivector<T> multivectorB)
         {
             sumOfTerms = multivectorA.sumOfTerms.Concat(multivectorB.sumOfTerms).ToList();
+
+            // TODO: Combine like terms.
         }
 
         public void Subtract(Multivector<T> multivectorA, Multivector<T> multivectorB)
@@ -205,6 +256,10 @@ namespace GeometricAlgebra
         }
 
         public void OuterProduct(Multivector<T> multivectorA, Multivector<T> multivectorB)
+        {
+        }
+
+        public void HomogenizeTermType(Term.Type type)
         {
         }
 
