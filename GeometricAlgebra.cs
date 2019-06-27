@@ -87,6 +87,9 @@ namespace GeometricAlgebra
             return clone;
         }
 
+        public abstract bool IsAssociative();
+        public abstract bool IsDistributiveOver(Operation operation);
+
         public override Operand Evaluate(Signature signature)
         {
             int count;
@@ -112,6 +115,37 @@ namespace GeometricAlgebra
             if (operandList.Count == 1)
                 return operandList[0];
 
+            for(int i = 0; i < operandList.Count; i++)
+            {
+                Operation operation = operandList[i] as Operation;
+                if(operation == null)
+                    continue;
+
+                if(operation.GetType() == this.GetType() && operation.IsAssociative())
+                {
+                    operandList = operandList.Take(i).Concat(operation.operandList).Concat(operandList.Skip(i + 1).Take(operandList.Count - i - 1)).ToList();
+                    return this;
+                }
+
+                if(this.IsDistributiveOver(operation))
+                {
+                    Operation newOperationA = (Operation)Activator.CreateInstance(operation.GetType());
+
+                    for (int j = 0; j < operation.operandList.Count; j++)
+                    {
+                        Operation newOperationB = (Operation)Activator.CreateInstance(this.GetType());
+
+                        newOperationB.operandList = (from operand in operandList.Take(i) select operand.Copy()).ToList();
+                        newOperationB.operandList.Add(operation.operandList[j]);
+                        newOperationB.operandList = newOperationB.operandList.Concat(from operand in operandList.Skip(i + 1).Take(operandList.Count - i - 1) select operand.Copy()).ToList();
+
+                        newOperationA.operandList.Add(newOperationB);
+                    }
+
+                    return newOperationA;
+                }
+            }
+
             return null;
         }
     }
@@ -125,6 +159,16 @@ namespace GeometricAlgebra
         public override Operand New()
         {
  	        return new Sum();
+        }
+
+        public override bool IsAssociative()
+        {
+            return true;
+        }
+
+        public override bool IsDistributiveOver(Operation operation)
+        {
+            return false;
         }
 
         public override Operand Evaluate(Signature signature)
@@ -206,6 +250,11 @@ namespace GeometricAlgebra
         {
         }
 
+        public override bool IsDistributiveOver(Operation operation)
+        {
+            return operation is Sum;
+        }
+
         public override Operand Evaluate(Signature signature)
         {
             if (operandList.Count == 0)
@@ -234,6 +283,11 @@ namespace GeometricAlgebra
         public override Operand New()
         {
  	        return new GeometricProduct();
+        }
+
+        public override bool IsAssociative()
+        {
+            return true;
         }
 
         public override Operand Evaluate(Signature signature)
@@ -268,6 +322,11 @@ namespace GeometricAlgebra
  	        return new InnerProduct();
         }
 
+        public override bool IsAssociative()
+        {
+            return false;
+        }
+
         public override Operand Evaluate(Signature signature)
         {
             Operand operand = base.Evaluate(signature);
@@ -298,6 +357,11 @@ namespace GeometricAlgebra
         public override Operand New()
         {
             return new OuterProduct();
+        }
+
+        public override bool IsAssociative()
+        {
+            return true;
         }
 
         public override Operand Evaluate(Signature signature)

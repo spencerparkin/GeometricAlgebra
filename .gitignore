@@ -54,3 +54,6 @@ dkms.conf
 # C# stuff...
 *.suo
 obj/
+
+# DevStudio...
+.vs/
