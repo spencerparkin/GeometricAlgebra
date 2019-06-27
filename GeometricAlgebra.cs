@@ -83,6 +83,11 @@ namespace GeometricAlgebra
             operandList = new List<Operand>();
         }
 
+        public Operation(List<Operand> operandList)
+        {
+            this.operandList = operandList;
+        }
+
         public override Operand Copy()
         {
             Operation clone = (Operation)New();
@@ -156,6 +161,11 @@ namespace GeometricAlgebra
     public class Sum : Operation
     {
         public Sum() : base()
+        {
+        }
+
+        public Sum(List<Operand> operandList)
+            : base(operandList)
         {
         }
 
@@ -268,6 +278,11 @@ namespace GeometricAlgebra
         {
         }
 
+        public Product(List<Operand> operandList)
+            : base(operandList)
+        {
+        }
+
         public override bool IsDistributiveOver(Operation operation)
         {
             return operation is Sum;
@@ -281,10 +296,53 @@ namespace GeometricAlgebra
             for (int i = 0; i < operandList.Count; i++)
             {
                 Blade blade = operandList[i] as Blade;
-                if (blade != null && blade.scalar == 1.0 && blade.vectorList.Count == 0)
+                if (blade != null && blade.scalar == 1.0 && blade.Grade == 0)
                 {
                     operandList.RemoveAt(i);
                     return this;
+                }
+            }
+
+            for (int i = 0; i < operandList.Count; i++)
+            {
+                Blade bladeA = operandList[i] as Blade;
+                if (bladeA == null || bladeA.Grade != 0)
+                    continue;
+
+                for (int j = i + 1; j < operandList.Count; j++)
+                {
+                    Blade bladeB = operandList[j] as Blade;
+                    if (bladeB == null || bladeB.Grade != 0)
+                        continue;
+
+                    operandList.RemoveAt(i);
+                    operandList.RemoveAt(j);
+                    operandList.Add(new Blade(bladeA.scalar * bladeB.scalar));
+                    return this;
+                }
+            }
+
+            for (int i = 0; i < operandList.Count; i++)
+            {
+                Blade bladeA = operandList[i] as Blade;
+                if (bladeA != null)
+                    continue;
+
+                for (int j = 0; j < operandList.Count; j++)
+                {
+                    if (i == j)
+                        continue;
+
+                    Blade bladeB = operandList[j] as Blade;
+                    if (bladeB != null)
+                        continue;
+
+                    if (bladeA.Grade > 0 && bladeB.Grade == 0)
+                    {
+                        bladeA.scalar *= bladeB.scalar;
+                        operandList.RemoveAt(j);
+                        return this;
+                    }
                 }
             }
 
@@ -295,6 +353,11 @@ namespace GeometricAlgebra
     public class GeometricProduct : Product
     {
         public GeometricProduct() : base()
+        {
+        }
+
+        public GeometricProduct(List<Operand> operandList)
+            : base(operandList)
         {
         }
 
@@ -335,6 +398,11 @@ namespace GeometricAlgebra
         {
         }
 
+        public InnerProduct(List<Operand> operandList)
+            : base(operandList)
+        {
+        }
+
         public override Operand New()
         {
  	        return new InnerProduct();
@@ -370,17 +438,61 @@ namespace GeometricAlgebra
 
                 if (bladeA != null && bladeB != null)
                 {
-                    
+                    if (bladeA.Grade == 1 && bladeB.Grade == 1)
+                    {
+                        return new Blade(bladeA.scalar * bladeB.scalar * signature.Evaluate(bladeA.vectorList[0], bladeB.vectorList[0]));
+                    }
+                    else if (bladeA.Grade == 1 && bladeB.Grade > 1)
+                    {
+                        return VectorDotBlade(bladeA, bladeB, signature, 1.0);
+                    }
+                    else if (bladeA.Grade > 1 && bladeB.Grade == 1)
+                    {
+                        return VectorDotBlade(bladeB, bladeA, signature, bladeA.Grade % 2 == 1 ? 1.0 : -1.0);
+                    }
+                    else if (bladeA.Grade > 1 && bladeB.Grade > 1)
+                    {
+                        if (bladeA.Grade <= bladeB.Grade)
+                        {
+                            return new InnerProduct(new List<Operand>() { bladeA.MakeSubBlade(bladeA.Grade - 1), new InnerProduct(new List<Operand>() { new Blade(bladeA.vectorList[bladeA.Grade - 1]), bladeB }) });
+                        }
+                        else
+                        {
+                            return new InnerProduct(new List<Operand>() { new InnerProduct(new List<Operand>() { bladeA, new Blade(bladeB.vectorList[0]) }), bladeB.MakeSubBlade(0) });
+                        }
+                    }
                 }
             }
 
             return null;
+        }
+
+        private Sum VectorDotBlade(Blade vector, Blade blade, Signature signature, double scale)
+        {
+            Sum sum = new Sum();
+
+            for (int i = 0; i < blade.vectorList.Count; i++)
+            {
+                Blade subBlade = blade.MakeSubBlade(i);
+                subBlade.scalar *= scale * vector.scalar * signature.Evaluate(vector.vectorList[0], blade.vectorList[i]);
+                if (i % 2 == 1)
+                    subBlade.scalar = -subBlade.scalar;
+
+                sum.operandList.Add(subBlade);
+            }
+
+            return sum;
         }
     }
 
     public class OuterProduct : Product
     {
         public OuterProduct() : base()
+        {
+        }
+
+        public OuterProduct(List<Operand> operandList)
+            : base(operandList)
         {
         }
 
@@ -523,8 +635,10 @@ namespace GeometricAlgebra
         {
             Blade subBlade = new Blade();
             subBlade.scalar = this.scalar;
+
             string removedVectorName = this.vectorList[i];
             subBlade.vectorList = (from vectorName in this.vectorList where vectorName != removedVectorName select vectorName).ToList();
+
             return subBlade;
         }
     }
