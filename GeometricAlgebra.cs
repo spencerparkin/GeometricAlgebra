@@ -53,7 +53,7 @@ namespace GeometricAlgebra
 
         public virtual int Grade { get { return -1; } }
         
-        public virtual Operand Evaluate(Signature signature)
+        public virtual Operand Evaluate(Signature signature, ref bool bail)
         {
             return null;
         }
@@ -62,9 +62,12 @@ namespace GeometricAlgebra
         {
             while (true)
             {
-                Operand newOperand = operand.Evaluate(signature);
+                bool bail = false;
+                Operand newOperand = operand.Evaluate(signature, ref bail);
                 if (newOperand != null)
                     operand = newOperand;
+                else if (bail)
+                    continue;
                 else
                     break;
             }
@@ -98,28 +101,8 @@ namespace GeometricAlgebra
         public abstract bool IsAssociative();
         public abstract bool IsDistributiveOver(Operation operation);
 
-        public override Operand Evaluate(Signature signature)
+        public override Operand Evaluate(Signature signature, ref bool bail)
         {
-            int count;
-            
-            do
-            {
-                count = 0;
-
-                for (int i = 0; i < operandList.Count; i++)
-                {
-                    Operand oldOperand = operandList[i];
-                    Operand newOperand = oldOperand.Evaluate(signature);
-
-                    if (newOperand != null)
-                    {
-                        operandList[i] = newOperand;
-                        count++;
-                    }
-                }
-            }
-            while (count > 0);
-
             if (operandList.Count == 1)
                 return operandList[0];
 
@@ -129,12 +112,14 @@ namespace GeometricAlgebra
                 if(operation == null)
                     continue;
 
+                // Apply the associative property.
                 if(operation.GetType() == this.GetType() && operation.IsAssociative())
                 {
                     operandList = operandList.Take(i).Concat(operation.operandList).Concat(operandList.Skip(i + 1).Take(operandList.Count - i - 1)).ToList();
                     return this;
                 }
 
+                // Apply the distributive property.
                 if(this.IsDistributiveOver(operation))
                 {
                     Operation newOperationA = (Operation)Activator.CreateInstance(operation.GetType());
@@ -153,6 +138,29 @@ namespace GeometricAlgebra
                     return newOperationA;
                 }
             }
+
+            int count;
+
+            do
+            {
+                count = 0;
+
+                for (int i = 0; i < operandList.Count; i++)
+                {
+                    Operand oldOperand = operandList[i];
+                    Operand newOperand = oldOperand.Evaluate(signature, ref bail);
+
+                    if (newOperand != null)
+                    {
+                        operandList[i] = newOperand;
+                        count++;
+                    }
+
+                    if (bail)
+                        return null;
+                }
+            }
+            while (count > 0);
 
             return null;
         }
@@ -199,12 +207,12 @@ namespace GeometricAlgebra
             }
         }
 
-        public override Operand Evaluate(Signature signature)
+        public override Operand Evaluate(Signature signature, ref bool bail)
         {
             if (operandList.Count == 0)
                 return new Blade(0.0);
 
-            Operand operand = base.Evaluate(signature);
+            Operand operand = base.Evaluate(signature, ref bail);
             if (operand != null)
                 return operand;
 
@@ -288,7 +296,7 @@ namespace GeometricAlgebra
             return operation is Sum;
         }
 
-        public override Operand Evaluate(Signature signature)
+        public override Operand Evaluate(Signature signature, ref bool bail)
         {
             if (operandList.Count == 0)
                 return new Blade(1.0);
@@ -346,7 +354,7 @@ namespace GeometricAlgebra
                 }
             }
 
-            return base.Evaluate(signature);
+            return base.Evaluate(signature, ref bail);
         }
     }
 
@@ -371,22 +379,88 @@ namespace GeometricAlgebra
             return true;
         }
 
-        public override Operand Evaluate(Signature signature)
+        public override Operand Evaluate(Signature signature, ref bool bail)
         {
-            Operand operand = base.Evaluate(signature);
+            Operand operand = base.Evaluate(signature, ref bail);
             if (operand != null)
                 return operand;
 
-            // TODO: Take blades in the geometric product.
-            
             // To avoid infinite evaluation looping, we must apply...
             //   1) vB = v.B + v^B, and
             //   2) v^B = vB - v.B,
             // ...according to rules that dictate when and where they're appropriate.
-            // The second of these is used to break up any A*B product where grade(A) > 1
-            // and grade(B) > 1.  The first of these should be applied in cases where
-            // grade(A) = 1 and grade(B) = 1 unless there exists a case where grade(A) = 1
-            // and grade(B) > 1.
+            // Also to avoid infinite looping, the distributive property must take
+            // precedence over anything we do here.  This is accomplished using the bail flag.
+
+            // All reduction cases must be eliminated before it is safe to handle the expansion cases.
+            for (int i = 0; i < operandList.Count - 1; i++)
+            {
+                Blade bladeA = operandList[i] as Blade;
+                Blade bladeB = operandList[i + 1] as Blade;
+
+                if (bladeA != null && bladeB != null && bladeA.Grade > 1 && bladeB.Grade > 1)
+                {
+                    // Here our choice of which blade to reduce is arbitrary from a stand-point of correctness.
+                    // However, we might converge faster by choosing the blade with smaller grade.
+                    // Note there is also something arbitrary about how we're reducing the blades.
+                    int j = bladeA.Grade <= bladeB.Grade ? i : i + 1;
+                    Blade blade = operandList[j] as Blade;
+                    Blade subBlade = blade.MakeSubBlade(0);
+                    Blade vector = new Blade(blade.vectorList[0]);
+                    GeometricProduct geometricProduct = new GeometricProduct(new List<Operand>() { vector, subBlade });
+                    InnerProduct innerProduct = new InnerProduct(new List<Operand>() { vector.Copy(), subBlade.Copy() });
+                    (innerProduct.operandList[1] as Blade).scalar *= -1.0;
+                    operandList[j] = new Sum(new List<Operand>() { geometricProduct, innerProduct });
+
+                    bail = true;
+                    return this;
+                }
+            }
+
+            // All reduction cases eliminated, it is now safe to handle some expansion cases.
+            for (int i = 0; i < operandList.Count - 1; i++)
+            {
+                Blade bladeA = operandList[i] as Blade;
+                Blade bladeB = operandList[i + 1] as Blade;
+
+                if (bladeA == null || bladeB == null)
+                    continue;
+
+                if ((bladeA.Grade == 1 && bladeB.Grade > 1) || (bladeA.Grade > 1 && bladeB.Grade == 1))
+                {
+                    InnerProduct innerProduct = new InnerProduct(new List<Operand>() { bladeA, bladeB });
+                    OuterProduct outerProduct = new OuterProduct(new List<Operand>() { bladeA.Copy(), bladeB.Copy() });
+                    operandList[i] = new Sum(new List<Operand>() { innerProduct, outerProduct });
+                    operandList.RemoveAt(i + 1);
+
+                    bail = true;
+                    return this;
+                }
+            }
+
+            // It is now safe to handle the remaining expansion cases.
+            for (int i = 0; i < operandList.Count - 1; i++)
+            {
+                Blade bladeA = operandList[i] as Blade;
+                Blade bladeB = operandList[i + 1] as Blade;
+
+                if (bladeA == null || bladeB == null)
+                    continue;
+
+                if(bladeA.Grade == 1 && bladeB.Grade == 1)
+                {
+                    operandList.RemoveAt(i + 1);
+                    double scalar = bladeA.scalar * bladeB.scalar;
+                    Blade innerProduct = new Blade(scalar * signature.Evaluate(bladeA.vectorList[0], bladeB.vectorList[0]));
+                    Blade outerProduct = new Blade(scalar);
+                    outerProduct.vectorList.Add(bladeA.vectorList[0]);
+                    outerProduct.vectorList.Add(bladeB.vectorList[0]);
+                    operandList[i] = new Sum(new List<Operand>() { innerProduct, outerProduct });
+
+                    bail = true;
+                    return this;
+                }
+            }
 
             return null;
         }
@@ -425,9 +499,9 @@ namespace GeometricAlgebra
             }
         }
 
-        public override Operand Evaluate(Signature signature)
+        public override Operand Evaluate(Signature signature, ref bool bail)
         {
-            Operand operand = base.Evaluate(signature);
+            Operand operand = base.Evaluate(signature, ref bail);
             if (operand != null)
                 return operand;
 
@@ -517,9 +591,9 @@ namespace GeometricAlgebra
             }
         }
 
-        public override Operand Evaluate(Signature signature)
+        public override Operand Evaluate(Signature signature, ref bool bail)
         {
-            Operand operand = base.Evaluate(signature);
+            Operand operand = base.Evaluate(signature, ref bail);
             if (operand != null)
                 return operand;
 
@@ -592,7 +666,7 @@ namespace GeometricAlgebra
             return clone;
         }
 
-        public override Operand Evaluate(Signature signature)
+        public override Operand Evaluate(Signature signature, ref bool bail)
         {
             for (int i = 0; i < vectorList.Count; i++)
                 for (int j = i + 1; j < vectorList.Count; j++)
