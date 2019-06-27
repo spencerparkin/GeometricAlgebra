@@ -696,6 +696,10 @@ namespace GeometricAlgebra
         }
     }
 
+    //public class Reverse : Operation
+    //public class Inverse : Operation
+    //public class GradePart : Operation
+
     public class Blade : Operand
     {
         public double scalar;
@@ -753,7 +757,7 @@ namespace GeometricAlgebra
             string printedBlade = "?";
 
             if(format == Format.LATEX)
-                printedBlade = string.Join(@"\wedge", vectorList);
+                printedBlade = string.Join(@"\wedge", from vectorName in vectorList select @"\vec{" + vectorName + "}");
             else if(format == Format.PARSEABLE)
                 printedBlade = string.Join("^", vectorList);
 
