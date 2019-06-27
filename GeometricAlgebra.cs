@@ -243,6 +243,15 @@ namespace GeometricAlgebra
                 return operand;
 
             // TODO: Take blades in the geometric product.
+            
+            // To avoid infinite evaluation looping, we must apply...
+            //   1) vB = v.B + v^B, and
+            //   2) v^B = vB - v.B,
+            // ...according to rules that dictate when and where they're appropriate.
+            // The second of these is used to break up any A*B product where grade(A) > 1
+            // and grade(B) > 1.  The first of these should be applied in cases where
+            // grade(A) = 1 and grade(B) = 1 unless there exists a case where grade(A) = 1
+            // and grade(B) > 1.
 
             return null;
         }
@@ -265,7 +274,16 @@ namespace GeometricAlgebra
             if (operand != null)
                 return operand;
 
-            // TODO: Take blades in the inner product.
+            if (operandList.Count == 2)
+            {
+                Blade bladeA = operandList[0] as Blade;
+                Blade bladeB = operandList[1] as Blade;
+
+                if (bladeA != null && bladeB != null)
+                {
+
+                }
+            }
 
             return null;
         }
