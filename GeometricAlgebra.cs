@@ -50,6 +50,8 @@ namespace GeometricAlgebra
 
         public abstract Operand Copy();
         public abstract Operand New();
+
+        public virtual int Grade { get { return -1; } }
         
         public virtual Operand Evaluate(Signature signature)
         {
@@ -71,6 +73,7 @@ namespace GeometricAlgebra
         }
     }
 
+    // TODO: Future derivatives of this class might be an invert, reverse or grade-part.
     public abstract class Operation : Operand
     {
         public List<Operand> operandList;
@@ -169,6 +172,21 @@ namespace GeometricAlgebra
         public override bool IsDistributiveOver(Operation operation)
         {
             return false;
+        }
+
+        public override int Grade
+        {
+            get
+            {
+                if(operandList.Count == 0)
+                    return 0;
+
+                int grade = operandList[0].Grade;
+                if(operandList.All(operand => operand.Grade == grade))
+                    return grade;
+
+                return -1;
+            }
         }
 
         public override Operand Evaluate(Signature signature)
@@ -327,6 +345,18 @@ namespace GeometricAlgebra
             return false;
         }
 
+        public override int Grade
+        {
+            get
+            {
+                if(operandList.Count == 2)
+                    if(operandList[0].Grade >= 0 && operandList[1].Grade >= 0)
+                        return Math.Abs(operandList[0].Grade - operandList[1].Grade);
+
+                return -1;
+            }
+        }
+
         public override Operand Evaluate(Signature signature)
         {
             Operand operand = base.Evaluate(signature);
@@ -340,7 +370,7 @@ namespace GeometricAlgebra
 
                 if (bladeA != null && bladeB != null)
                 {
-
+                    
                 }
             }
 
@@ -362,6 +392,17 @@ namespace GeometricAlgebra
         public override bool IsAssociative()
         {
             return true;
+        }
+
+        public override int Grade
+        {
+            get
+            {
+                if(operandList.All(operand => operand.Grade >= 0))
+                    return operandList.Sum(operand => operand.Grade);
+
+                return -1;
+            }
         }
 
         public override Operand Evaluate(Signature signature)
@@ -391,6 +432,14 @@ namespace GeometricAlgebra
     {
         public double scalar;
         public List<string> vectorList;
+
+        public override int Grade
+        {
+            get
+            {
+                return vectorList.Count;
+            }
+        }
 
         public Blade()
         {
