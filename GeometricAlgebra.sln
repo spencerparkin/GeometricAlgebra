@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GACalculator", "GACalculato
 		{E392581A-7DEA-4E69-88EA-4DB09D7307EB} = {E392581A-7DEA-4E69-88EA-4DB09D7307EB}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{0892FBC0-C1C6-4C84-8ACE-E296897506D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +26,10 @@ Global
 		{1065C4C4-A133-42D6-859B-2BD5D704764B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1065C4C4-A133-42D6-859B-2BD5D704764B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1065C4C4-A133-42D6-859B-2BD5D704764B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0892FBC0-C1C6-4C84-8ACE-E296897506D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0892FBC0-C1C6-4C84-8ACE-E296897506D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0892FBC0-C1C6-4C84-8ACE-E296897506D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0892FBC0-C1C6-4C84-8ACE-E296897506D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

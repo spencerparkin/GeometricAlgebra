@@ -55,6 +55,8 @@ dkms.conf
 *.suo
 obj/
 GACalculator/bin/
+packages/
+Tests/bin/
 
 # DevStudio...
 .vs/

@@ -1121,6 +1121,9 @@ namespace GeometricAlgebra
 
         public override string Print(Format format)
         {
+            if (Grade == 0)
+                return scalar.Print(format);
+
             string printedBlade = "?";
 
             if(format == Format.LATEX)
@@ -1131,9 +1134,9 @@ namespace GeometricAlgebra
             if(!scalar.IsMultiplicativeIdentity)
             {
                 if(format == Format.LATEX)
-                    printedBlade = scalar.ToString() + printedBlade;
+                    printedBlade = @"\left(" + scalar.Print(format) + @"\right)" + printedBlade;
                 else if(format == Format.PARSEABLE)
-                    printedBlade = "(" + scalar.ToString() + ")*" + printedBlade;
+                    printedBlade = "(" + scalar.Print(format) + ")*" + printedBlade;
             }
 
             return printedBlade;
@@ -1271,6 +1274,18 @@ namespace GeometricAlgebra
     {
         public string name;
 
+        public override int Grade
+        {
+            get
+            {
+                // This is kind-of a hack, but I'm okay with it for now.
+                if(name[0] == '_')
+                    return 0;
+
+                return -1;
+            }
+        }
+
         public Variable(string name = "") : base()
         {
             this.name = name;
@@ -1288,6 +1303,9 @@ namespace GeometricAlgebra
 
         public override Operand Evaluate(EvaluationContext context, ref bool bail)
         {
+            if(this.name[0] == '_')
+                return null;
+
             Operand operand = context.operandStorage[this.name];
             if(operand != null && operand.Grade == 0)
                 return operand;
@@ -1305,7 +1323,7 @@ namespace GeometricAlgebra
                 }
                 case Format.PARSEABLE:
                 {
-                    return this.name;
+                    return "$" + this.name;
                 }
             }
 

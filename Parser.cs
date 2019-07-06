@@ -92,19 +92,19 @@ namespace GeometricAlgebra
                 return new Token(Token.Kind.DELIMITER, ch.ToString());
             }
 
-            if (Char.IsLetterOrDigit(ch))
+            if (Char.IsLetterOrDigit(ch) || ch == '$')
             {
                 Token token = null;
 
                 if(Char.IsDigit(ch))
                     token = new Token(Token.Kind.NUMBER);
-                else if(Char.IsLetter(ch))
+                else if(Char.IsLetter(ch) || ch == '$')
                     token = new Token(Token.Kind.SYMBOL);
 
                 while(charList.Count > 0)
                 {
                     ch = charList[0];
-                    if (Char.IsLetterOrDigit(ch))
+                    if (Char.IsLetterOrDigit(ch) || (token.kind == Token.Kind.NUMBER && ch == '.') || (token.kind == Token.Kind.SYMBOL && ch == '$'))
                     {
                         token.data += ch;
                         charList.RemoveAt(0);
@@ -133,6 +133,20 @@ namespace GeometricAlgebra
                 return 4;
 
             throw new ParseException(string.Format("Cannot determine precedence level of \"{0}\".", operation));
+        }
+
+        enum Associativity
+        {
+            LEFT_TO_RIGHT,
+            RIGHT_TO_LEFT
+        }
+
+        private Associativity OperatorAssociativity(string operation)
+        {
+            // For now, all binary operators have the same associativity.
+            return Associativity.LEFT_TO_RIGHT;
+
+            //throw new ParseException(string.Format("Cannot determine associativity of \"{0}\".", operation));
         }
 
         public Operand BuildOperandTree(List<Token> tokenList)
@@ -212,39 +226,53 @@ namespace GeometricAlgebra
                 if(operation == null)
                     throw new ParseException(string.Format("Encountered uknown function \"{0}\".", token.data));
 
-                List<Token> argumentTokenList = new List<Token>();
-                foreach(Token argToken in WalkTokensSkipSubexpressions(tokenList.Skip(2).Take(tokenList.Count - 1).ToList()))
+                List<int> argBoundaryList = new List<int>() { 1 };
+                
+                foreach(Token delimeterToken in WalkTokensSkipSubexpressions(tokenList.Skip(2).Take(tokenList.Count - 3).ToList()))
                 {
-                    if(argToken.kind != Token.Kind.DELIMITER)
-                        argumentTokenList.Add(argToken);
-                    else
+                    if(delimeterToken.kind == Token.Kind.DELIMITER)
                     {
-                        operation.operandList.Add(BuildOperandTree(argumentTokenList));
-                        argumentTokenList.Clear();
+                        int i = tokenList.IndexOf(delimeterToken);
+                        argBoundaryList.Add(i);
                     }
                 }
+
+                argBoundaryList.Add(tokenList.Count - 1);
+
+                for(int i = 0; i < argBoundaryList.Count - 1; i++)
+                    operation.operandList.Add(BuildOperandTree(tokenList.Skip(argBoundaryList[i] + 1).Take(argBoundaryList[i + 1] - argBoundaryList[i] - 1).ToList()));
 
                 return operation;
             }
             else
             {
-                // Our goal here is to find the operator of lowest precedence.  It will never be
-                // at the beginning or end of the entire token sequence.
-
-                int j;
-                Token operatorToken = null;
-
-                foreach(Token token in WalkTokensSkipSubexpressions(tokenList.Skip(1).Take(tokenList.Count - 2).ToList()))
+                // Our goal here is to find an operator of lowest precedence.  It will never be
+                // at the very beginning or end of the entire token sequence.
+                List<Token> opTokenList = null;
+                foreach(Token token in WalkTokensSkipSubexpressions(tokenList))
                 {
-                    if (token.kind == Token.Kind.OPERATOR)
+                    if (token.kind == Token.Kind.OPERATOR && tokenList.IndexOf(token) != 0 && tokenList.IndexOf(token) != tokenList.Count - 1)
                     {
-                        if (operatorToken == null || PrecedenceLevel(operatorToken.data) > PrecedenceLevel(token.data))
-                            operatorToken = token;
+                        if (opTokenList == null || PrecedenceLevel(opTokenList[0].data) > PrecedenceLevel(token.data))
+                            opTokenList = new List<Token>() { token };
+                        else if(opTokenList != null && PrecedenceLevel(opTokenList[0].data) == PrecedenceLevel(token.data))
+                            opTokenList.Add(token);
                     }
                 }
 
-                if (operatorToken == null)
+                if (opTokenList == null)
                     throw new ParseException("Did not encounter operator token.");
+
+                Token operatorToken = null;
+                switch(OperatorAssociativity(opTokenList[0].data))
+                {
+                    case Associativity.LEFT_TO_RIGHT:
+                        operatorToken = opTokenList[0];
+                        break;
+                    case Associativity.RIGHT_TO_LEFT:
+                        operatorToken = opTokenList[opTokenList.Count - 1];
+                        break;
+                }
 
                 Operation operation = null;
 
@@ -262,10 +290,10 @@ namespace GeometricAlgebra
                 if (operation == null)
                     throw new ParseException(string.Format("Did not recognized operator token ({0}).", operatorToken.data));
 
-                j = tokenList.IndexOf(operatorToken);
+                int i = tokenList.IndexOf(operatorToken);
 
-                Operand leftOperand = BuildOperandTree(tokenList.Take(j).ToList());
-                Operand rightOperand = BuildOperandTree(tokenList.Skip(j + 1).Take(tokenList.Count - 1 - j).ToList());
+                Operand leftOperand = BuildOperandTree(tokenList.Take(i).ToList());
+                Operand rightOperand = BuildOperandTree(tokenList.Skip(i + 1).Take(tokenList.Count - 1 - i).ToList());
 
                 operation.operandList.Add(leftOperand);
                 operation.operandList.Add(rightOperand);
@@ -291,7 +319,12 @@ namespace GeometricAlgebra
                             j--;
 
                         if(i == tokenList.Count - 1)
-                            throw new ParseException("Encountered unbalanced parenthesis.");
+                        {
+                            if (j > 0)
+                                throw new ParseException("Encountered unbalanced parenthesis.");
+                            
+                            yield break;
+                        }
 
                         token = tokenList[++i];
                     }
