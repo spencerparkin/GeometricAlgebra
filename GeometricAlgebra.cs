@@ -979,7 +979,7 @@ namespace GeometricAlgebra
                 }
                 case Format.PARSEABLE:
                 {
-                    return string.Format("grade({0},{1})", operandList[0].ToString(), operandList[1].ToString());
+                    return string.Format("grade({0},{1})", operandList[0].Print(format), operandList[1].Print(format));
                 }
             }
 
