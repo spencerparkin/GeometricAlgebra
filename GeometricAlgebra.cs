@@ -8,7 +8,8 @@ using System.Reflection;
 //       and I think that I need to add two new operand derivatives: the numeric scalar, and the symbolic
 //       scalar.  The parser should always place these under blades, but at some point we may consider
 //       handling them no matter where they fall in the tree.  Anyhow, this would be a big change, but I
-//       believe it's worth doing before any unit tests are created.
+//       believe it's worth doing before any unit tests are created.  Also, we might have the Product
+//       class become non-abstract, and use it to multiply the new scalar types.
 
 namespace GeometricAlgebra
 {
