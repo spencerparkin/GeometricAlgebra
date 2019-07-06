@@ -4,6 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Reflection;
 
+// TODO: Everywhere the "double" type is used, I believe I need to replace this with the Operand type,
+//       and I think that I need to add two new operand derivatives: the numeric scalar, and the symbolic
+//       scalar.  The parser should always place these under blades, but at some point we may consider
+//       handling them no matter where they fall in the tree.  Anyhow, this would be a big change, but I
+//       believe it's worth doing before any unit tests are created.
+
 namespace GeometricAlgebra
 {
     public abstract class Signature
@@ -12,9 +18,6 @@ namespace GeometricAlgebra
         {
         }
 
-        // TODO: At some point I would like to be able to generalize from floating-point
-        //       scalars to symbolic scalars.  This would allow us to support symbolic vectors.
-        //       For now, all pairs of vectors taken in an inner product must give a numeric result.
         public abstract double Evaluate(string vectorNameA, string vectorNameB);
     }
 
