@@ -13,7 +13,8 @@ namespace GeometricAlgebra
             NUMBER,
             OPERATOR,
             LEFT_PARAN,
-            RIGHT_PARAN
+            RIGHT_PARAN,
+            DELIMITER
         }
 
         public Kind kind;
@@ -63,7 +64,7 @@ namespace GeometricAlgebra
 
         private Token EatToken(List<char> charList)
         {
-            List<char> operatorList = new List<char>() { '+', '-', '*', '^', '.', '~', '!' };
+            List<char> operatorList = new List<char>() { '+', '-', '*', '^', '.', '~', '!', '=' };
 
             char ch = charList[0];
 
@@ -83,6 +84,12 @@ namespace GeometricAlgebra
             {
                 charList.RemoveAt(0);
                 return new Token(Token.Kind.RIGHT_PARAN, ch.ToString());
+            }
+
+            if(ch == ',')
+            {
+                charList.RemoveAt(0);
+                return new Token(Token.Kind.DELIMITER, ch.ToString());
             }
 
             if (Char.IsLetterOrDigit(ch))
@@ -114,14 +121,16 @@ namespace GeometricAlgebra
 
         private int PrecedenceLevel(string operation)
         {
-            if (operation == "+")
+            if (operation == "=")
                 return 0;
-            if (operation == ".")
+            if (operation == "+")
                 return 1;
-            if (operation == "^")
+            if (operation == ".")
                 return 2;
-            if (operation == "*")
+            if (operation == "^")
                 return 3;
+            if (operation == "*")
+                return 4;
 
             throw new ParseException(string.Format("Cannot determine precedence level of \"{0}\".", operation));
         }
@@ -149,7 +158,9 @@ namespace GeometricAlgebra
                 {
                     case Token.Kind.SYMBOL:
                     {
-                        // TODO: Here we might differentiate between symbolic scalars and symbolic vectors.
+                        if(token.data[0] == '$')
+                            return new Variable(token.data.Substring(1));
+
                         return new Blade(token.data);
                     }
                     case Token.Kind.NUMBER:
@@ -179,15 +190,41 @@ namespace GeometricAlgebra
             {
                 Token token = tokenList[tokenList.Count - 1];
 
-                // TODO: Should handle ~ unary operator here.
+                if(token.data == "~")
+                    return new Reverse(new List<Operand>() { BuildOperandTree(tokenList.Take(tokenList.Count - 1).ToList()) });
 
                 throw new ParseException(string.Format("Encountered unary operator ({0}) that isn't recognized on the right.", token.data));
             }
             else if (tokenList[0].kind == Token.Kind.SYMBOL && tokenList[1].kind == Token.Kind.LEFT_PARAN && tokenList[tokenList.Count - 1].kind == Token.Kind.RIGHT_PARAN)
             {
-                // TODO: Support functions here.  We'll need to add the delimeter token.
+                Token token = tokenList[0];
 
-                throw new ParseException(string.Format("Encountered uknown function \"{0}\".", tokenList[0].data));
+                Operation operation = null;
+                if(token.data == "reverse" || token.data == "rev")
+                    operation = new Reverse();
+                else if(token.data == "inverse" || token.data == "inv")
+                    operation = new Inverse();
+                else if(token.data == "grade")
+                    operation = new GradePart();
+                else if(token.data == "assign")
+                    operation = new Assignment();
+
+                if(operation == null)
+                    throw new ParseException(string.Format("Encountered uknown function \"{0}\".", token.data));
+
+                List<Token> argumentTokenList = new List<Token>();
+                foreach(Token argToken in WalkTokensSkipSubexpressions(tokenList.Skip(2).Take(tokenList.Count - 1).ToList()))
+                {
+                    if(argToken.kind != Token.Kind.DELIMITER)
+                        argumentTokenList.Add(argToken);
+                    else
+                    {
+                        operation.operandList.Add(BuildOperandTree(argumentTokenList));
+                        argumentTokenList.Clear();
+                    }
+                }
+
+                return operation;
             }
             else
             {
@@ -197,33 +234,12 @@ namespace GeometricAlgebra
                 int j;
                 Token operatorToken = null;
 
-                for(int i = 1; i < tokenList.Count - 1; i++)
+                foreach(Token token in WalkTokensSkipSubexpressions(tokenList.Skip(1).Take(tokenList.Count - 2).ToList()))
                 {
-                    Token token = tokenList[i];
-
                     if (token.kind == Token.Kind.OPERATOR)
                     {
                         if (operatorToken == null || PrecedenceLevel(operatorToken.data) > PrecedenceLevel(token.data))
                             operatorToken = token;
-                    }
-                    else if (token.kind == Token.Kind.LEFT_PARAN)
-                    {
-                        j = 0;
-                        while (true)
-                        {
-                            if (token.kind == Token.Kind.LEFT_PARAN)
-                                j++;
-                            else if (token.kind == Token.Kind.RIGHT_PARAN)
-                                j--;
-
-                            if (j == 0)
-                                break;
-
-                            if (i == tokenList.Count - 1)
-                                throw new ParseException("Encountered unbalanced parenthesis.");
-
-                            token = tokenList[++i];
-                        }
                     }
                 }
 
@@ -240,6 +256,8 @@ namespace GeometricAlgebra
                     operation = new InnerProduct();
                 else if (operatorToken.data == "^")
                     operation = new OuterProduct();
+                else if (operatorToken.data == "=")
+                    operation = new Assignment();
 
                 if (operation == null)
                     throw new ParseException(string.Format("Did not recognized operator token ({0}).", operatorToken.data));
@@ -253,6 +271,34 @@ namespace GeometricAlgebra
                 operation.operandList.Add(rightOperand);
 
                 return operation;
+            }
+        }
+
+        public IEnumerable<Token> WalkTokensSkipSubexpressions(List<Token> tokenList)
+        {
+            for(int i = 0; i < tokenList.Count; i++)
+            {
+                Token token = tokenList[i];
+
+                if(token.kind == Token.Kind.LEFT_PARAN)
+                {
+                    int j = 0;
+                    do
+                    {
+                        if(token.kind == Token.Kind.LEFT_PARAN)
+                            j++;
+                        else if(token.kind == Token.Kind.RIGHT_PARAN)
+                            j--;
+
+                        if(i == tokenList.Count - 1)
+                            throw new ParseException("Encountered unbalanced parenthesis.");
+
+                        token = tokenList[++i];
+                    }
+                    while(j > 0);
+                }
+
+                yield return token;
             }
         }
     }

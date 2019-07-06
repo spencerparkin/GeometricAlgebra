@@ -6,6 +6,13 @@ using System.Reflection;
 
 namespace GeometricAlgebra
 {
+    public class EvaluationException : Exception
+    {
+        public EvaluationException(string error) : base(error)
+        {
+        }
+    }
+
     public class EvaluationContext
     {
         public Dictionary<string, Operand> operandStorage;
@@ -19,7 +26,7 @@ namespace GeometricAlgebra
         {
             // TODO: Is there a better way to handle this?  Maybe just return an inner product here?
             //       For now, this should work pretty well except for how it formats.
-            return new SymbolicScalar(vectorNameA + "|" + vectorNameB);
+            return new Variable(vectorNameA + "|" + vectorNameB);
         }
     }
 
@@ -34,29 +41,29 @@ namespace GeometricAlgebra
             if(vectorNameA == "e1")
             {
                 if(vectorNameB == "e1")
-                    return new NumericScalar(1.0);
+                    return new Scalar(1.0);
                 else if(vectorNameB == "e2")
-                    return new NumericScalar(0.0);
+                    return new Scalar(0.0);
                 else if(vectorNameB == "e3")
-                    return new NumericScalar(0.0);
+                    return new Scalar(0.0);
             }
             else if(vectorNameA == "e2")
             {
                 if (vectorNameB == "e1")
-                    return new NumericScalar(0.0);
+                    return new Scalar(0.0);
                 else if (vectorNameB == "e2")
-                    return new NumericScalar(1.0);
+                    return new Scalar(1.0);
                 else if (vectorNameB == "e3")
-                    return new NumericScalar(0.0);
+                    return new Scalar(0.0);
             }
             else if(vectorNameA == "e3")
             {
                 if (vectorNameB == "e1")
-                    return new NumericScalar(0.0);
+                    return new Scalar(0.0);
                 else if (vectorNameB == "e2")
-                    return new NumericScalar(0.0);
+                    return new Scalar(0.0);
                 else if (vectorNameB == "e3")
-                    return new NumericScalar(1.0);
+                    return new Scalar(1.0);
             }
 
             return base.BilinearForm(vectorNameA, vectorNameB);
@@ -74,20 +81,20 @@ namespace GeometricAlgebra
             if(vectorNameA == "e1" || vectorNameA == "e2" || vectorNameA == "e3")
             {
                 if(vectorNameB == "no" || vectorNameB == "ni")
-                    return new NumericScalar(0.0);
+                    return new Scalar(0.0);
             }
 
             if(vectorNameA == "no" || vectorNameA == "ni")
             {
                 if(vectorNameB == "e1" || vectorNameB == "e2" || vectorNameB == "e3")
-                    return new NumericScalar(0.0);
+                    return new Scalar(0.0);
 
                 if (vectorNameB == "no" || vectorNameB == "ni")
                 {
                     if(vectorNameA == vectorNameB)
-                        return new NumericScalar(0.0);
+                        return new Scalar(0.0);
                     else
-                        return new NumericScalar(-1.0);
+                        return new Scalar(-1.0);
                 }
             }
             
@@ -139,7 +146,6 @@ namespace GeometricAlgebra
         }
     }
 
-    // TODO: Future derivatives of this class might be an invert, reverse or grade-part.
     public abstract class Operation : Operand
     {
         public List<Operand> operandList;
@@ -163,7 +169,12 @@ namespace GeometricAlgebra
 
         public abstract bool IsAssociative();
         public abstract bool IsDistributiveOver(Operation operation);
-        public abstract string PrintJoiner(Format format);
+        
+        // This is used by infix operators.
+        public virtual string PrintJoiner(Format format)
+        {
+            return "?";
+        }
 
         public override string Print(Format format)
         {
@@ -325,19 +336,19 @@ namespace GeometricAlgebra
 
             for (int i = 0; i < operandList.Count; i++)
             {
-                NumericScalar scalarA = operandList[i] as NumericScalar;
+                Scalar scalarA = operandList[i] as Scalar;
                 if (scalarA == null)
                     continue;
 
                 for (int j = i + 1; j < operandList.Count; j++)
                 {
-                    NumericScalar scalarB = operandList[i] as NumericScalar;
+                    Scalar scalarB = operandList[i] as Scalar;
                     if (scalarB == null)
                         continue;
 
                     operandList.RemoveAt(i);
                     operandList.RemoveAt(j);
-                    operandList.Add(new NumericScalar(scalarA.value + scalarB.value));
+                    operandList.Add(new Scalar(scalarA.value + scalarB.value));
                     return this;
                 }
             }
@@ -413,13 +424,13 @@ namespace GeometricAlgebra
         public override Operand Evaluate(EvaluationContext context, ref bool bail)
         {
             if (operandList.Count == 0)
-                return new NumericScalar(1.0);
+                return new Scalar(1.0);
 
             for (int i = 0; i < operandList.Count; i++)
             {
                 Operand operand = operandList[i];
                 if(operand.IsAdditiveIdentity)
-                    return new NumericScalar(0.0);
+                    return new Scalar(0.0);
 
                 if(operand.IsMultiplicativeIdentity)
                 {
@@ -430,19 +441,19 @@ namespace GeometricAlgebra
 
             for (int i = 0; i < operandList.Count; i++)
             {
-                NumericScalar scalarA = operandList[i] as NumericScalar;
+                Scalar scalarA = operandList[i] as Scalar;
                 if(scalarA == null)
                     continue;
 
                 for (int j = i + 1; j < operandList.Count; j++)
                 {
-                    NumericScalar scalarB = operandList[i] as NumericScalar;
+                    Scalar scalarB = operandList[i] as Scalar;
                     if(scalarB == null)
                         continue;
 
                     operandList.RemoveAt(i);
                     operandList.RemoveAt(j);
-                    operandList.Add(new NumericScalar(scalarA.value * scalarB.value));
+                    operandList.Add(new Scalar(scalarA.value * scalarB.value));
                     return this;
                 }
             }
@@ -533,7 +544,7 @@ namespace GeometricAlgebra
                     Blade vector = new Blade(blade.vectorList[0]);
                     GeometricProduct geometricProduct = new GeometricProduct(new List<Operand>() { vector, subBlade });
                     InnerProduct innerProduct = new InnerProduct(new List<Operand>() { vector.Copy(), subBlade.Copy() });
-                    operandList[j] = new Sum(new List<Operand>() { geometricProduct, new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), innerProduct }) });
+                    operandList[j] = new Sum(new List<Operand>() { geometricProduct, new GeometricProduct(new List<Operand>() { new Scalar(-1.0), innerProduct }) });
 
                     bail = true;
                     return this;
@@ -683,7 +694,7 @@ namespace GeometricAlgebra
             for (int i = 0; i < blade.vectorList.Count; i++)
             {
                 Blade subBlade = blade.MakeSubBlade(i);
-                subBlade.scalar = new GeometricProduct(new List<Operand>() { new NumericScalar(i % 2 == 1 ? -scale : scale), vector.scalar, context.BilinearForm(vector.vectorList[0], blade.vectorList[i]) });
+                subBlade.scalar = new GeometricProduct(new List<Operand>() { new Scalar(i % 2 == 1 ? -scale : scale), vector.scalar, context.BilinearForm(vector.vectorList[0], blade.vectorList[i]) });
                 sum.operandList.Add(subBlade);
             }
 
@@ -759,9 +770,274 @@ namespace GeometricAlgebra
         }
     }
 
-    //public class Reverse : Operation
-    //public class Inverse : Operation
-    //public class GradePart : Operation
+    public class Reverse : Operation
+    {
+        public Reverse() : base()
+        {
+        }
+
+        public Reverse(List<Operand> operandList)
+            : base(operandList)
+        {
+        }
+
+        public override bool IsAssociative()
+        {
+            return false;
+        }
+
+        public override bool IsDistributiveOver(Operation operation)
+        {
+            // The reverse of a sum is the sum of the reverses.
+            return operation is Sum;
+        }
+
+        public override Operand New()
+        {
+            return new Reverse();
+        }
+
+        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        {
+            Operand operand = base.Evaluate(context, ref bail);
+            if(operand != null)
+                return null;
+
+            if (operandList.Count != 1)
+                throw new EvaluationException(string.Format("Reverse operation expects exactly one operand, got {0}.", operandList.Count));
+
+            if (operandList[0].Grade == 0)
+                return operandList[0];
+
+            Blade blade = operandList[0] as Blade;
+            if(blade != null)
+            {
+                // TODO: Apply identity for taking the reverse of a blade here.
+            }
+
+            return null;
+        }
+
+        public override string Print(Format format)
+        {
+            if (operandList.Count != 1)
+                return "?";
+
+            switch (format)
+            {
+                case Format.LATEX:
+                    return @"\left(" + operandList[0].Print(format) + @"\right)^{\tilde}";
+                case Format.PARSEABLE:
+                    return string.Format("reverse({0})", operandList[0].Print(format));
+            }
+
+            return "?";
+        }
+    }
+
+    public class Inverse : Operation
+    {
+        public Inverse() : base()
+        {
+        }
+
+        public Inverse(List<Operand> operandList)
+            : base(operandList)
+        {
+        }
+
+        public override bool IsAssociative()
+        {
+            return false;
+        }
+
+        public override bool IsDistributiveOver(Operation operation)
+        {
+            return false;
+        }
+
+        public override Operand New()
+        {
+            return new Inverse();
+        }
+
+        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        {
+            Operand operand = base.Evaluate(context, ref bail);
+            if(operand != null)
+                return operand;
+
+            if (operandList.Count != 1)
+                throw new EvaluationException(string.Format("Inverse operation expects exactly one operand, got {0}.", operandList.Count));
+
+            if(operandList[0].IsAdditiveIdentity)
+                throw new EvaluationException("Cannot invert the additive identity.");
+
+            Scalar scalar = operandList[0] as Scalar;
+            if(scalar != null)
+            {
+                try
+                {
+                    return new Scalar(1.0 / scalar.value);
+                }
+                catch(DivideByZeroException)
+                {
+                    throw new EvaluationException(string.Format("Attempted to invert scalar ({0}), but got divid-by-zero exception.", scalar.value));
+                }
+            }
+
+            // TODO: Look for easy cases we know how to invert, such as blades or maybe even rotors.
+            //       Note that the general case is a fully evaluated multivector,
+            //       and inverting it amounts to solving a system of linear equations,
+            //       but coming up with this system isn't terribly easy.  Solving it symbolically would be very hard.
+            return null;
+        }
+
+        public override string Print(Format format)
+        {
+            if(operandList.Count != 1)
+                return "?";
+
+            switch(format)
+            {
+                case Format.LATEX:
+                    return @"\left(" + operandList[0].Print(format) + @"\right)^{-1}";
+                case Format.PARSEABLE:
+                    return string.Format("inverse({0})", operandList[0].Print(format));
+            }
+
+            return "?";
+        }
+    }
+
+    public class GradePart : Operation
+    {
+        public GradePart() : base()
+        {
+        }
+
+        public GradePart(List<Operand> operandList)
+            : base(operandList)
+        {
+        }
+
+        public override bool IsAssociative()
+        {
+            return false;
+        }
+
+        public override bool IsDistributiveOver(Operation operation)
+        {
+            return operation is Sum;
+        }
+
+        public override Operand New()
+        {
+            return new GradePart();
+        }
+
+        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        {
+            Operand operand = base.Evaluate(context, ref bail);
+            if(operand != null)
+                return operand;
+
+            if (operandList.Count != 2)
+                throw new EvaluationException(string.Format("Grade-part operation expects exactly two arguments, got {0}.", operandList.Count));
+
+            int determinedGrade = operandList[0].Grade;
+            if(determinedGrade == -1)
+                return null;
+
+            Scalar scalar = operandList[1] as Scalar;
+            if(scalar == null)
+                return null;
+
+            int desiredGrade = (int)scalar.value;
+
+            return determinedGrade == desiredGrade ? operand : new Scalar(0.0);
+        }
+
+        public override string Print(Format format)
+        {
+            if(operandList.Count != 2)
+                return "?";
+
+            switch(format)
+            {
+                case Format.LATEX:
+                {
+                    Scalar scalar = operandList[1] as Scalar;
+                    if (scalar == null)
+                        return "?";
+
+                    int desiredGrade = (int)scalar.value;
+                    if (desiredGrade == 0)
+                        return @"\left\langle" + operandList[0].Print(format) + @"\right\rangle";
+
+                    return @"\left\langle" + operandList[0].Print(format) + @"\right\rangle_{" + desiredGrade.ToString() + "}";
+                }
+                case Format.PARSEABLE:
+                {
+                    return string.Format("grade({0},{1})", operandList[0].ToString(), operandList[1].ToString());
+                }
+            }
+
+            return "?";
+        }
+    }
+
+    public class Assignment : Operation
+    {
+        public Assignment() : base()
+        {
+        }
+
+        public Assignment(List<Operand> operandList)
+            : base(operandList)
+        {
+        }
+
+        public override bool IsAssociative()
+        {
+            return false;
+        }
+
+        public override bool IsDistributiveOver(Operation operation)
+        {
+            return false;
+        }
+
+        public override Operand New()
+        {
+            return new Assignment();
+        }
+
+        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        {
+            Operand operand = base.Evaluate(context, ref bail);
+            if(operand != null)
+                return operand;
+
+            if (operandList.Count != 2)
+                throw new EvaluationException(string.Format("Assignment operation expects exactly two operands, got {0}.", operandList.Count));
+
+            Variable variable = operandList[0] as Variable;
+            if(variable == null)
+                throw new EvaluationException("Assignment operation expects an l-value of type variable.");
+
+            context.operandStorage.Add(variable.name, operandList[1]);
+            return operandList[1];
+        }
+
+        public override string Print(Format format)
+        {
+            if(operandList.Count == 2)
+                return string.Format("{0} = {1}", operandList[0].Print(format), operandList[1].Print(format));
+
+            return "?";
+        }
+    }
 
     public class Blade : Operand
     {
@@ -795,27 +1071,27 @@ namespace GeometricAlgebra
         public Blade() : base()
         {
             vectorList = new List<string>();
-            this.scalar = new NumericScalar(1.0);
+            this.scalar = new Scalar(1.0);
         }
 
         public Blade(double scalar) : base()
         {
             vectorList = new List<string>();
-            this.scalar = new NumericScalar(scalar);
+            this.scalar = new Scalar(scalar);
         }
 
         public Blade(string vectorName) : base()
         {
             vectorList = new List<string>();
             vectorList.Add(vectorName);
-            this.scalar = new NumericScalar(1.0);
+            this.scalar = new Scalar(1.0);
         }
 
         public Blade(double scalar, string vectorName) : base()
         {
             vectorList = new List<string>();
             vectorList.Add(vectorName);
-            this.scalar = new NumericScalar(scalar);
+            this.scalar = new Scalar(scalar);
         }
 
         public Blade(Operand scalar) : base()
@@ -872,7 +1148,7 @@ namespace GeometricAlgebra
             for (int i = 0; i < vectorList.Count; i++)
                 for (int j = i + 1; j < vectorList.Count; j++)
                     if (vectorList[i] == vectorList[j])
-                        return new NumericScalar(0.0);
+                        return new Scalar(0.0);
 
             Operand newScalar = scalar.Evaluate(context, ref bail);
             if (newScalar != null)
@@ -905,7 +1181,7 @@ namespace GeometricAlgebra
             if (adjacentSwapCount > 0)
             {
                 if (adjacentSwapCount % 2 == 1)
-                    scalar = new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), scalar });
+                    scalar = new GeometricProduct(new List<Operand>() { new Scalar(-1.0), scalar });
 
                 return this;
             }
@@ -925,8 +1201,10 @@ namespace GeometricAlgebra
         }
     }
 
-    public abstract class Scalar : Operand
+    public class Scalar : Operand
     {
+        public double value;
+
         public override int Grade
         {
             get
@@ -934,15 +1212,6 @@ namespace GeometricAlgebra
                 return 0;
             }
         }
-
-        public Scalar() : base()
-        {
-        }
-    }
-
-    public class NumericScalar : Scalar
-    {
-        public double value;
 
         public override bool IsAdditiveIdentity
         {
@@ -960,19 +1229,19 @@ namespace GeometricAlgebra
             }
         }
 
-        public NumericScalar(double value = 0.0) : base()
+        public Scalar(double value = 0.0) : base()
         {
             this.value = value;
         }
 
         public override Operand Copy()
         {
-            return new NumericScalar(this.value);
+            return new Scalar(this.value);
         }
 
         public override Operand New()
         {
-            return new NumericScalar();
+            return new Scalar();
         }
 
         public override Operand Evaluate(EvaluationContext context, ref bool bail)
@@ -998,23 +1267,23 @@ namespace GeometricAlgebra
         }
     }
 
-    public class SymbolicScalar : Scalar
+    public class Variable : Operand
     {
         public string name;
 
-        public SymbolicScalar(string name = "") : base()
+        public Variable(string name = "") : base()
         {
             this.name = name;
         }
 
         public override Operand Copy()
         {
-            return new SymbolicScalar(this.name);
+            return new Variable(this.name);
         }
 
         public override Operand New()
         {
-            return new SymbolicScalar();
+            return new Variable();
         }
 
         public override Operand Evaluate(EvaluationContext context, ref bool bail)
