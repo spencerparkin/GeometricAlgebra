@@ -54,6 +54,7 @@ dkms.conf
 # C# stuff...
 *.suo
 obj/
+GACalculator/bin/
 
 # DevStudio...
 .vs/
