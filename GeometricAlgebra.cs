@@ -347,10 +347,16 @@ namespace GeometricAlgebra
             for (int i = 0; i < operandList.Count; i++)
             {
                 Blade blade = operandList[i] as Blade;
-                if (blade != null && blade.scalar == 1.0 && blade.Grade == 0)
+                if (blade != null)
                 {
-                    operandList.RemoveAt(i);
-                    return this;
+                    if(blade.scalar == 0.0)
+                        return new Blade(0.0);
+
+                    if (blade.scalar == 1.0 && blade.Grade == 0)
+                    {
+                        operandList.RemoveAt(i);
+                        return this;
+                    }
                 }
             }
 
