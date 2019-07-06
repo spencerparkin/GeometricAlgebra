@@ -112,8 +112,10 @@
             this.outputTextBox.Location = new System.Drawing.Point(3, 3);
             this.outputTextBox.Multiline = true;
             this.outputTextBox.Name = "outputTextBox";
+            this.outputTextBox.ReadOnly = true;
             this.outputTextBox.Size = new System.Drawing.Size(764, 215);
             this.outputTextBox.TabIndex = 0;
+            this.outputTextBox.TabStop = false;
             // 
             // inputTextBox
             // 
@@ -123,7 +125,7 @@
             this.inputTextBox.Location = new System.Drawing.Point(3, 224);
             this.inputTextBox.Name = "inputTextBox";
             this.inputTextBox.Size = new System.Drawing.Size(764, 20);
-            this.inputTextBox.TabIndex = 1;
+            this.inputTextBox.TabIndex = 0;
             this.inputTextBox.TextChanged += new System.EventHandler(this.InputTextBox_TextChanged);
             // 
             // CalculatorForm
