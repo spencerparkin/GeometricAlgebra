@@ -166,7 +166,7 @@ namespace GeometricAlgebra
                     }
                 }
             }
-            else if (tokenList[0].kind == Token.Kind.OPERATOR && (tokenList[1].kind == Token.Kind.LEFT_PARAN || tokenList.Count == 2))
+            else if (tokenList[0].kind == Token.Kind.OPERATOR && ((tokenList[1].kind == Token.Kind.LEFT_PARAN && tokenList[tokenList.Count - 1].kind == Token.Kind.RIGHT_PARAN) || tokenList.Count == 2))
             {
                 Token token = tokenList[0];
 
@@ -175,13 +175,19 @@ namespace GeometricAlgebra
 
                 throw new ParseException(string.Format("Encounterd unary operator ({0}) that isn't recognized on the left.", token.data));
             }
-            else if (tokenList[tokenList.Count - 1].kind == Token.Kind.OPERATOR && (tokenList[tokenList.Count - 2].kind == Token.Kind.RIGHT_PARAN || tokenList.Count == 2))
+            else if (tokenList[tokenList.Count - 1].kind == Token.Kind.OPERATOR && ((tokenList[0].kind == Token.Kind.LEFT_PARAN && tokenList[tokenList.Count - 2].kind == Token.Kind.RIGHT_PARAN) || tokenList.Count == 2))
             {
                 Token token = tokenList[tokenList.Count - 1];
 
                 // TODO: Should handle ~ unary operator here.
 
                 throw new ParseException(string.Format("Encountered unary operator ({0}) that isn't recognized on the right.", token.data));
+            }
+            else if (tokenList[0].kind == Token.Kind.SYMBOL && tokenList[1].kind == Token.Kind.LEFT_PARAN && tokenList[tokenList.Count - 1].kind == Token.Kind.RIGHT_PARAN)
+            {
+                // TODO: Support functions here.  We'll need to add the delimeter token.
+
+                throw new ParseException(string.Format("Encountered uknown function \"{0}\".", tokenList[0].data));
             }
             else
             {
