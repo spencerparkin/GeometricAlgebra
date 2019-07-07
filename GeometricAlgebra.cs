@@ -123,7 +123,7 @@ namespace GeometricAlgebra
 
         public abstract string Print(Format format);
         
-        public virtual Operand Evaluate(EvaluationContext context, ref bool bail)
+        public virtual Operand Evaluate(EvaluationContext context)
         {
             return null;
         }
@@ -132,12 +132,9 @@ namespace GeometricAlgebra
         {
             while (true)
             {
-                bool bail = false;
-                Operand newOperand = operand.Evaluate(context, ref bail);
+                Operand newOperand = operand.Evaluate(context);
                 if (newOperand != null)
                     operand = newOperand;
-                else if (bail)
-                    continue;
                 else
                     break;
             }
@@ -198,7 +195,7 @@ namespace GeometricAlgebra
             return string.Join(PrintJoiner(format), printList);
         }
 
-        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        public override Operand Evaluate(EvaluationContext context)
         {
             if (operandList.Count == 1)
                 return operandList[0];
@@ -236,28 +233,17 @@ namespace GeometricAlgebra
                 }
             }
 
-            int count;
-
-            do
+            for (int i = 0; i < operandList.Count; i++)
             {
-                count = 0;
+                Operand oldOperand = operandList[i];
+                Operand newOperand = oldOperand.Evaluate(context);
 
-                for (int i = 0; i < operandList.Count; i++)
+                if (newOperand != null)
                 {
-                    Operand oldOperand = operandList[i];
-                    Operand newOperand = oldOperand.Evaluate(context, ref bail);
-
-                    if (newOperand != null)
-                    {
-                        operandList[i] = newOperand;
-                        count++;
-                    }
-
-                    if (bail)
-                        return null;
+                    operandList[i] = newOperand;
+                    return this;
                 }
             }
-            while (count > 0);
 
             return null;
         }
@@ -316,12 +302,12 @@ namespace GeometricAlgebra
             }
         }
 
-        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        public override Operand Evaluate(EvaluationContext context)
         {
             if (operandList.Count == 0)
                 return new Blade(0.0);
 
-            Operand operand = base.Evaluate(context, ref bail);
+            Operand operand = base.Evaluate(context);
             if (operand != null)
                 return operand;
 
@@ -421,7 +407,7 @@ namespace GeometricAlgebra
             return operation is Sum;
         }
 
-        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        public override Operand Evaluate(EvaluationContext context)
         {
             if (operandList.Count == 0)
                 return new Scalar(1.0);
@@ -476,7 +462,7 @@ namespace GeometricAlgebra
                 }
             }
 
-            return base.Evaluate(context, ref bail);
+            return base.Evaluate(context);
         }
     }
 
@@ -514,9 +500,9 @@ namespace GeometricAlgebra
             return "?";
         }
 
-        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        public override Operand Evaluate(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context, ref bail);
+            Operand operand = base.Evaluate(context);
             if (operand != null)
                 return operand;
 
@@ -525,7 +511,7 @@ namespace GeometricAlgebra
             //   2) v^B = vB - v.B,
             // ...according to rules that dictate when and where they're appropriate.
             // Also to avoid infinite looping, the distributive property must take
-            // precedence over anything we do here.  This is accomplished using the bail flag.
+            // precedence over anything we do here.
 
             // All reduction cases must be eliminated before it is safe to handle the expansion cases.
             for (int i = 0; i < operandList.Count - 1; i++)
@@ -545,8 +531,6 @@ namespace GeometricAlgebra
                     GeometricProduct geometricProduct = new GeometricProduct(new List<Operand>() { vector, subBlade });
                     InnerProduct innerProduct = new InnerProduct(new List<Operand>() { vector.Copy(), subBlade.Copy() });
                     operandList[j] = new Sum(new List<Operand>() { geometricProduct, new GeometricProduct(new List<Operand>() { new Scalar(-1.0), innerProduct }) });
-
-                    bail = true;
                     return this;
                 }
             }
@@ -566,8 +550,6 @@ namespace GeometricAlgebra
                     OuterProduct outerProduct = new OuterProduct(new List<Operand>() { bladeA.Copy(), bladeB.Copy() });
                     operandList[i] = new Sum(new List<Operand>() { innerProduct, outerProduct });
                     operandList.RemoveAt(i + 1);
-
-                    bail = true;
                     return this;
                 }
             }
@@ -589,8 +571,6 @@ namespace GeometricAlgebra
                     outerProduct.vectorList.Add(bladeA.vectorList[0]);
                     outerProduct.vectorList.Add(bladeB.vectorList[0]);
                     operandList[i] = new Sum(new List<Operand>() { innerProduct, outerProduct });
-
-                    bail = true;
                     return this;
                 }
             }
@@ -645,9 +625,9 @@ namespace GeometricAlgebra
             }
         }
 
-        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        public override Operand Evaluate(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context, ref bail);
+            Operand operand = base.Evaluate(context);
             if (operand != null)
                 return operand;
 
@@ -747,9 +727,9 @@ namespace GeometricAlgebra
             }
         }
 
-        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        public override Operand Evaluate(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context, ref bail);
+            Operand operand = base.Evaluate(context);
             if (operand != null)
                 return operand;
 
@@ -799,9 +779,9 @@ namespace GeometricAlgebra
             return new Reverse();
         }
 
-        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        public override Operand Evaluate(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context, ref bail);
+            Operand operand = base.Evaluate(context);
             if(operand != null)
                 return null;
 
@@ -863,9 +843,9 @@ namespace GeometricAlgebra
             return new Inverse();
         }
 
-        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        public override Operand Evaluate(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context, ref bail);
+            Operand operand = base.Evaluate(context);
             if(operand != null)
                 return operand;
 
@@ -938,9 +918,9 @@ namespace GeometricAlgebra
             return new GradePart();
         }
 
-        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        public override Operand Evaluate(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context, ref bail);
+            Operand operand = base.Evaluate(context);
             if(operand != null)
                 return operand;
 
@@ -1015,9 +995,9 @@ namespace GeometricAlgebra
             return new Assignment();
         }
 
-        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        public override Operand Evaluate(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context, ref bail);
+            Operand operand = base.Evaluate(context);
             if(operand != null)
                 return operand;
 
@@ -1144,7 +1124,7 @@ namespace GeometricAlgebra
             return printedBlade;
         }
 
-        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        public override Operand Evaluate(EvaluationContext context)
         {
             if (Grade == 0)
                 return scalar;
@@ -1155,7 +1135,7 @@ namespace GeometricAlgebra
                     if (vectorList[i] == vectorList[j])
                         return new Scalar(0.0);
 
-            Operand newScalar = scalar.Evaluate(context, ref bail);
+            Operand newScalar = scalar.Evaluate(context);
             if (newScalar != null)
             {
                 scalar = newScalar;
@@ -1249,7 +1229,7 @@ namespace GeometricAlgebra
             return new Scalar();
         }
 
-        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        public override Operand Evaluate(EvaluationContext context)
         {
             return null;
         }
@@ -1303,7 +1283,7 @@ namespace GeometricAlgebra
             return new Variable();
         }
 
-        public override Operand Evaluate(EvaluationContext context, ref bool bail)
+        public override Operand Evaluate(EvaluationContext context)
         {
             if(this.name[0] == '_')
                 return null;
