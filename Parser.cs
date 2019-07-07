@@ -92,19 +92,19 @@ namespace GeometricAlgebra
                 return new Token(Token.Kind.DELIMITER, ch.ToString());
             }
 
-            if (Char.IsLetterOrDigit(ch) || ch == '$')
+            if (Char.IsLetterOrDigit(ch) || ch == '$' || ch == '_')
             {
                 Token token = null;
 
                 if(Char.IsDigit(ch))
                     token = new Token(Token.Kind.NUMBER);
-                else if(Char.IsLetter(ch) || ch == '$')
+                else if(Char.IsLetter(ch) || ch == '$' || ch == '_')
                     token = new Token(Token.Kind.SYMBOL);
 
                 while(charList.Count > 0)
                 {
                     ch = charList[0];
-                    if (Char.IsLetterOrDigit(ch) || (token.kind == Token.Kind.NUMBER && ch == '.') || (token.kind == Token.Kind.SYMBOL && ch == '$'))
+                    if (Char.IsLetterOrDigit(ch) || (token.kind == Token.Kind.NUMBER && ch == '.') || (token.kind == Token.Kind.SYMBOL && (ch == '$' || ch == '_')))
                     {
                         token.data += ch;
                         charList.RemoveAt(0);
@@ -151,14 +151,21 @@ namespace GeometricAlgebra
 
         public Operand BuildOperandTree(List<Token> tokenList)
         {
-            while (tokenList.Count > 0)
+            while (true)
             {
-                if (tokenList[0].kind == Token.Kind.LEFT_PARAN && tokenList[tokenList.Count - 1].kind == Token.Kind.RIGHT_PARAN)
+                int count = tokenList.Count;
+
+                if (tokenList[0].kind == Token.Kind.LEFT_PARAN)
                 {
-                    tokenList.RemoveAt(0);
-                    tokenList.RemoveAt(tokenList.Count - 1);
+                    int i = FindMatchingParan(tokenList, 0);
+                    if(i == tokenList.Count - 1)
+                    {
+                        tokenList.RemoveAt(0);
+                        tokenList.RemoveAt(tokenList.Count - 1);
+                    }
                 }
-                else
+
+                if(tokenList.Count == count)
                     break;
             }
 
@@ -310,29 +317,42 @@ namespace GeometricAlgebra
 
                 if(token.kind == Token.Kind.LEFT_PARAN)
                 {
-                    int j = 0;
-                    do
-                    {
-                        if(token.kind == Token.Kind.LEFT_PARAN)
-                            j++;
-                        else if(token.kind == Token.Kind.RIGHT_PARAN)
-                            j--;
-
-                        if(i == tokenList.Count - 1)
-                        {
-                            if (j > 0)
-                                throw new ParseException("Encountered unbalanced parenthesis.");
-                            
-                            yield break;
-                        }
-
-                        token = tokenList[++i];
-                    }
-                    while(j > 0);
+                    i = FindMatchingParan(tokenList, i);
+                    continue;
                 }
 
                 yield return token;
             }
+        }
+
+        public int FindMatchingParan(List<Token> tokenList, int i)
+        {
+            int j = 0;
+
+            while(true)
+            {
+                Token token = tokenList[i];
+
+                if(token.kind == Token.Kind.LEFT_PARAN)
+                    j++;
+                else if(token.kind == Token.Kind.RIGHT_PARAN)
+                {
+                    j--;
+
+                    if(j <= 0)
+                        break;
+                }
+
+                if(i < tokenList.Count - 1)
+                    i++;
+                else
+                    break;
+            }
+
+            if (j != 0)
+                throw new ParseException("Encountered unbalanced parenthesis.");
+
+            return i;
         }
     }
 }

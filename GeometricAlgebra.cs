@@ -19,6 +19,7 @@ namespace GeometricAlgebra
 
         public EvaluationContext()
         {
+            operandStorage = new Dictionary<string, Operand>();
         }
 
         // The operand returned here should have grade zero.
@@ -1293,8 +1294,8 @@ namespace GeometricAlgebra
             if(this.name[0] == '_')
                 return null;
 
-            Operand operand = context.operandStorage[this.name];
-            if(operand != null && operand.Grade == 0)
+            Operand operand;
+            if(context.operandStorage.TryGetValue(this.name, out operand))
                 return operand;
 
             return null;
