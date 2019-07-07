@@ -94,11 +94,35 @@ namespace Tests
             string outputText = operand.Print(Operand.Format.PARSEABLE);
             Assert.AreEqual("9", outputText);
         }
+
+        [TestMethod]
+        public void Divide()
+        {
+            EvaluationContext context = new EvaluationContext();
+            Parser parser = new Parser();
+            string inputText = "1/(1+1)";
+            Operand operand = parser.Parse(inputText);
+            operand = Operand.FullyEvaluate(operand, context);
+            string outputText = operand.Print(Operand.Format.PARSEABLE);
+            Assert.AreEqual("0.5", outputText);
+        }
     }
 
     [TestClass]
     public class UnitTests_Blades
     {
+        [TestMethod]
+        public void Subtract()
+        {
+            EvaluationContext context = new EvaluationContext();
+            Parser parser = new Parser();
+            string inputText = "a - b";
+            Operand operand = parser.Parse(inputText);
+            operand = Operand.FullyEvaluate(operand, context);
+            string outputText = operand.Print(Operand.Format.PARSEABLE);
+            Assert.AreEqual("a + (-1)*b", outputText);
+        }
+
         [TestMethod]
         public void SortVectors()
         {

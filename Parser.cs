@@ -64,7 +64,7 @@ namespace GeometricAlgebra
 
         private Token EatToken(List<char> charList)
         {
-            List<char> operatorList = new List<char>() { '+', '-', '*', '^', '.', '~', '!', '=' };
+            List<char> operatorList = new List<char>() { '+', '-', '*', '/', '^', '.', '~', '!', '=' };
 
             char ch = charList[0];
 
@@ -123,13 +123,13 @@ namespace GeometricAlgebra
         {
             if (operation == "=")
                 return 0;
-            if (operation == "+")
+            if (operation == "+" || operation == "-")
                 return 1;
             if (operation == ".")
                 return 2;
             if (operation == "^")
                 return 3;
-            if (operation == "*")
+            if (operation == "*" || operation == "/")
                 return 4;
 
             throw new ParseException(string.Format("Cannot determine precedence level of \"{0}\".", operation));
@@ -286,9 +286,9 @@ namespace GeometricAlgebra
 
                 Operation operation = null;
 
-                if (operatorToken.data == "+")
+                if (operatorToken.data == "+" || operatorToken.data == "-")
                     operation = new Sum();
-                else if (operatorToken.data == "*")
+                else if (operatorToken.data == "*" || operatorToken.data == "/")
                     operation = new GeometricProduct();
                 else if (operatorToken.data == ".")
                     operation = new InnerProduct();
@@ -306,7 +306,19 @@ namespace GeometricAlgebra
                 Operand rightOperand = BuildOperandTree(tokenList.Skip(i + 1).Take(tokenList.Count - 1 - i).ToList());
 
                 operation.operandList.Add(leftOperand);
-                operation.operandList.Add(rightOperand);
+
+                if(operatorToken.data == "-")
+                {
+                    operation.operandList.Add(new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), rightOperand }));
+                }
+                else if(operatorToken.data == "/")
+                {
+                    operation.operandList.Add(new Inverse(new List<Operand>() { rightOperand }));
+                }
+                else
+                {
+                    operation.operandList.Add(rightOperand);
+                }
 
                 return operation;
             }

@@ -352,7 +352,7 @@ namespace GeometricAlgebra
                 if (bladeA == null)
                     continue;
 
-                for (int j = i + 1; j < operandList.Count; i++)
+                for (int j = i + 1; j < operandList.Count; j++)
                 {
                     Blade bladeB = operandList[j] as Blade;
                     if (bladeB == null)
