@@ -197,7 +197,7 @@ namespace GeometricAlgebra
 
         public override Operand Evaluate(EvaluationContext context)
         {
-            if (operandList.Count == 1)
+            if (operandList.Count == 1 && (this is Sum || this is Product))
                 return operandList[0];
 
             for(int i = 0; i < operandList.Count; i++)
@@ -332,8 +332,8 @@ namespace GeometricAlgebra
                     if (scalarB == null)
                         continue;
 
-                    operandList.RemoveAt(i);
                     operandList.RemoveAt(j);
+                    operandList.RemoveAt(i);
                     operandList.Add(new Scalar(scalarA.value + scalarB.value));
                     return this;
                 }
@@ -355,8 +355,8 @@ namespace GeometricAlgebra
                     // so this is all we need to do in order to identify like-terms in a sum.
                     if (Enumerable.SequenceEqual<string>(bladeA.vectorList, bladeB.vectorList))
                     {
-                        operandList.RemoveAt(i);
                         operandList.RemoveAt(j);
+                        operandList.RemoveAt(i);
                         Blade blade = new Blade(new Sum(new List<Operand>() { bladeA.scalar, bladeB.scalar }));
                         blade.vectorList = bladeA.vectorList;
                         operandList.Add(blade);
@@ -433,12 +433,12 @@ namespace GeometricAlgebra
 
                 for (int j = i + 1; j < operandList.Count; j++)
                 {
-                    Scalar scalarB = operandList[i] as Scalar;
+                    Scalar scalarB = operandList[j] as Scalar;
                     if(scalarB == null)
                         continue;
 
-                    operandList.RemoveAt(i);
                     operandList.RemoveAt(j);
+                    operandList.RemoveAt(i);
                     operandList.Add(new Scalar(scalarA.value * scalarB.value));
                     return this;
                 }
@@ -452,7 +452,7 @@ namespace GeometricAlgebra
 
                 for (int j = 0; j < operandList.Count; j++)
                 {
-                    Operand scalar = operandList[i];
+                    Operand scalar = operandList[j];
                     if(scalar.Grade != 0)
                         continue;
 
@@ -783,7 +783,7 @@ namespace GeometricAlgebra
         {
             Operand operand = base.Evaluate(context);
             if(operand != null)
-                return null;
+                return operand;
 
             if (operandList.Count != 1)
                 throw new EvaluationException(string.Format("Reverse operation expects exactly one operand, got {0}.", operandList.Count));
@@ -794,7 +794,12 @@ namespace GeometricAlgebra
             Blade blade = operandList[0] as Blade;
             if(blade != null)
             {
-                // TODO: Apply identity for taking the reverse of a blade here.
+                int i = blade.Grade;
+                int j = i * (i - 1) / 2;
+                if(j % 2 == 0)
+                    return blade;
+
+                return new GeometricProduct(new List<Operand>() { new Scalar(-1.0), blade });
             }
 
             return null;

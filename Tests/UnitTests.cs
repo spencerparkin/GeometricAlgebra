@@ -82,5 +82,29 @@ namespace Tests
             string outputText = operand.Print(Operand.Format.PARSEABLE);
             Assert.AreEqual("(-1)*a^b^c", outputText);
         }
+
+        [TestMethod]
+        public void LinearlyDependentVectors()
+        {
+            EvaluationContext context = new EvaluationContext();
+            Parser parser = new Parser();
+            string inputText = "c^b^a^c";
+            Operand operand = parser.Parse(inputText);
+            operand = Operand.FullyEvaluate(operand, context);
+            string outputText = operand.Print(Operand.Format.PARSEABLE);
+            Assert.AreEqual("0", outputText);
+        }
+
+        [TestMethod]
+        public void BladeReverse()
+        {
+            EvaluationContext context = new EvaluationContext();
+            Parser parser = new Parser();
+            string inputText = "reverse(a^b^c)";
+            Operand operand = parser.Parse(inputText);
+            operand = Operand.FullyEvaluate(operand, context);
+            string outputText = operand.Print(Operand.Format.PARSEABLE);
+            Assert.AreEqual("(-1)*a^b^c", outputText);
+        }
     }
 }
