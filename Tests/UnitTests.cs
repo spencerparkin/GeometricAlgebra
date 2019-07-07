@@ -76,11 +76,11 @@ namespace Tests
         {
             EvaluationContext context = new EvaluationContext();
             Parser parser = new Parser();
-            string inputText = "($_a*($_b + $_c))*(x^y)";
+            string inputText = "($a*($b + $c))*(x^y)";
             Operand operand = parser.Parse(inputText);
             operand = Operand.FullyEvaluate(operand, context);
             string outputText = operand.Print(Operand.Format.PARSEABLE);
-            Assert.AreEqual("(($_a*$_b) + ($_a*$_c))*x^y", outputText);
+            Assert.AreEqual("(($a*$b) + ($a*$c))*x^y", outputText);
         }
     }
 
@@ -134,13 +134,13 @@ namespace Tests
         {
             EvaluationContext context = new EvaluationContext();
             Parser parser = new Parser();
-            string inputText = "$a = a^b";
+            string inputText = "@a = a^b";
             Operand operand = parser.Parse(inputText);
             operand = Operand.FullyEvaluate(operand, context);
             Assert.IsTrue(context.operandStorage.Count == 1);
             string outputText = operand.Print(Operand.Format.PARSEABLE);
             Assert.AreEqual("a^b", outputText);
-            inputText = "$a";
+            inputText = "@a";
             operand = parser.Parse(inputText);
             operand = Operand.FullyEvaluate(operand, context);
             outputText = operand.Print(Operand.Format.PARSEABLE);

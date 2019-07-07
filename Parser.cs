@@ -92,19 +92,19 @@ namespace GeometricAlgebra
                 return new Token(Token.Kind.DELIMITER, ch.ToString());
             }
 
-            if (Char.IsLetterOrDigit(ch) || ch == '$' || ch == '_')
+            if (Char.IsLetterOrDigit(ch) || ch == '$' || ch == '@')
             {
                 Token token = null;
 
                 if(Char.IsDigit(ch))
                     token = new Token(Token.Kind.NUMBER);
-                else if(Char.IsLetter(ch) || ch == '$' || ch == '_')
+                else if(Char.IsLetter(ch) || ch == '$' || ch == '@')
                     token = new Token(Token.Kind.SYMBOL);
 
                 while(charList.Count > 0)
                 {
                     ch = charList[0];
-                    if (Char.IsLetterOrDigit(ch) || (token.kind == Token.Kind.NUMBER && ch == '.') || (token.kind == Token.Kind.SYMBOL && (ch == '$' || ch == '_')))
+                    if (Char.IsLetterOrDigit(ch) || (token.kind == Token.Kind.NUMBER && ch == '.') || (token.kind == Token.Kind.SYMBOL && (ch == '$' || ch == '@')))
                     {
                         token.data += ch;
                         charList.RemoveAt(0);
@@ -179,8 +179,11 @@ namespace GeometricAlgebra
                 {
                     case Token.Kind.SYMBOL:
                     {
-                        if(token.data[0] == '$')
+                        if(token.data[0] == '@')
                             return new Variable(token.data.Substring(1));
+
+                        if(token.data[0] == '$')
+                            return new SymbolicScalar(token.data.Substring(1));
 
                         return new Blade(token.data);
                     }

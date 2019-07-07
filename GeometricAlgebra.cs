@@ -42,29 +42,29 @@ namespace GeometricAlgebra
             if(vectorNameA == "e1")
             {
                 if(vectorNameB == "e1")
-                    return new Scalar(1.0);
+                    return new NumericScalar(1.0);
                 else if(vectorNameB == "e2")
-                    return new Scalar(0.0);
+                    return new NumericScalar(0.0);
                 else if(vectorNameB == "e3")
-                    return new Scalar(0.0);
+                    return new NumericScalar(0.0);
             }
             else if(vectorNameA == "e2")
             {
                 if (vectorNameB == "e1")
-                    return new Scalar(0.0);
+                    return new NumericScalar(0.0);
                 else if (vectorNameB == "e2")
-                    return new Scalar(1.0);
+                    return new NumericScalar(1.0);
                 else if (vectorNameB == "e3")
-                    return new Scalar(0.0);
+                    return new NumericScalar(0.0);
             }
             else if(vectorNameA == "e3")
             {
                 if (vectorNameB == "e1")
-                    return new Scalar(0.0);
+                    return new NumericScalar(0.0);
                 else if (vectorNameB == "e2")
-                    return new Scalar(0.0);
+                    return new NumericScalar(0.0);
                 else if (vectorNameB == "e3")
-                    return new Scalar(1.0);
+                    return new NumericScalar(1.0);
             }
 
             return base.BilinearForm(vectorNameA, vectorNameB);
@@ -82,20 +82,20 @@ namespace GeometricAlgebra
             if(vectorNameA == "e1" || vectorNameA == "e2" || vectorNameA == "e3")
             {
                 if(vectorNameB == "no" || vectorNameB == "ni")
-                    return new Scalar(0.0);
+                    return new NumericScalar(0.0);
             }
 
             if(vectorNameA == "no" || vectorNameA == "ni")
             {
                 if(vectorNameB == "e1" || vectorNameB == "e2" || vectorNameB == "e3")
-                    return new Scalar(0.0);
+                    return new NumericScalar(0.0);
 
                 if (vectorNameB == "no" || vectorNameB == "ni")
                 {
                     if(vectorNameA == vectorNameB)
-                        return new Scalar(0.0);
+                        return new NumericScalar(0.0);
                     else
-                        return new Scalar(-1.0);
+                        return new NumericScalar(-1.0);
                 }
             }
             
@@ -323,19 +323,19 @@ namespace GeometricAlgebra
 
             for (int i = 0; i < operandList.Count; i++)
             {
-                Scalar scalarA = operandList[i] as Scalar;
+                NumericScalar scalarA = operandList[i] as NumericScalar;
                 if (scalarA == null)
                     continue;
 
                 for (int j = i + 1; j < operandList.Count; j++)
                 {
-                    Scalar scalarB = operandList[i] as Scalar;
+                    NumericScalar scalarB = operandList[i] as NumericScalar;
                     if (scalarB == null)
                         continue;
 
                     operandList.RemoveAt(j);
                     operandList.RemoveAt(i);
-                    operandList.Add(new Scalar(scalarA.value + scalarB.value));
+                    operandList.Add(new NumericScalar(scalarA.value + scalarB.value));
                     return this;
                 }
             }
@@ -411,13 +411,13 @@ namespace GeometricAlgebra
         public override Operand Evaluate(EvaluationContext context)
         {
             if (operandList.Count == 0)
-                return new Scalar(1.0);
+                return new NumericScalar(1.0);
 
             for (int i = 0; i < operandList.Count; i++)
             {
                 Operand operand = operandList[i];
                 if(operand.IsAdditiveIdentity)
-                    return new Scalar(0.0);
+                    return new NumericScalar(0.0);
 
                 if(operand.IsMultiplicativeIdentity)
                 {
@@ -428,19 +428,19 @@ namespace GeometricAlgebra
 
             for (int i = 0; i < operandList.Count; i++)
             {
-                Scalar scalarA = operandList[i] as Scalar;
+                NumericScalar scalarA = operandList[i] as NumericScalar;
                 if(scalarA == null)
                     continue;
 
                 for (int j = i + 1; j < operandList.Count; j++)
                 {
-                    Scalar scalarB = operandList[j] as Scalar;
+                    NumericScalar scalarB = operandList[j] as NumericScalar;
                     if(scalarB == null)
                         continue;
 
                     operandList.RemoveAt(j);
                     operandList.RemoveAt(i);
-                    operandList.Add(new Scalar(scalarA.value * scalarB.value));
+                    operandList.Add(new NumericScalar(scalarA.value * scalarB.value));
                     return this;
                 }
             }
@@ -531,7 +531,7 @@ namespace GeometricAlgebra
                     Blade vector = new Blade(blade.vectorList[0]);
                     GeometricProduct geometricProduct = new GeometricProduct(new List<Operand>() { vector, subBlade });
                     InnerProduct innerProduct = new InnerProduct(new List<Operand>() { vector.Copy(), subBlade.Copy() });
-                    operandList[j] = new Sum(new List<Operand>() { geometricProduct, new GeometricProduct(new List<Operand>() { new Scalar(-1.0), innerProduct }) });
+                    operandList[j] = new Sum(new List<Operand>() { geometricProduct, new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), innerProduct }) });
                     return this;
                 }
             }
@@ -675,7 +675,7 @@ namespace GeometricAlgebra
             for (int i = 0; i < blade.vectorList.Count; i++)
             {
                 Blade subBlade = blade.MakeSubBlade(i);
-                subBlade.scalar = new GeometricProduct(new List<Operand>() { new Scalar(i % 2 == 1 ? -scale : scale), vector.scalar, context.BilinearForm(vector.vectorList[0], blade.vectorList[i]) });
+                subBlade.scalar = new GeometricProduct(new List<Operand>() { new NumericScalar(i % 2 == 1 ? -scale : scale), vector.scalar, context.BilinearForm(vector.vectorList[0], blade.vectorList[i]) });
                 sum.operandList.Add(subBlade);
             }
 
@@ -800,7 +800,7 @@ namespace GeometricAlgebra
                 if(j % 2 == 0)
                     return blade;
 
-                return new GeometricProduct(new List<Operand>() { new Scalar(-1.0), blade });
+                return new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), blade });
             }
 
             return null;
@@ -861,12 +861,12 @@ namespace GeometricAlgebra
             if(operandList[0].IsAdditiveIdentity)
                 throw new EvaluationException("Cannot invert the additive identity.");
 
-            Scalar scalar = operandList[0] as Scalar;
+            NumericScalar scalar = operandList[0] as NumericScalar;
             if(scalar != null)
             {
                 try
                 {
-                    return new Scalar(1.0 / scalar.value);
+                    return new NumericScalar(1.0 / scalar.value);
                 }
                 catch(DivideByZeroException)
                 {
@@ -937,13 +937,13 @@ namespace GeometricAlgebra
             if(determinedGrade == -1)
                 return null;
 
-            Scalar scalar = operandList[1] as Scalar;
+            NumericScalar scalar = operandList[1] as NumericScalar;
             if(scalar == null)
                 return null;
 
             int desiredGrade = (int)scalar.value;
 
-            return determinedGrade == desiredGrade ? operand : new Scalar(0.0);
+            return determinedGrade == desiredGrade ? operand : new NumericScalar(0.0);
         }
 
         public override string Print(Format format)
@@ -955,7 +955,7 @@ namespace GeometricAlgebra
             {
                 case Format.LATEX:
                 {
-                    Scalar scalar = operandList[1] as Scalar;
+                    NumericScalar scalar = operandList[1] as NumericScalar;
                     if (scalar == null)
                         return "?";
 
@@ -1059,27 +1059,27 @@ namespace GeometricAlgebra
         public Blade() : base()
         {
             vectorList = new List<string>();
-            this.scalar = new Scalar(1.0);
+            this.scalar = new NumericScalar(1.0);
         }
 
         public Blade(double scalar) : base()
         {
             vectorList = new List<string>();
-            this.scalar = new Scalar(scalar);
+            this.scalar = new NumericScalar(scalar);
         }
 
         public Blade(string vectorName) : base()
         {
             vectorList = new List<string>();
             vectorList.Add(vectorName);
-            this.scalar = new Scalar(1.0);
+            this.scalar = new NumericScalar(1.0);
         }
 
         public Blade(double scalar, string vectorName) : base()
         {
             vectorList = new List<string>();
             vectorList.Add(vectorName);
-            this.scalar = new Scalar(scalar);
+            this.scalar = new NumericScalar(scalar);
         }
 
         public Blade(Operand scalar) : base()
@@ -1139,12 +1139,12 @@ namespace GeometricAlgebra
             for (int i = 0; i < vectorList.Count; i++)
                 for (int j = i + 1; j < vectorList.Count; j++)
                     if (vectorList[i] == vectorList[j])
-                        return new Scalar(0.0);
+                        return new NumericScalar(0.0);
 
-            Operand newScalar = scalar.Evaluate(context);
-            if (newScalar != null)
+            Operand newNumericScalar = scalar.Evaluate(context);
+            if (newNumericScalar != null)
             {
-                scalar = newScalar;
+                scalar = newNumericScalar;
                 return this;
             }
 
@@ -1172,7 +1172,7 @@ namespace GeometricAlgebra
             if (adjacentSwapCount > 0)
             {
                 if (adjacentSwapCount % 2 == 1)
-                    scalar = new GeometricProduct(new List<Operand>() { new Scalar(-1.0), scalar });
+                    scalar = new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), scalar });
 
                 return this;
             }
@@ -1192,10 +1192,8 @@ namespace GeometricAlgebra
         }
     }
 
-    public class Scalar : Operand
+    public abstract class Scalar : Operand
     {
-        public double value;
-
         public override int Grade
         {
             get
@@ -1203,6 +1201,15 @@ namespace GeometricAlgebra
                 return 0;
             }
         }
+
+        public Scalar() : base()
+        {
+        }
+    }
+
+    public class NumericScalar : Scalar
+    {
+        public double value;
 
         public override bool IsAdditiveIdentity
         {
@@ -1220,19 +1227,19 @@ namespace GeometricAlgebra
             }
         }
 
-        public Scalar(double value = 0.0) : base()
+        public NumericScalar(double value = 0.0) : base()
         {
             this.value = value;
         }
 
         public override Operand Copy()
         {
-            return new Scalar(this.value);
+            return new NumericScalar(this.value);
         }
 
         public override Operand New()
         {
-            return new Scalar();
+            return new NumericScalar();
         }
 
         public override Operand Evaluate(EvaluationContext context)
@@ -1258,21 +1265,51 @@ namespace GeometricAlgebra
         }
     }
 
-    public class Variable : Operand
+    public class SymbolicScalar : Scalar
     {
         public string name;
 
-        public override int Grade
+        public SymbolicScalar(string name = "") : base()
         {
-            get
-            {
-                // This is kind-of a hack, but I'm okay with it for now.
-                if(name[0] == '_')
-                    return 0;
-
-                return -1;
-            }
+            this.name = name;
         }
+
+        public override Operand Copy()
+        {
+            return new SymbolicScalar(this.name);
+        }
+
+        public override Operand New()
+        {
+            return new SymbolicScalar();
+        }
+
+        public override Operand Evaluate(EvaluationContext context)
+        {
+            return null;
+        }
+
+        public override string Print(Format format)
+        {
+            switch (format)
+            {
+                case Format.LATEX:
+                {
+                    return this.name;
+                }
+                case Format.PARSEABLE:
+                {
+                    return "$" + this.name;
+                }
+            }
+
+            return "?";
+        }
+    }
+
+    public class Variable : Operand
+    {
+        public string name;
 
         public Variable(string name = "") : base()
         {
@@ -1291,9 +1328,6 @@ namespace GeometricAlgebra
 
         public override Operand Evaluate(EvaluationContext context)
         {
-            if(this.name[0] == '_')
-                return null;
-
             Operand operand;
             if(context.operandStorage.TryGetValue(this.name, out operand))
                 return operand;
@@ -1311,7 +1345,7 @@ namespace GeometricAlgebra
                 }
                 case Format.PARSEABLE:
                 {
-                    return "$" + this.name;
+                    return "@" + this.name;
                 }
             }
 
