@@ -261,16 +261,16 @@ namespace GeometricAlgebra
                 }
 
                 if (opTokenList == null)
-                    throw new ParseException("Did not encounter operator token.");
+                    throw new ParseException("Did not encounter binary operator token.");
 
                 Token operatorToken = null;
                 switch(OperatorAssociativity(opTokenList[0].data))
                 {
                     case Associativity.LEFT_TO_RIGHT:
-                        operatorToken = opTokenList[0];
+                        operatorToken = opTokenList[opTokenList.Count - 1];
                         break;
                     case Associativity.RIGHT_TO_LEFT:
-                        operatorToken = opTokenList[opTokenList.Count - 1];
+                        operatorToken = opTokenList[0];
                         break;
                 }
 

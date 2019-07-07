@@ -44,7 +44,7 @@ namespace Tests
             string inputText = "a^b^c";
             Operand operand = parser.Parse(inputText);
             string outputText = operand.Print(Operand.Format.PARSEABLE);
-            Assert.AreEqual("a^(b^c)", outputText);
+            Assert.AreEqual("(a^b)^c", outputText);
         }
 
         [TestMethod]
@@ -74,13 +74,13 @@ namespace Tests
         [TestMethod]
         public void SortVectors()
         {
-            /*EvaluationContext context = new EvaluationContext();
+            EvaluationContext context = new EvaluationContext();
             Parser parser = new Parser();
             string inputText = "c^b^a";
             Operand operand = parser.Parse(inputText);
             operand = Operand.FullyEvaluate(operand, context);
             string outputText = operand.Print(Operand.Format.PARSEABLE);
-            Assert.AreEqual("-1.0*a^b^c", outputText);*/
+            Assert.AreEqual("(-1)*a^b^c", outputText);
         }
     }
 }

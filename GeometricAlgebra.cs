@@ -762,7 +762,9 @@ namespace GeometricAlgebra
                 {
                     Blade blade = new Blade(new GeometricProduct(new List<Operand>() { bladeA.scalar, bladeB.scalar }));
                     blade.vectorList = bladeA.vectorList.Concat(bladeB.vectorList).ToList();
-                    return blade;
+                    operandList.RemoveAt(i);
+                    operandList[i] = blade;
+                    return this;
                 }
             }
 
