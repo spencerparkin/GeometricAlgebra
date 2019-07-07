@@ -82,6 +82,18 @@ namespace Tests
             string outputText = operand.Print(Operand.Format.PARSEABLE);
             Assert.AreEqual("(($a*$b) + ($a*$c))*x^y", outputText);
         }
+
+        [TestMethod]
+        public void Arithmetic()
+        {
+            EvaluationContext context = new EvaluationContext();
+            Parser parser = new Parser();
+            string inputText = "3*(2+1)";
+            Operand operand = parser.Parse(inputText);
+            operand = Operand.FullyEvaluate(operand, context);
+            string outputText = operand.Print(Operand.Format.PARSEABLE);
+            Assert.AreEqual("9", outputText);
+        }
     }
 
     [TestClass]

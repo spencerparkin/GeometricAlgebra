@@ -129,7 +129,7 @@ namespace GeometricAlgebra
             return null;
         }
 
-        public static Operand FullyEvaluate(Operand operand, EvaluationContext context)
+        public static Operand FullyEvaluate(Operand operand, EvaluationContext context, bool debug = false)
         {
             while (true)
             {
@@ -138,6 +138,12 @@ namespace GeometricAlgebra
                     operand = newOperand;
                 else
                     break;
+
+                if(debug)
+                {
+                    string expression = operand.Print(Format.PARSEABLE);
+                    Console.WriteLine(expression + "\n");
+                }
             }
 
             return operand;
@@ -329,7 +335,7 @@ namespace GeometricAlgebra
 
                 for (int j = i + 1; j < operandList.Count; j++)
                 {
-                    NumericScalar scalarB = operandList[i] as NumericScalar;
+                    NumericScalar scalarB = operandList[j] as NumericScalar;
                     if (scalarB == null)
                         continue;
 
