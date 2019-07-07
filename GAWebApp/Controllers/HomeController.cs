@@ -5,39 +5,48 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using GAWebApp.Models;
+using GeometricAlgebra;
 
 namespace GAWebApp.Controllers
 {
     public class HomeController : Controller
     {
+        private static State defaultState = new State();
+
         public IActionResult Index()
         {
-            return View();
+            State state = this.GetState();
+            return View(state);
         }
 
-        public IActionResult About()
+        // TODO: Why is this action never called?
+        [HttpGet]
+        public IActionResult Calculate(string expression)
         {
-            ViewData["Message"] = "Your application description page.";
+            State state = GetState();
 
-            return View();
+            try
+            {
+                // TODO: We should probably do this in a task and then wait with time-out.
+                Parser parser = new Parser();
+                Operand operand = parser.Parse(expression);
+                operand = Operand.FullyEvaluate(operand, state.context);
+                string result = operand.Print(Operand.Format.PARSEABLE);
+                state.history.Add(expression, result);
+            }
+            catch(Exception exc)
+            {
+                state.history.Add(expression, exc.Message);
+            }
+
+            return PartialView("HistoryView", state);
         }
 
-        public IActionResult Contact()
+        // TODO: Add parameter that identifies client, then retrieve state from a database or something based on that identification.
+        // TODO: Use the async/await stuff for this.
+        private State GetState()
         {
-            ViewData["Message"] = "Your contact page.";
-
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return defaultState;
         }
     }
 }

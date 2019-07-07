@@ -13,6 +13,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{0892FBC0-C1C6-4C84-8ACE-E296897506D7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GAWebApp", "GAWebApp\GAWebApp.csproj", "{DE74FEEE-0B1B-4837-9785-7D8DF87943AC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E392581A-7DEA-4E69-88EA-4DB09D7307EB} = {E392581A-7DEA-4E69-88EA-4DB09D7307EB}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

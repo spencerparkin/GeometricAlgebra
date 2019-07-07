@@ -1,0 +1,21 @@
+﻿@model GAWebApp.Models.State
+
+<tbody>
+    <thead>
+        <tr>
+            <th>Input</th>
+            <th>Output</th>
+        </tr>
+    </thead>
+    @foreach (var pair in Model.history)
+    {
+        <tr>
+            <td>
+                @pair.Key
+            </td>
+            <td>
+                @pair.Value
+            </td>
+        </tr>
+    }
+</tbody>
