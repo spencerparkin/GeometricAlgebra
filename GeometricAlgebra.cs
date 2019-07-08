@@ -151,6 +151,11 @@ namespace GeometricAlgebra
 
             return operand;
         }
+
+        public virtual string LexicographicSortKey()
+        {
+            return "";
+        }
     }
 
     public abstract class Operation : Operand
@@ -256,6 +261,11 @@ namespace GeometricAlgebra
             }
 
             return null;
+        }
+
+        public override string LexicographicSortKey()
+        {
+            return string.Join("", from operand in operandList select operand.LexicographicSortKey());
         }
     }
 
@@ -414,7 +424,11 @@ namespace GeometricAlgebra
                     swapOperands = true;
                 else if (operandA.Grade == operandB.Grade)
                 {
-                    // TODO: Do some sort of lexographic compare here.
+                    string keyA = operandA.LexicographicSortKey();
+                    string keyB = operandB.LexicographicSortKey();
+
+                    if (string.Compare(keyA, keyB) > 0)
+                        swapOperands = true;
                 }
 
                 if (swapOperands)
@@ -1299,6 +1313,11 @@ namespace GeometricAlgebra
         {
             return operand is NumericScalar || operand is SymbolicScalar || operand is SymbolicInnerProductOfVectors;
         }
+
+        public override string LexicographicSortKey()
+        {
+            return string.Join("", vectorList);
+        }
     }
 
     public class NumericScalar : Operand
@@ -1415,6 +1434,11 @@ namespace GeometricAlgebra
 
             return "?";
         }
+
+        public override string LexicographicSortKey()
+        {
+            return this.name;
+        }
     }
 
     public class SymbolicInnerProductOfVectors : Collectable
@@ -1526,6 +1550,11 @@ namespace GeometricAlgebra
         {
             return operand is NumericScalar || operand is SymbolicScalar;
         }
+
+        public override string LexicographicSortKey()
+        {
+            return this.vectorNameA + this.vectorNameB;
+        }
     }
 
     public class Variable : Operand
@@ -1571,6 +1600,11 @@ namespace GeometricAlgebra
             }
 
             return "?";
+        }
+
+        public override string LexicographicSortKey()
+        {
+            return this.name;
         }
     }
 }
