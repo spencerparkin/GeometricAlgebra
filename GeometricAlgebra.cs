@@ -529,20 +529,23 @@ namespace GeometricAlgebra
 
             for (int i = 0; i < operandList.Count; i++)
             {
-                var symbolicScalarA = operandList[i] as SymbolicScalar;
-                if (symbolicScalarA == null)
+                Operand operandA = operandList[i];
+                if (operandA.Grade != 0)
                     continue;
 
                 for (int j = i + 1; j < operandList.Count; j++)
                 {
-                    var symbolicScalarB = operandList[j] as SymbolicScalar;
-                    if (symbolicScalarB == null)
+                    Operand operandB = operandList[j];
+                    if (operandB.Grade != 0)
                         continue;
 
-                    if (string.Compare(symbolicScalarA.name, symbolicScalarB.name) > 0)
+                    string keyA = operandA.LexicographicSortKey();
+                    string keyB = operandB.LexicographicSortKey();
+
+                    if(string.Compare(keyA, keyB) > 0)
                     {
-                        operandList[i] = symbolicScalarB;
-                        operandList[j] = symbolicScalarA;
+                        operandList[i] = operandB;
+                        operandList[j] = operandA;
                         return this;
                     }
                 }
@@ -1378,16 +1381,12 @@ namespace GeometricAlgebra
 
         public override string Print(Format format)
         {
-            switch(format)
+            switch (format)
             {
                 case Format.LATEX:
-                {
                     return string.Format("{0:F2}", this.value);
-                }
                 case Format.PARSEABLE:
-                {
                     return string.Format("{0}", this.value);
-                }
             }
 
             return "?";
