@@ -25,9 +25,7 @@ namespace GeometricAlgebra
         // The operand returned here should have grade zero.
         public virtual Operand BilinearForm(string vectorNameA, string vectorNameB)
         {
-            // TODO: Is there a better way to handle this?  Maybe just return an inner product here?
-            //       For now, this should work pretty well except for how it formats.
-            return new Variable(vectorNameA + "|" + vectorNameB);
+            return new SymbolicInnerProductOfVectors(vectorNameA, vectorNameB);
         }
     }
 
@@ -103,6 +101,7 @@ namespace GeometricAlgebra
         }
     }
 
+    // TODO: We might add a virtual method taking a map that can be used to verify there are no cycles in the operand tree.
     public abstract class Operand
     {
         public Operand()
@@ -124,6 +123,10 @@ namespace GeometricAlgebra
 
         public abstract string Print(Format format);
         
+        // Derivatives overriding this virtual method are to return null
+        // if no algebraic manipulation of the sub-tree rooted at this object
+        // is performed.  On the other hand, if such a manipulation is performed,
+        // then the new or existing root should be returned.
         public virtual Operand Evaluate(EvaluationContext context)
         {
             return null;
@@ -256,6 +259,37 @@ namespace GeometricAlgebra
         }
     }
 
+    public abstract class Collectable : Operand
+    {
+        public Operand scalar;
+
+        public abstract bool Like(Collectable collectable);
+        public abstract Operand Collect(Collectable collectable);
+
+        public Collectable()
+        {
+            scalar = null;
+        }
+
+        public override Operand Evaluate(EvaluationContext context)
+        {
+            if (scalar != null)
+            {
+                if (scalar.IsAdditiveIdentity)
+                    return scalar;
+
+                Operand newScalar = scalar.Evaluate(context);
+                if (newScalar != null)
+                {
+                    this.scalar = newScalar;
+                    return this;
+                }
+            }
+
+            return null;
+        }
+    }
+
     public class Sum : Operation
     {
         public Sum() : base()
@@ -348,25 +382,21 @@ namespace GeometricAlgebra
 
             for (int i = 0; i < operandList.Count; i++)
             {
-                Blade bladeA = operandList[i] as Blade;
-                if (bladeA == null)
+                Collectable collectableA = operandList[i] as Collectable;
+                if (collectableA == null)
                     continue;
 
                 for (int j = i + 1; j < operandList.Count; j++)
                 {
-                    Blade bladeB = operandList[j] as Blade;
-                    if (bladeB == null)
+                    Collectable collectableB = operandList[j] as Collectable;
+                    if (collectableB == null)
                         continue;
 
-                    // Note that as blades evaluate, their anti-commutative property is applied,
-                    // so this is all we need to do in order to identify like-terms in a sum.
-                    if (Enumerable.SequenceEqual<string>(bladeA.vectorList, bladeB.vectorList))
+                    if(collectableA.Like(collectableB))
                     {
                         operandList.RemoveAt(j);
                         operandList.RemoveAt(i);
-                        Blade blade = new Blade(new Sum(new List<Operand>() { bladeA.scalar, bladeB.scalar }));
-                        blade.vectorList = bladeA.vectorList;
-                        operandList.Add(blade);
+                        operandList.Add(collectableA.Collect(collectableB));
                         return this;
                     }
                 }
@@ -451,20 +481,59 @@ namespace GeometricAlgebra
                 }
             }
 
-            for (int i = 0; i < operandList.Count; i++)
+            for(int i = 0; i < operandList.Count; i++)
             {
-                Blade blade = operandList[i] as Blade;
-                if (blade == null || blade.Grade == 0)
+                Collectable collectable = operandList[i] as Collectable;
+                if (collectable == null)
                     continue;
 
-                for (int j = 0; j < operandList.Count; j++)
+                for(int j = 0; j < operandList.Count; j++)
                 {
                     Operand scalar = operandList[j];
-                    if(scalar.Grade != 0)
+                    if (scalar as Collectable != null || scalar.Grade != 0)
                         continue;
 
                     operandList.RemoveAt(j);
-                    blade.scalar = new GeometricProduct(new List<Operand>() { blade.scalar, scalar });
+                    collectable.scalar = new GeometricProduct(new List<Operand>() { scalar, collectable.scalar });
+                    return this;
+                }
+            }
+
+            for (int i = 0; i < operandList.Count; i++)
+            {
+                var symbolicScalarA = operandList[i] as SymbolicScalar;
+                if (symbolicScalarA == null)
+                    continue;
+
+                for (int j = i + 1; j < operandList.Count; j++)
+                {
+                    var symbolicScalarB = operandList[j] as SymbolicScalar;
+                    if (symbolicScalarB == null)
+                        continue;
+
+                    if (string.Compare(symbolicScalarA.name, symbolicScalarB.name) > 0)
+                    {
+                        operandList[i] = symbolicScalarB;
+                        operandList[j] = symbolicScalarA;
+                        return this;
+                    }
+                }
+            }
+
+            for(int i = 0; i < operandList.Count; i++)
+            {
+                Operand operandA = operandList[i];
+                if (operandA.Grade <= 0)
+                    continue;
+
+                for(int j = i + 1; j < operandList.Count; j++)
+                {
+                    Operand operandB = operandList[j];
+                    if (operandB.Grade != 0)
+                        continue;
+
+                    operandList.RemoveAt(j);
+                    operandList.Insert(0, operandB);
                     return this;
                 }
             }
@@ -1033,9 +1102,8 @@ namespace GeometricAlgebra
         }
     }
 
-    public class Blade : Operand
+    public class Blade : Collectable
     {
-        public Operand scalar;
         public List<string> vectorList;
 
         public override int Grade
@@ -1103,6 +1171,12 @@ namespace GeometricAlgebra
             this.scalar = scalar;
         }
 
+        public Blade(Operand scalar, List<string> vectorList) : base()
+        {
+            this.vectorList = vectorList;
+            this.scalar = scalar;
+        }
+
         public override Operand New()
         {
             return new Blade();
@@ -1150,12 +1224,9 @@ namespace GeometricAlgebra
                     if (vectorList[i] == vectorList[j])
                         return new NumericScalar(0.0);
 
-            Operand newScalar = scalar.Evaluate(context);
-            if (newScalar != null)
-            {
-                scalar = newScalar;
-                return this;
-            }
+            Operand operand = base.Evaluate(context);
+            if (operand != null)
+                return operand;
 
             int adjacentSwapCount = 0;
             bool keepGoing = true;
@@ -1199,10 +1270,28 @@ namespace GeometricAlgebra
 
             return subBlade;
         }
+
+        public override bool Like(Collectable collectable)
+        {
+            Blade blade = collectable as Blade;
+            if (blade == null)
+                return false;
+
+            // This works because blades are sorted as part of their evaluation.
+            return Enumerable.SequenceEqual<string>(vectorList, blade.vectorList);
+        }
+
+        public override Operand Collect(Collectable collectable)
+        {
+            Blade blade = collectable as Blade;
+            return new Blade(new Sum(new List<Operand>() { scalar, blade.scalar }), vectorList);
+        }
     }
 
-    public abstract class Scalar : Operand
+    public class NumericScalar : Operand
     {
+        public double value;
+
         public override int Grade
         {
             get
@@ -1210,15 +1299,6 @@ namespace GeometricAlgebra
                 return 0;
             }
         }
-
-        public Scalar() : base()
-        {
-        }
-    }
-
-    public class NumericScalar : Scalar
-    {
-        public double value;
 
         public override bool IsAdditiveIdentity
         {
@@ -1274,9 +1354,17 @@ namespace GeometricAlgebra
         }
     }
 
-    public class SymbolicScalar : Scalar
+    public class SymbolicScalar : Operand
     {
         public string name;
+
+        public override int Grade
+        {
+            get
+            {
+                return 0;
+            }
+        }
 
         public SymbolicScalar(string name = "") : base()
         {
@@ -1313,6 +1401,112 @@ namespace GeometricAlgebra
             }
 
             return "?";
+        }
+    }
+
+    public class SymbolicInnerProductOfVectors : Collectable
+    {
+        public string vectorNameA;
+        public string vectorNameB;
+
+        public override int Grade
+        {
+            get
+            {
+                return 0;
+            }
+        }
+
+        public SymbolicInnerProductOfVectors() : base()
+        {
+            vectorNameA = "?";
+            vectorNameB = "?";
+            this.scalar = new NumericScalar(1.0);
+        }
+
+        public SymbolicInnerProductOfVectors(string vectorNameA, string vectorNameB) : base()
+        {
+            this.vectorNameA = vectorNameA;
+            this.vectorNameB = vectorNameB;
+            this.scalar = new NumericScalar(1.0);
+        }
+
+        public SymbolicInnerProductOfVectors(string vectorNameA, string vectorNameB, Operand scalar) : base()
+        {
+            this.vectorNameA = vectorNameA;
+            this.vectorNameB = vectorNameB;
+            this.scalar = scalar;
+        }
+
+        public override Operand Copy()
+        {
+            return new SymbolicInnerProductOfVectors(this.vectorNameA, this.vectorNameB);
+        }
+
+        public override Operand New()
+        {
+            return new SymbolicInnerProductOfVectors();
+        }
+
+        public override Operand Evaluate(EvaluationContext context)
+        {
+            Operand operand = base.Evaluate(context);
+            if (operand != null)
+                return operand;
+
+            if (string.Compare(vectorNameA, vectorNameB) > 0)
+            {
+                string name = vectorNameA;
+                vectorNameA = vectorNameB;
+                vectorNameB = name;
+                return this;
+            }
+
+            return null;
+        }
+
+        public override string Print(Format format)
+        {
+            string result = "";
+
+            switch(format)
+            {
+                case Format.LATEX:
+                {
+                    result = @"\left(\vec{" + vectorNameA + @"}\cdot\vec{" + vectorNameB + @"}\right)";
+                    break;
+                }
+                case Format.PARSEABLE:
+                {
+                    result = $"({vectorNameA}.{vectorNameB})";
+                    break;
+                }
+            }
+
+            if(!scalar.IsMultiplicativeIdentity)
+            {
+                if(format == Format.PARSEABLE)
+                    result = "(" + scalar.Print(format) + ")*" + result;
+                else if(format == Format.LATEX)
+                    result = @"\left(" + scalar.Print(format) + @"\right)" + result;
+            }
+
+            return result;
+        }
+
+        public override bool Like(Collectable collectable)
+        {
+            var dot = collectable as SymbolicInnerProductOfVectors;
+            if (dot == null)
+                return false;
+
+            return dot.vectorNameA == vectorNameA && dot.vectorNameB == vectorNameB;
+        }
+
+        public override Operand Collect(Collectable collectable)
+        {
+            var dot = collectable as SymbolicInnerProductOfVectors;
+            return new SymbolicInnerProductOfVectors(vectorNameA, vectorNameB, new Sum(new List<Operand>() { scalar, dot.scalar }));
         }
     }
 
