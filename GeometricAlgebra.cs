@@ -265,6 +265,7 @@ namespace GeometricAlgebra
 
         public abstract bool Like(Collectable collectable);
         public abstract Operand Collect(Collectable collectable);
+        public abstract bool CanAbsorb(Operand operand);
 
         public Collectable()
         {
@@ -489,13 +490,19 @@ namespace GeometricAlgebra
 
                 for(int j = 0; j < operandList.Count; j++)
                 {
-                    Operand scalar = operandList[j];
-                    if (scalar as Collectable != null || scalar.Grade != 0)
+                    if (i == j)
                         continue;
 
-                    operandList.RemoveAt(j);
-                    collectable.scalar = new GeometricProduct(new List<Operand>() { scalar, collectable.scalar });
-                    return this;
+                    Operand scalar = operandList[j];
+                    if (scalar.Grade != 0)
+                        continue;
+
+                    if (collectable.CanAbsorb(scalar))
+                    {
+                        operandList.RemoveAt(j);
+                        collectable.scalar = new GeometricProduct(new List<Operand>() { scalar, collectable.scalar });
+                        return this;
+                    }
                 }
             }
 
@@ -1286,6 +1293,11 @@ namespace GeometricAlgebra
             Blade blade = collectable as Blade;
             return new Blade(new Sum(new List<Operand>() { scalar, blade.scalar }), vectorList);
         }
+
+        public override bool CanAbsorb(Operand operand)
+        {
+            return operand is NumericScalar || operand is SymbolicScalar || operand is SymbolicInnerProductOfVectors;
+        }
     }
 
     public class NumericScalar : Operand
@@ -1507,6 +1519,11 @@ namespace GeometricAlgebra
         {
             var dot = collectable as SymbolicInnerProductOfVectors;
             return new SymbolicInnerProductOfVectors(vectorNameA, vectorNameB, new Sum(new List<Operand>() { scalar, dot.scalar }));
+        }
+
+        public override bool CanAbsorb(Operand operand)
+        {
+            return operand is NumericScalar || operand is SymbolicScalar;
         }
     }
 
