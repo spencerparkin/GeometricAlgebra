@@ -8,8 +8,10 @@ function textbox_keydown(textbox) {
             type: 'GET',
             data: {
                 'expression': expression
+            },
+            success: renderedHtml => {
+                $('#historyView').html(renderedHtml);
             }
-            // TODO: Do we need to do something with the returned result to get the partial view to update?  If so, what?!
         });
     }
 }
