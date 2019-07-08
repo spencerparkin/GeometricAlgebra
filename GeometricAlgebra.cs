@@ -727,11 +727,26 @@ namespace GeometricAlgebra
                     }
                     else if (bladeA.Grade == 1 && bladeB.Grade > 1)
                     {
-                        return VectorDotBlade(bladeA, bladeB, context, 1.0);
+                        Sum sum = new Sum();
+
+                        for (int i = 0; i < bladeB.vectorList.Count; i++)
+                        {
+                            Blade subBlade = bladeB.MakeSubBlade(i);
+                            subBlade.scalar = new GeometricProduct(new List<Operand>() { new NumericScalar(i % 2 == 1 ? -1.0 : 1.0), bladeA.scalar, bladeB.scalar, context.BilinearForm(bladeA.vectorList[0], bladeB.vectorList[i]) });
+                            sum.operandList.Add(subBlade);
+                        }
+
+                        return sum;
                     }
                     else if (bladeA.Grade > 1 && bladeB.Grade == 1)
                     {
-                        return VectorDotBlade(bladeB, bladeA, context, bladeA.Grade % 2 == 1 ? 1.0 : -1.0);
+                        operandList[0] = bladeB;
+                        operandList[1] = bladeA;
+
+                        if (bladeA.Grade % 2 == 0)
+                            operandList.Add(new NumericScalar(-1.0));
+
+                        return this;
                     }
                     else if (bladeA.Grade > 1 && bladeB.Grade > 1)
                     {
@@ -748,20 +763,6 @@ namespace GeometricAlgebra
             }
 
             return null;
-        }
-
-        private Sum VectorDotBlade(Blade vector, Blade blade, EvaluationContext context, double scale)
-        {
-            Sum sum = new Sum();
-
-            for (int i = 0; i < blade.vectorList.Count; i++)
-            {
-                Blade subBlade = blade.MakeSubBlade(i);
-                subBlade.scalar = new GeometricProduct(new List<Operand>() { new NumericScalar(i % 2 == 1 ? -scale : scale), vector.scalar, context.BilinearForm(vector.vectorList[0], blade.vectorList[i]) });
-                sum.operandList.Add(subBlade);
-            }
-
-            return sum;
         }
     }
 
