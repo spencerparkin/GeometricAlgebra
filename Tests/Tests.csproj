@@ -5,7 +5,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0892FBC0-C1C6-4C84-8ACE-E296897506D7}</ProjectGuid>
+    <ProjectGuid>{5258D259-AE56-4F3D-A3C3-F06C4ED9E733}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Tests</RootNamespace>
@@ -49,8 +49,8 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="UnitTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnitTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

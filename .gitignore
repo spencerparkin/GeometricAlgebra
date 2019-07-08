@@ -57,6 +57,7 @@ obj/
 GACalculator/bin/
 packages/
 Tests/bin/
+GAWebApp/bin/
 
 # DevStudio...
 .vs/

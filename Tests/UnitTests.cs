@@ -31,7 +31,7 @@ namespace Tests
         public void ParseSymbolicVariable()
         {
             Parser parser = new Parser();
-            string inputText = "$blah";
+            string inputText = "@blah";
             Operand operand = parser.Parse(inputText);
             string outputText = operand.Print(Operand.Format.PARSEABLE);
             Assert.AreEqual(inputText, outputText);
