@@ -1137,12 +1137,10 @@ namespace GeometricAlgebra
             return new Assignment();
         }
 
+        // Notice that we store the un-evaluated r-value in the l-value.  This is necessary if
+        // we want to be able to create a dependency-chain between variables.
         public override Operand Evaluate(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context);
-            if(operand != null)
-                return operand;
-
             if (operandList.Count != 2)
                 throw new EvaluationException(string.Format("Assignment operation expects exactly two operands, got {0}.", operandList.Count));
 
@@ -1150,7 +1148,11 @@ namespace GeometricAlgebra
             if(variable == null)
                 throw new EvaluationException("Assignment operation expects an l-value of type variable.");
 
-            context.operandStorage.Add(variable.name, operandList[1]);
+            if (context.operandStorage.ContainsKey(variable.name))
+                context.operandStorage.Remove(variable.name);
+
+            context.operandStorage.Add(variable.name, operandList[1].Copy());
+
             return operandList[1];
         }
 

@@ -143,10 +143,16 @@ namespace GeometricAlgebra
 
         private Associativity OperatorAssociativity(string operation)
         {
-            // For now, all binary operators have the same associativity.
-            return Associativity.LEFT_TO_RIGHT;
+            if (operation == "=")
+                return Associativity.RIGHT_TO_LEFT;
+            else if (operation == "+" || operation == "-")
+                return Associativity.LEFT_TO_RIGHT;
+            else if (operation == "*" || operation == "/")
+                return Associativity.LEFT_TO_RIGHT;
+            else if (operation == "." || operation == "^")
+                return Associativity.LEFT_TO_RIGHT;
 
-            //throw new ParseException(string.Format("Cannot determine associativity of \"{0}\".", operation));
+            throw new ParseException(string.Format("Cannot determine associativity of \"{0}\".", operation));
         }
 
         public Operand BuildOperandTree(List<Token> tokenList)
