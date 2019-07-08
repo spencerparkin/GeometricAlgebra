@@ -1042,6 +1042,9 @@ namespace GeometricAlgebra
         {
             get
             {
+                if(scalar.IsAdditiveIdentity)
+                    return 0;
+
                 return vectorList.Count;
             }
         }
@@ -1147,10 +1150,10 @@ namespace GeometricAlgebra
                     if (vectorList[i] == vectorList[j])
                         return new NumericScalar(0.0);
 
-            Operand newNumericScalar = scalar.Evaluate(context);
-            if (newNumericScalar != null)
+            Operand newScalar = scalar.Evaluate(context);
+            if (newScalar != null)
             {
-                scalar = newNumericScalar;
+                scalar = newScalar;
                 return this;
             }
 
