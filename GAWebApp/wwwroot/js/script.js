@@ -4,7 +4,7 @@ function textbox_keydown(textbox) {
     if (event.key === 'Enter') {
         let expression = textbox.value;
         $.ajax({
-            url: 'Calculate',
+            url: 'Home/Calculate',
             type: 'GET',
             data: {
                 'expression': expression

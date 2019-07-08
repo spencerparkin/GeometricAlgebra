@@ -52,7 +52,7 @@ namespace GAWebApp
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}");
+                    template: "{controller=Home}/{action=Index}/{expression?}");
             });
         }
     }
