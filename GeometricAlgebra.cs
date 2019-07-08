@@ -102,6 +102,13 @@ namespace GeometricAlgebra
     }
 
     // TODO: We might add a virtual method taking a map that can be used to verify there are no cycles in the operand tree.
+    // Note that eliminating redundancy in code or representation (data-structures) is often a programmer's goal,
+    // and it certainly is here, because it reduces the number of cases that need to be considered and maintained.
+    // There is, however, some redundancy going on here in our data-structure.  For example, there is more than one
+    // way to represent an outer product of vectors (a blade).  This really shouldn't bother us too badly, though,
+    // because redundancy is inherant in what we're trying to do here anyway.  Specifically, if one operand tree evaluates as
+    // another, and both trees are different in any way, then you could argue that one is a redundant representation of
+    // the other, or vice versa, but then to eliminate that redundancy defeats the purpose of a symbolic calculator.
     public abstract class Operand
     {
         public Operand()
@@ -1124,6 +1131,7 @@ namespace GeometricAlgebra
         }
     }
 
+    // A more consistent name would have been SymbolicOuterProductOfVectors, but Blade is fine, and more concise.
     public class Blade : Collectable
     {
         public List<string> vectorList;
