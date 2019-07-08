@@ -19,7 +19,6 @@ namespace GAWebApp.Controllers
             return View(state);
         }
 
-        // TODO: Why is this action never called?
         [HttpGet]
         public IActionResult Calculate(string expression)
         {
