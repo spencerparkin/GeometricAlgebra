@@ -159,9 +159,21 @@ namespace GeometricAlgebra
             return operand;
         }
 
+        public static Operand FullyEvaluate(string expression, EvaluationContext context, bool debug = false)
+        {
+            Parser parser = new Parser();
+            Operand operand = parser.Parse(expression);
+            return FullyEvaluate(operand, context, debug);
+        }
+
         public virtual string LexicographicSortKey()
         {
             return "";
+        }
+
+        public string FormatNameForLatex(string name)
+        {
+            return name;    // TODO: If the name ends with a number, subscript the number.  Use regex stuff?
         }
     }
 
