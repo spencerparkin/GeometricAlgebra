@@ -607,6 +607,17 @@ namespace GeometricAlgebra
             return "?";
         }
 
+        public override int Grade
+        {
+            get
+            {
+                if (operandList.All(operand => operand.Grade == 0))
+                    return 0;
+
+                return -1;
+            }
+        }
+
         public override Operand Evaluate(EvaluationContext context)
         {
             Operand operand = base.Evaluate(context);
@@ -1031,26 +1042,32 @@ namespace GeometricAlgebra
             return new GradePart();
         }
 
+        // Notice that we try to cull by grade first before evaluating our main argument.
+        // This is what may be an optimization by early detection of grade.  We must evaluate
+        // our main argument as long as its grade remains indeterminant.  How good the optimization
+        // is depends on how well we can determine the grade of an arbitrary operand tree.
+        // Of course, some trees well never have a grade, such as a sum of blades of non-homogeneous grade.
         public override Operand Evaluate(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context);
-            if(operand != null)
-                return operand;
-
             if (operandList.Count != 2)
                 throw new EvaluationException(string.Format("Grade-part operation expects exactly two arguments, got {0}.", operandList.Count));
 
             int determinedGrade = operandList[0].Grade;
-            if(determinedGrade == -1)
-                return null;
+            if (determinedGrade != -1)
+            {
+                NumericScalar scalar = operandList[1] as NumericScalar;
+                if (scalar != null)
+                {
+                    int desiredGrade = (int)scalar.value;
+                    return determinedGrade == desiredGrade ? operandList[0] : new NumericScalar(0.0);
+                }
+            }
 
-            NumericScalar scalar = operandList[1] as NumericScalar;
-            if(scalar == null)
-                return null;
+            Operand operand = base.Evaluate(context);
+            if (operand != null)
+                return operand;
 
-            int desiredGrade = (int)scalar.value;
-
-            return determinedGrade == desiredGrade ? operand : new NumericScalar(0.0);
+            return null;
         }
 
         public override string Print(Format format)
