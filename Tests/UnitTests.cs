@@ -160,6 +160,18 @@ namespace Tests
         }
 
         // TODO: Test blade inverse.
+
+        [TestMethod]
+        public void BladeCancellation()
+        {
+            EvaluationContext context = new EvaluationContext();
+            Parser parser = new Parser();
+            string inputText = "a^b + b^a";
+            Operand operand = parser.Parse(inputText);
+            operand = Operand.FullyEvaluate(operand, context);
+            string outputText = operand.Print(Operand.Format.PARSEABLE);
+            Assert.AreEqual("0", outputText);
+        }
     }
 
     [TestClass]
