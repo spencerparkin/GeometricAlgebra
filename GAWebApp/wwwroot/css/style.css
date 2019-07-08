@@ -1,0 +1,34 @@
+#historyView {
+    font-family: "Courier New";
+}
+
+table {
+    width: 100%;
+}
+
+td {
+    height: 30px;
+    width: 100%;
+}
+
+tr:nth-child(even) {
+    background-color: #d6d5d5;
+}
+
+.historyInput {
+    text-align: left;
+}
+
+.historyOutput {
+    text-align: right;
+}
+
+input {
+    width: 100%;
+    font-family: "Courier New";
+}
+
+body {
+    margin-left: 40px;
+    margin-right: 40px;
+}

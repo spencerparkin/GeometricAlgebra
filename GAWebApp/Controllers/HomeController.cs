@@ -23,21 +23,7 @@ namespace GAWebApp.Controllers
         public IActionResult Calculate(string expression)
         {
             State state = GetState();
-
-            try
-            {
-                // TODO: We should probably do this in a task and then wait with time-out.
-                Parser parser = new Parser();
-                Operand operand = parser.Parse(expression);
-                operand = Operand.FullyEvaluate(operand, state.context);
-                string result = operand.Print(Operand.Format.PARSEABLE);
-                state.history.Add(expression, result);
-            }
-            catch(Exception exc)
-            {
-                state.history.Add(expression, exc.Message);
-            }
-
+            state.Calculate(expression);
             return PartialView("HistoryView", state);
         }
 

@@ -1,21 +1,18 @@
 ﻿@model GAWebApp.Models.State
 
 <table>
-    <thead>
-        <tr>
-            <th>Input</th>
-            <th>Output</th>
-        </tr>
-    </thead>
     <tbody>
         @foreach (var pair in Model.history)
         {
             <tr>
-                <td>
-                    @pair.Key
+                <td class="historyInput">
+                    <img src=@($"https://latex.codecogs.com/gif.latex?{@pair.Key}")>
                 </td>
-                <td>
-                    @pair.Value
+            </tr>
+            <tr>
+                <td class="historyOutput">
+                    <img src=@($"https://latex.codecogs.com/gif.latex?{@pair.Value}")>
+                    <!--TODO: Add an 'x' button to clear this row using JS.-->
                 </td>
             </tr>
         }

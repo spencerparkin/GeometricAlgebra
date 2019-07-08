@@ -1,6 +1,6 @@
 ﻿@model GAWebApp.Models.State
 
-<h2>Geometric Algebra Calculator (v1.0) Beta!</h2>
+<center><h2>Geometric Algebra Calculator</h2></center>
 
 @if (Model.history.Count > 0)
 {
@@ -10,7 +10,10 @@
 }
 else
 {
-    <p>No history.  Enter an expression below.</p>
+    <div id="historyView">
+        No history.  Enter an expression below.
+    </div>
 }
 
+<br />
 <input type="text" onkeydown="textbox_keydown(this)">
