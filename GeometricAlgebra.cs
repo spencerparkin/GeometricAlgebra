@@ -1815,8 +1815,8 @@ namespace GeometricAlgebra
         public override Operand Evaluate(EvaluationContext context)
         {
             Operand operand;
-            if(context.operandStorage.TryGetValue(this.name, out operand))
-                return operand;
+            if (context.operandStorage.TryGetValue(this.name, out operand))
+                return operand.Copy();
 
             return null;
         }
