@@ -1089,7 +1089,8 @@ namespace GeometricAlgebra
     {
         public bool storeEvaluation;
 
-        public Assignment(bool storeEvaluation = false) : base()
+        // TODO: Expose the other varient ":=" in the parser.
+        public Assignment(bool storeEvaluation = true) : base()
         {
             this.storeEvaluation = storeEvaluation;
         }
