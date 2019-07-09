@@ -47,7 +47,7 @@ namespace GACalculator
                 try
                 {
                     string expression = inputTextBox.Text;
-                    Parser parser = new Parser();
+                    Parser parser = new Parser(context);
 
                     Operand operand = parser.Parse(expression);
                     outputTextBox.AppendText("Input: " + operand.Print(Operand.Format.PARSEABLE) + "\r\n\r\n");

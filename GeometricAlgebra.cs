@@ -17,49 +17,27 @@ namespace GeometricAlgebra
     public class EvaluationContext
     {
         public Dictionary<string, Operand> operandStorage;
+        public List<Function> funcList;
 
         public EvaluationContext()
         {
+            funcList = new List<Function>();
             operandStorage = new Dictionary<string, Operand>();
         }
 
         // The operand returned here should have grade zero.
         public virtual Operand BilinearForm(string vectorNameA, string vectorNameB)
         {
-            if (vectorNameA == "e1")
-            {
-                if (vectorNameB == "e1")
-                    return new NumericScalar(1.0);
-                else if (vectorNameB == "e2")
-                    return new NumericScalar(0.0);
-                else if (vectorNameB == "e3")
-                    return new NumericScalar(0.0);
-            }
-            else if (vectorNameA == "e2")
-            {
-                if (vectorNameB == "e1")
-                    return new NumericScalar(0.0);
-                else if (vectorNameB == "e2")
-                    return new NumericScalar(1.0);
-                else if (vectorNameB == "e3")
-                    return new NumericScalar(0.0);
-            }
-            else if (vectorNameA == "e3")
-            {
-                if (vectorNameB == "e1")
-                    return new NumericScalar(0.0);
-                else if (vectorNameB == "e2")
-                    return new NumericScalar(0.0);
-                else if (vectorNameB == "e3")
-                    return new NumericScalar(1.0);
-            }
-
             return new SymbolicScalarTerm(vectorNameA, vectorNameB);
         }
 
         public virtual Operation CreateFunction(string name)
         {
-            return null;
+            IEnumerable<Function> enumerable = from func in funcList where func.Name(Operand.Format.PARSEABLE) == name select func;
+            if (enumerable.Count() == 0)
+                return null;
+
+            return enumerable.ToArray()[0].Copy() as Operation;
         }
     }
 
@@ -253,6 +231,54 @@ namespace GeometricAlgebra
         public override string LexicographicSortKey()
         {
             return string.Join("", from operand in operandList select operand.LexicographicSortKey());
+        }
+    }
+
+    public abstract class Function : Operation
+    {
+        public Function() : base()
+        {
+        }
+
+        public Function(List<Operand> operandList) : base(operandList)
+        {
+
+        }
+
+        public abstract string Name(Format format);
+
+        public override bool IsDistributiveOver(Operation operation)
+        {
+            return false;
+        }
+
+        public override bool IsAssociative()
+        {
+            return false;
+        }
+
+        // This is really clunky/hacky.  A variation of this might look for an operand in our list by the given name.
+        public Operand GrabArg(string name, EvaluationContext context, Operand defaultOperand)
+        {
+            if (operandList.Count != 1 || !(operandList[0] is Variable variable))
+                throw new EvaluationException("Expected variable argument.");
+
+            string key = variable.name + name;
+            if (!context.operandStorage.ContainsKey(key))
+                return defaultOperand;
+
+            return context.operandStorage[key];
+        }
+
+        public override string Print(Format format)
+        {
+            string name = Name(format);
+            string args = string.Join(", ", from operand in operandList select operand.Print(format));
+            if (format == Format.PARSEABLE)
+                return name + "(" + args + ")";
+            else if (format == Format.LATEX)
+                return name + @"\left(" + args + @"\right)";
+            return "?";
         }
     }
 

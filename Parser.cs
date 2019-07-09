@@ -95,7 +95,7 @@ namespace GeometricAlgebra
                 return new Token(Token.Kind.DELIMITER, ch.ToString());
             }
 
-            if (Char.IsLetterOrDigit(ch) || ch == '$' || ch == '@')
+            if (Char.IsLetterOrDigit(ch) || ch == '_' || ch == '$' || ch == '@')
             {
                 Token token = null;
 
@@ -107,7 +107,7 @@ namespace GeometricAlgebra
                 while(charList.Count > 0)
                 {
                     ch = charList[0];
-                    if (Char.IsLetterOrDigit(ch) || (token.kind == Token.Kind.NUMBER && ch == '.') || (token.kind == Token.Kind.SYMBOL && (ch == '$' || ch == '@')))
+                    if (Char.IsLetterOrDigit(ch) || ch == '_' || (token.kind == Token.Kind.NUMBER && ch == '.') || (token.kind == Token.Kind.SYMBOL && (ch == '$' || ch == '@')))
                     {
                         token.data += ch;
                         charList.RemoveAt(0);
@@ -160,7 +160,7 @@ namespace GeometricAlgebra
 
         public Operand BuildOperandTree(List<Token> tokenList)
         {
-            while (true)
+            while (tokenList.Count > 0)
             {
                 int count = tokenList.Count;
 
@@ -261,7 +261,11 @@ namespace GeometricAlgebra
                 argBoundaryList.Add(tokenList.Count - 1);
 
                 for(int i = 0; i < argBoundaryList.Count - 1; i++)
-                    operation.operandList.Add(BuildOperandTree(tokenList.Skip(argBoundaryList[i] + 1).Take(argBoundaryList[i + 1] - argBoundaryList[i] - 1).ToList()));
+                {
+                    List<Token> argTokenList = tokenList.Skip(argBoundaryList[i] + 1).Take(argBoundaryList[i + 1] - argBoundaryList[i] - 1).ToList();
+                    if(argTokenList.Count > 0)
+                        operation.operandList.Add(BuildOperandTree(argTokenList));
+                }
 
                 return operation;
             }

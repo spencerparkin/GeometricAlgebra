@@ -11,10 +11,52 @@ namespace GeometricAlgebra.ConformalModel
         {
             operandStorage.Add("i", Operand.FullyEvaluate("e1^e2^e3", this));
             operandStorage.Add("I", Operand.FullyEvaluate("e1^e2^e3^no^ni", this));
+
+            funcList.Add(new EuclidVector());
+            funcList.Add(new Point());
+            funcList.Add(new Sphere());
+            funcList.Add(new Sphere(true));
+            funcList.Add(new Plane());
+            funcList.Add(new Line());
+            funcList.Add(new Circle());
+            funcList.Add(new Circle(true));
+            funcList.Add(new PointPair());
+            funcList.Add(new PointPair(true));
+            funcList.Add(new FlatPoint());
+            funcList.Add(new TangentPoint());
+            funcList.Add(new Decompose());
         }
 
         public override Operand BilinearForm(string vectorNameA, string vectorNameB)
         {
+            if (vectorNameA == "e1")
+            {
+                if (vectorNameB == "e1")
+                    return new NumericScalar(1.0);
+                else if (vectorNameB == "e2")
+                    return new NumericScalar(0.0);
+                else if (vectorNameB == "e3")
+                    return new NumericScalar(0.0);
+            }
+            else if (vectorNameA == "e2")
+            {
+                if (vectorNameB == "e1")
+                    return new NumericScalar(0.0);
+                else if (vectorNameB == "e2")
+                    return new NumericScalar(1.0);
+                else if (vectorNameB == "e3")
+                    return new NumericScalar(0.0);
+            }
+            else if (vectorNameA == "e3")
+            {
+                if (vectorNameB == "e1")
+                    return new NumericScalar(0.0);
+                else if (vectorNameB == "e2")
+                    return new NumericScalar(0.0);
+                else if (vectorNameB == "e3")
+                    return new NumericScalar(1.0);
+            }
+
             if (vectorNameA == "e1" || vectorNameA == "e2" || vectorNameA == "e3")
             {
                 if (vectorNameB == "no" || vectorNameB == "ni")
@@ -37,78 +79,17 @@ namespace GeometricAlgebra.ConformalModel
 
             return base.BilinearForm(vectorNameA, vectorNameB);
         }
-
-        public override Operation CreateFunction(string name)
-        {
-            if (name == "vec")
-                return new EuclidVector();
-            else if (name == "point")
-                return new Point();
-            else if (name == "sphere")
-                return new Sphere();
-            else if (name == "isphere")
-                return new Sphere(true);
-            else if (name == "plane")
-                return new Plane();
-            else if (name == "line")
-                return new Line();
-            else if (name == "circle")
-                return new Circle();
-            else if (name == "icircle")
-                return new Circle(true);
-            else if (name == "pointpair")
-                return new PointPair();
-            else if (name == "ipointpair")
-                return new PointPair(true);
-            else if (name == "flatpoint")
-                return new FlatPoint();
-            else if (name == "tangentpoint")
-                return new TangentPoint();
-            else if (name == "decompose")
-                return new Decompose();
-
-            return null;
-        }
-    }
-
-    public abstract class Function : Operation
-    {
-        public Function() : base()
-        {
-        }
-
-        public Function(List<Operand> operandList) : base(operandList)
-        {
-
-        }
-
-        public override bool IsDistributiveOver(Operation operation)
-        {
-            return false;
-        }
-
-        public override bool IsAssociative()
-        {
-            return false;
-        }
-
-        public Operand GrabArg(string name, EvaluationContext context, Operand defaultOperand)
-        {
-            if (operandList.Count != 1 || !(operandList[0] is Variable variable))
-                throw new EvaluationException("Expected varaible argument.");
-
-            string key = variable.name + name;
-            if (!context.operandStorage.ContainsKey(key))
-                return defaultOperand;
-
-            return context.operandStorage[key];
-        }
     }
 
     public class EuclidVector : Function
     {
         public EuclidVector() : base()
         {
+        }
+
+        public override string Name(Format format)
+        {
+            return "vec";
         }
 
         public override Operand New()
@@ -172,6 +153,11 @@ namespace GeometricAlgebra.ConformalModel
         {
         }
 
+        public override string Name(Format format)
+        {
+            return "point";
+        }
+
         public override Operand New()
         {
             return new Point();
@@ -201,6 +187,13 @@ namespace GeometricAlgebra.ConformalModel
 
         public Sphere(List<Operand> operandList, bool imaginary = false) : base(operandList, imaginary)
         {
+        }
+
+        public override string Name(Format format)
+        {
+            if (imaginary)
+                return "isphere";
+            return "sphere";
         }
 
         public override Operand New()
@@ -236,6 +229,11 @@ namespace GeometricAlgebra.ConformalModel
         {
         }
 
+        public override string Name(Format format)
+        {
+            return "plane";
+        }
+
         public override Operand New()
         {
             return new Plane();
@@ -269,6 +267,13 @@ namespace GeometricAlgebra.ConformalModel
         {
         }
 
+        public override string Name(Format format)
+        {
+            if (imaginary)
+                return "icircle";
+            return "circle";
+        }
+
         public override Operand New()
         {
             return new Circle();
@@ -285,6 +290,7 @@ namespace GeometricAlgebra.ConformalModel
             Operand radius = GrabArg("Radius", context, new NumericScalar(1.0));
             Operand weight = GrabArg("Weight", context, new NumericScalar(1.0));
 
+            // TODO: This won't work.  Hmmm!
             OuterProduct circle = new OuterProduct();
             circle.operandList.Add(new Sphere(new List<Operand>() { euclidPoint, radius, weight }, imaginary));
             circle.operandList.Add(new Plane(new List<Operand>() { euclidPoint, euclidNormal }));
@@ -300,6 +306,11 @@ namespace GeometricAlgebra.ConformalModel
 
         public TangentPoint(List<Operand> operandList) : base(operandList)
         {
+        }
+
+        public override string Name(Format format)
+        {
+            return "tangentpoint";
         }
 
         public override Operand New()
@@ -329,6 +340,11 @@ namespace GeometricAlgebra.ConformalModel
 
         public Line(List<Operand> operandList) : base(operandList)
         {
+        }
+
+        public override string Name(Format format)
+        {
+            return "line";
         }
 
         public override Operand New()
@@ -364,6 +380,13 @@ namespace GeometricAlgebra.ConformalModel
         {
         }
 
+        public override string Name(Format format)
+        {
+            if (imaginary)
+                return "ipointpair";
+            return "pointpair";
+        }
+
         public override Operand New()
         {
             return new PointPair();
@@ -395,6 +418,11 @@ namespace GeometricAlgebra.ConformalModel
 
         public FlatPoint(List<Operand> operandList) : base(operandList)
         {
+        }
+
+        public override string Name(Format format)
+        {
+            return "flatpoint";
         }
 
         public override Operand New()
@@ -429,6 +457,11 @@ namespace GeometricAlgebra.ConformalModel
         {
         }
 
+        public override string Name(Format format)
+        {
+            return "decompose";
+        }
+
         public override Operand New()
         {
             return new Decompose();
@@ -443,7 +476,7 @@ namespace GeometricAlgebra.ConformalModel
             // TODO: Here we take an operand to decompose and then a variable to use as a prefix.
             //       Here we identify the given element and store its decomposition.  So if the
             //       variable given was @_, we create the variables @_Center, @_Radius, @_Normal, @_Weight,
-            //       setting each to a value appropriate to the given element.  Creating these variable is convenient,
+            //       setting each to a value appropriate to the given element.  Creating these variables is convenient,
             //       because all composition functions take their input in the same form as our output here.
             //       We might also add a log to the evaluation context where we can spew the decomposition data.
             //       In this log I would give, in addition to the decomposition parameters, the type of geometry.
