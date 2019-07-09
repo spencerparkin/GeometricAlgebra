@@ -110,14 +110,12 @@ namespace Tests
         [TestMethod]
         public void ConformalPoint()
         {
-            // TODO: I think I may want to get rid of the SymbolicScalar class in favor of SymbolicProductOfScalars,
-            //       and it should be collectable and not absorb collectables of the same type.
             EvaluationContext context = new Conformal3D_EvaluationContext();
             Operand.FullyEvaluate("@v = $x*e1 + $y*e2 + $z*e3", context);
             Operand.FullyEvaluate("@p = no + @v + 0.5*(@v.@v)*ni", context);
             Operand operand = Operand.FullyEvaluate("@p.@p", context);
             string outputText = operand.Print(Operand.Format.PARSEABLE);
-            // TODO: Check result here.
+            Assert.AreEqual("0", outputText);
         }
     }
 
