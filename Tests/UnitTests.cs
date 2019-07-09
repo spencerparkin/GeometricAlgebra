@@ -80,7 +80,7 @@ namespace Tests
             Operand operand = parser.Parse(inputText);
             operand = Operand.FullyEvaluate(operand, context);
             string outputText = operand.Print(Operand.Format.PARSEABLE);
-            Assert.AreEqual("(($a*$b) + ($a*$c))*x^y", outputText);
+            Assert.AreEqual("($a*$b + $a*$c)*x^y", outputText);
         }
 
         [TestMethod]

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Reflection;
 
 namespace GeometricAlgebra
@@ -25,7 +26,7 @@ namespace GeometricAlgebra
         // The operand returned here should have grade zero.
         public virtual Operand BilinearForm(string vectorNameA, string vectorNameB)
         {
-            return new SymbolicInnerProductOfVectors(vectorNameA, vectorNameB);
+            return new SymbolicScalarTerm(vectorNameA, vectorNameB);
         }
     }
 
@@ -170,10 +171,16 @@ namespace GeometricAlgebra
         {
             return "";
         }
-
-        public string FormatNameForLatex(string name)
+        
+        // This is with respect to the geometric product.
+        public virtual Operand Inverse()
         {
-            return name;    // TODO: If the name ends with a number, subscript the number.  Use regex stuff?
+            return null;
+        }
+
+        public virtual Operand Reverse()
+        {
+            return null;
         }
     }
 
@@ -511,6 +518,25 @@ namespace GeometricAlgebra
                     operandList.RemoveAt(j);
                     operandList.RemoveAt(i);
                     operandList.Add(new NumericScalar(scalarA.value * scalarB.value));
+                    return this;
+                }
+            }
+
+            for(int i = 0; i < operandList.Count; i++)
+            {
+                if (!(operandList[i] is SymbolicScalarTerm scalarA))
+                    continue;
+
+                for(int j = i + 1; j < operandList.Count; j++)
+                {
+                    if (!(operandList[j] is SymbolicScalarTerm scalarB))
+                        continue;
+
+                    operandList.RemoveAt(j);
+                    operandList.RemoveAt(i);
+                    SymbolicScalarTerm scalar = new SymbolicScalarTerm(new GeometricProduct(new List<Operand>() { scalarA.scalar, scalarB.scalar }));
+                    scalar.factorList = (from factor in scalarA.factorList.Concat(scalarB.factorList) select factor.Copy()).ToList();
+                    operandList.Add(scalar);
                     return this;
                 }
             }
@@ -922,18 +948,8 @@ namespace GeometricAlgebra
             if (operandList[0].Grade == 0)
                 return operandList[0];
 
-            Blade blade = operandList[0] as Blade;
-            if(blade != null)
-            {
-                int i = blade.Grade;
-                int j = i * (i - 1) / 2;
-                if(j % 2 == 0)
-                    return blade;
-
-                return new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), blade });
-            }
-
-            return null;
+            Operand reverse = operandList[0].Reverse();
+            return reverse;
         }
 
         public override string Print(Format format)
@@ -991,24 +1007,8 @@ namespace GeometricAlgebra
             if(operandList[0].IsAdditiveIdentity)
                 throw new EvaluationException("Cannot invert the additive identity.");
 
-            NumericScalar scalar = operandList[0] as NumericScalar;
-            if(scalar != null)
-            {
-                try
-                {
-                    return new NumericScalar(1.0 / scalar.value);
-                }
-                catch(DivideByZeroException)
-                {
-                    throw new EvaluationException(string.Format("Attempted to invert scalar ({0}), but got divid-by-zero exception.", scalar.value));
-                }
-            }
-
-            // TODO: Look for easy cases we know how to invert, such as blades or maybe even rotors.
-            //       Note that the general case is a fully evaluated multivector,
-            //       and inverting it amounts to solving a system of linear equations,
-            //       but coming up with this system isn't terribly easy.  Solving it symbolically would be very hard.
-            return null;
+            Operand inverse = operandList[0].Inverse();
+            return inverse;
         }
 
         public override string Print(Format format)
@@ -1165,7 +1165,6 @@ namespace GeometricAlgebra
         }
     }
 
-    // A more consistent name would have been SymbolicOuterProductOfVectors, but Blade is fine, and more concise.
     public class Blade : Collectable
     {
         public List<string> vectorList;
@@ -1353,12 +1352,28 @@ namespace GeometricAlgebra
 
         public override bool CanAbsorb(Operand operand)
         {
-            return operand is NumericScalar || operand is SymbolicScalar || operand is SymbolicInnerProductOfVectors;
+            return operand is NumericScalar || operand is SymbolicScalarTerm;
         }
 
         public override string LexicographicSortKey()
         {
             return string.Join("", vectorList);
+        }
+
+        public override Operand Reverse()
+        {
+            int i = this.Grade;
+            int j = i * (i - 1) / 2;
+            if (j % 2 == 0)
+                return this;
+
+            return new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), this });
+        }
+
+        public override Operand Inverse()
+        {
+            // TODO: Write this.
+            return null;
         }
     }
 
@@ -1422,11 +1437,175 @@ namespace GeometricAlgebra
 
             return "?";
         }
+
+        public override Operand Inverse()
+        {
+            try
+            {
+                return new NumericScalar(1.0 / this.value);
+            }
+            catch (DivideByZeroException)
+            {
+                throw new EvaluationException(string.Format("Attempted to invert scalar ({0}), but got divid-by-zero exception.", this.value));
+            }
+        }
+
+        public override Operand Reverse()
+        {
+            return this;
+        }
     }
 
-    public class SymbolicScalar : Operand
+    // These are monomials.
+    public class SymbolicScalarTerm : Collectable
     {
-        public string name;
+        public abstract class Factor
+        {
+            public int exponent;
+
+            public Factor()
+            {
+                exponent = 1;
+            }
+
+            public abstract Factor New();
+            public abstract string PrintSymbol(Format format);
+            public abstract bool Matches(Factor factor);
+            public abstract string SortKey();
+
+            public virtual Factor Copy()
+            {
+                Factor factor = New();
+                factor.exponent = exponent;
+                return factor;
+            }
+
+            public string Print(Format format)
+            {
+                string symbol = PrintSymbol(format);
+
+                if (exponent == 1)
+                    return symbol;
+
+                if(format == Format.PARSEABLE)
+                {
+                    return string.Format("pow({0},{1})", symbol, exponent);
+                }
+                else if(format == Format.LATEX)
+                {
+                    return symbol + "^{" + exponent.ToString() + "}";
+                }
+
+                return "?";
+            }
+
+            public static string SubscriptNameForLatex(string name)
+            {
+                Regex rx = new Regex(@"^([a-zA-Z]+)([0-9]+)$");
+                MatchCollection collection = rx.Matches(name);
+                if (collection.Count != 1)
+                    return name;
+
+                Match match = collection[0];
+                return match.Groups[0].Value + "_{" + match.Groups[1].Value + "}";
+            }
+        }
+
+        public class Symbol : Factor
+        {
+            public string name;
+
+            public Symbol() : base()
+            {
+            }
+
+            public Symbol(string name) : base()
+            {
+                this.name = name;
+            }
+
+            public override Factor New()
+            {
+                return new Symbol();
+            }
+
+            public override Factor Copy()
+            {
+                Symbol symbol = base.Copy() as Symbol;
+                symbol.name = this.name;
+                return symbol;
+            }
+
+            public override string PrintSymbol(Format format)
+            {
+                if (format == Format.PARSEABLE)
+                    return "$" + name;
+                else if (format == Format.LATEX)
+                    return SubscriptNameForLatex(name);
+                return "?";
+            }
+
+            public override bool Matches(Factor factor)
+            {
+                return factor is Symbol symbol && symbol.name == name;
+            }
+
+            public override string SortKey()
+            {
+                return this.name;
+            }
+        }
+
+        public class SymbolicDot : Factor
+        {
+            public string vectorNameA;
+            public string vectorNameB;
+
+            public SymbolicDot() : base()
+            {
+            }
+
+            public SymbolicDot(string vectorNameA, string vectorNameB) : base()
+            {
+                this.vectorNameA = vectorNameA;
+                this.vectorNameB = vectorNameB;
+            }
+
+            public override Factor New()
+            {
+                return new SymbolicDot();
+            }
+
+            public override Factor Copy()
+            {
+                SymbolicDot dot = base.Copy() as SymbolicDot;
+                dot.vectorNameA = this.vectorNameA;
+                dot.vectorNameB = this.vectorNameB;
+                return dot;
+            }
+
+            public override string PrintSymbol(Format format)
+            {
+                if (format == Format.PARSEABLE)
+                    return "(" + vectorNameA + "." + vectorNameB + ")";
+                else if (format == Format.LATEX)
+                    return @"\left(\vec{" + SubscriptNameForLatex(vectorNameA) + @"}\cdot\vec{" + SubscriptNameForLatex(vectorNameB) + @"}\right)";
+                return "?";
+            }
+
+            public override bool Matches(Factor factor)
+            {
+                // Not that this works because of our sorting.
+                return factor is SymbolicDot dot && dot.vectorNameA == vectorNameA && dot.vectorNameB == vectorNameB;
+            }
+
+            public override string SortKey()
+            {
+                return this.vectorNameA + this.vectorNameB;
+            }
+        }
+
+        public List<Factor> factorList;
 
         public override int Grade
         {
@@ -1436,105 +1615,121 @@ namespace GeometricAlgebra
             }
         }
 
-        public SymbolicScalar(string name = "") : base()
-        {
-            this.name = name;
-        }
-
-        public override Operand Copy()
-        {
-            return new SymbolicScalar(this.name);
-        }
-
-        public override Operand New()
-        {
-            return new SymbolicScalar();
-        }
-
-        public override Operand Evaluate(EvaluationContext context)
-        {
-            return null;
-        }
-
-        public override string Print(Format format)
-        {
-            switch (format)
-            {
-                case Format.LATEX:
-                {
-                    return this.name;
-                }
-                case Format.PARSEABLE:
-                {
-                    return "$" + this.name;
-                }
-            }
-
-            return "?";
-        }
-
-        public override string LexicographicSortKey()
-        {
-            return this.name;
-        }
-    }
-
-    public class SymbolicInnerProductOfVectors : Collectable
-    {
-        public string vectorNameA;
-        public string vectorNameB;
-
-        public override int Grade
+        public override bool IsAdditiveIdentity
         {
             get
             {
-                return 0;
+                return this.scalar.IsAdditiveIdentity;
             }
         }
 
-        public SymbolicInnerProductOfVectors() : base()
+        public override bool IsMultiplicativeIdentity
         {
-            vectorNameA = "?";
-            vectorNameB = "?";
+            get
+            {
+                return this.scalar.IsMultiplicativeIdentity && factorList.Count == 0;
+            }
+        }
+
+        public SymbolicScalarTerm() : base()
+        {
+            factorList = new List<Factor>();
             this.scalar = new NumericScalar(1.0);
         }
 
-        public SymbolicInnerProductOfVectors(string vectorNameA, string vectorNameB) : base()
+        public SymbolicScalarTerm(string name) : base()
         {
-            this.vectorNameA = vectorNameA;
-            this.vectorNameB = vectorNameB;
+            factorList = new List<Factor>() { new Symbol(name) };
             this.scalar = new NumericScalar(1.0);
         }
 
-        public SymbolicInnerProductOfVectors(string vectorNameA, string vectorNameB, Operand scalar) : base()
+        public SymbolicScalarTerm(string vectorNameA, string vectorNameB) : base()
         {
-            this.vectorNameA = vectorNameA;
-            this.vectorNameB = vectorNameB;
+            factorList = new List<Factor>() { new SymbolicDot(vectorNameA, vectorNameB) };
+            this.scalar = new NumericScalar(1.0);
+        }
+
+        public SymbolicScalarTerm(List<Factor> factorList) : base()
+        {
+            this.factorList = factorList;
+            this.scalar = new NumericScalar(1.0);
+        }
+
+        public SymbolicScalarTerm(Operand scalar) : base()
+        {
+            factorList = new List<Factor>();
             this.scalar = scalar;
         }
 
         public override Operand Copy()
         {
-            return new SymbolicInnerProductOfVectors(this.vectorNameA, this.vectorNameB);
+            return new SymbolicScalarTerm((from factor in factorList select factor.Copy()).ToList());
         }
 
         public override Operand New()
         {
-            return new SymbolicInnerProductOfVectors();
+            return new SymbolicScalarTerm();
         }
 
         public override Operand Evaluate(EvaluationContext context)
         {
+            if (factorList.Count == 0)
+                return scalar;
+
             Operand operand = base.Evaluate(context);
             if (operand != null)
                 return operand;
 
-            if (string.Compare(vectorNameA, vectorNameB) > 0)
+            for(int i = 0; i < factorList.Count; i++)
             {
-                string name = vectorNameA;
-                vectorNameA = vectorNameB;
-                vectorNameB = name;
-                return this;
+                Factor factor = factorList[i];
+                if(factor.exponent == 0)
+                {
+                    factorList.RemoveAt(i);
+                    return this;
+                }
+            }
+
+            for(int i = 0; i < factorList.Count; i++)
+            {
+                SymbolicDot dot = factorList[i] as SymbolicDot;
+                if (dot != null && string.Compare(dot.vectorNameA, dot.vectorNameB) > 0)
+                {
+                    string name = dot.vectorNameA;
+                    dot.vectorNameA = dot.vectorNameB;
+                    dot.vectorNameB = name;
+                    return this;
+                }
+            }
+
+            for(int i = 0; i < factorList.Count; i++)
+            {
+                Factor factorA = factorList[i];
+
+                for (int j = i + 1; j < factorList.Count; j++)
+                {
+                    Factor factorB = factorList[j];
+
+                    if(factorA.Matches(factorB))
+                    {
+                        factorList.RemoveAt(j);
+                        factorA.exponent += factorB.exponent;
+                        return this;
+                    }
+                }
+            }
+
+            for(int i = 0; i < factorList.Count - 1; i++)
+            {
+                Factor factorA = factorList[i];
+                Factor factorB = factorList[i + 1];
+
+                if(string.Compare(factorA.SortKey(), factorB.SortKey()) > 0)
+                {
+                    factorList[i] = factorB;
+                    factorList[i + 1] = factorA;
+                    return this;
+                }
             }
 
             return null;
@@ -1542,56 +1737,70 @@ namespace GeometricAlgebra
 
         public override string Print(Format format)
         {
-            string result = "";
+            List<string> printedFactorList = (from factor in factorList select factor.Print(format)).ToList();
 
-            switch(format)
+            if (!scalar.IsMultiplicativeIdentity)
             {
-                case Format.LATEX:
-                {
-                    result = @"\left(\vec{" + vectorNameA + @"}\cdot\vec{" + vectorNameB + @"}\right)";
-                    break;
-                }
-                case Format.PARSEABLE:
-                {
-                    result = $"({vectorNameA}.{vectorNameB})";
-                    break;
-                }
+                if (format == Format.PARSEABLE)
+                    printedFactorList.Insert(0, "(" + scalar.Print(format) + ")");
+                else if (format == Format.LATEX)
+                    printedFactorList.Insert(0, @"\left(" + scalar.Print(format) + @"\right)");
             }
 
-            if(!scalar.IsMultiplicativeIdentity)
-            {
-                if(format == Format.PARSEABLE)
-                    result = "(" + scalar.Print(format) + ")*" + result;
-                else if(format == Format.LATEX)
-                    result = @"\left(" + scalar.Print(format) + @"\right)" + result;
-            }
+            if (format == Format.PARSEABLE)
+                return string.Join("*", printedFactorList);
+            else if (format == Format.LATEX)
+                return string.Join("", printedFactorList);
 
-            return result;
+            return "?";
         }
 
         public override bool Like(Collectable collectable)
         {
-            var dot = collectable as SymbolicInnerProductOfVectors;
-            if (dot == null)
-                return false;
+            if(collectable is SymbolicScalarTerm term)
+            {
+                if(Enumerable.SequenceEqual<string>(from factor in factorList select factor.SortKey(), from factor in term.factorList select factor.SortKey()))
+                {
+                    if(Enumerable.SequenceEqual<int>(from factor in factorList select factor.exponent, from factor in term.factorList select factor.exponent))
+                    {
+                        return true;
+                    }
+                }
+            }
 
-            return dot.vectorNameA == vectorNameA && dot.vectorNameB == vectorNameB;
+            return false;
         }
 
         public override Operand Collect(Collectable collectable)
         {
-            var dot = collectable as SymbolicInnerProductOfVectors;
-            return new SymbolicInnerProductOfVectors(vectorNameA, vectorNameB, new Sum(new List<Operand>() { scalar, dot.scalar }));
+            SymbolicScalarTerm term = collectable as SymbolicScalarTerm;
+            term.scalar = new Sum(new List<Operand>() { scalar, term.scalar });
+            return term;
         }
 
         public override bool CanAbsorb(Operand operand)
         {
-            return operand is NumericScalar || operand is SymbolicScalar;
+            return operand is NumericScalar;
         }
 
         public override string LexicographicSortKey()
         {
-            return this.vectorNameA + this.vectorNameB;
+            // What about sorting by the degree of the monomial?
+            return string.Join("", (from factor in factorList select factor.SortKey()).ToList());
+        }
+
+        public override Operand Inverse()
+        {
+            SymbolicScalarTerm term = this.Copy() as SymbolicScalarTerm;
+            term.scalar = new Inverse(new List<Operand>() { term.scalar });
+            for (int i = 0; i < term.factorList.Count; i++)
+                term.factorList[i].exponent *= -1;
+            return term;
+        }
+
+        public override Operand Reverse()
+        {
+            return this;
         }
     }
 

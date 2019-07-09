@@ -189,7 +189,7 @@ namespace GeometricAlgebra
                             return new Variable(token.data.Substring(1));
 
                         if(token.data[0] == '$')
-                            return new SymbolicScalar(token.data.Substring(1));
+                            return new SymbolicScalarTerm(token.data.Substring(1));
 
                         return new Blade(token.data);
                     }
