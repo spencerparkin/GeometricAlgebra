@@ -26,79 +26,40 @@ namespace GeometricAlgebra
         // The operand returned here should have grade zero.
         public virtual Operand BilinearForm(string vectorNameA, string vectorNameB)
         {
+            if (vectorNameA == "e1")
+            {
+                if (vectorNameB == "e1")
+                    return new NumericScalar(1.0);
+                else if (vectorNameB == "e2")
+                    return new NumericScalar(0.0);
+                else if (vectorNameB == "e3")
+                    return new NumericScalar(0.0);
+            }
+            else if (vectorNameA == "e2")
+            {
+                if (vectorNameB == "e1")
+                    return new NumericScalar(0.0);
+                else if (vectorNameB == "e2")
+                    return new NumericScalar(1.0);
+                else if (vectorNameB == "e3")
+                    return new NumericScalar(0.0);
+            }
+            else if (vectorNameA == "e3")
+            {
+                if (vectorNameB == "e1")
+                    return new NumericScalar(0.0);
+                else if (vectorNameB == "e2")
+                    return new NumericScalar(0.0);
+                else if (vectorNameB == "e3")
+                    return new NumericScalar(1.0);
+            }
+
             return new SymbolicScalarTerm(vectorNameA, vectorNameB);
         }
-    }
 
-    public class Euclidean3D_EvaluationContext : EvaluationContext
-    {
-        public Euclidean3D_EvaluationContext() : base()
+        public virtual Operation CreateFunction(string name)
         {
-        }
-
-        public override Operand BilinearForm(string vectorNameA, string vectorNameB)
-        {
-            if(vectorNameA == "e1")
-            {
-                if(vectorNameB == "e1")
-                    return new NumericScalar(1.0);
-                else if(vectorNameB == "e2")
-                    return new NumericScalar(0.0);
-                else if(vectorNameB == "e3")
-                    return new NumericScalar(0.0);
-            }
-            else if(vectorNameA == "e2")
-            {
-                if (vectorNameB == "e1")
-                    return new NumericScalar(0.0);
-                else if (vectorNameB == "e2")
-                    return new NumericScalar(1.0);
-                else if (vectorNameB == "e3")
-                    return new NumericScalar(0.0);
-            }
-            else if(vectorNameA == "e3")
-            {
-                if (vectorNameB == "e1")
-                    return new NumericScalar(0.0);
-                else if (vectorNameB == "e2")
-                    return new NumericScalar(0.0);
-                else if (vectorNameB == "e3")
-                    return new NumericScalar(1.0);
-            }
-
-            return base.BilinearForm(vectorNameA, vectorNameB);
-        }
-    }
-
-    public class Conformal3D_EvaluationContext : Euclidean3D_EvaluationContext
-    {
-        public Conformal3D_EvaluationContext() : base()
-        {
-        }
-
-        public override Operand BilinearForm(string vectorNameA, string vectorNameB)
-        {
-            if(vectorNameA == "e1" || vectorNameA == "e2" || vectorNameA == "e3")
-            {
-                if(vectorNameB == "no" || vectorNameB == "ni")
-                    return new NumericScalar(0.0);
-            }
-
-            if(vectorNameA == "no" || vectorNameA == "ni")
-            {
-                if(vectorNameB == "e1" || vectorNameB == "e2" || vectorNameB == "e3")
-                    return new NumericScalar(0.0);
-
-                if (vectorNameB == "no" || vectorNameB == "ni")
-                {
-                    if(vectorNameA == vectorNameB)
-                        return new NumericScalar(0.0);
-                    else
-                        return new NumericScalar(-1.0);
-                }
-            }
-            
-            return base.BilinearForm(vectorNameA, vectorNameB);
+            return null;
         }
     }
 
@@ -162,7 +123,7 @@ namespace GeometricAlgebra
 
         public static Operand FullyEvaluate(string expression, EvaluationContext context, bool debug = false)
         {
-            Parser parser = new Parser();
+            Parser parser = new Parser(context);
             Operand operand = parser.Parse(expression);
             return FullyEvaluate(operand, context, debug);
         }

@@ -110,7 +110,7 @@ namespace Tests
         [TestMethod]
         public void ConformalPoint()
         {
-            EvaluationContext context = new Conformal3D_EvaluationContext();
+            EvaluationContext context = new GeometricAlgebra.ConformalModel.Conformal3D_EvaluationContext();
             Operand.FullyEvaluate("@v = $x*e1 + $y*e2 + $z*e3", context);
             Operand.FullyEvaluate("@p = no + @v + 0.5*(@v.@v)*ni", context);
             Operand operand = Operand.FullyEvaluate("@p.@p", context);

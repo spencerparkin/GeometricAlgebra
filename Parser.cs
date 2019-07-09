@@ -37,8 +37,11 @@ namespace GeometricAlgebra
 
     public class Parser
     {
-        public Parser()
+        public EvaluationContext context;
+
+        public Parser(EvaluationContext context = null)
         {
+            this.context = context;
         }
 
         public Operand Parse(string expression)
@@ -230,17 +233,19 @@ namespace GeometricAlgebra
                 Token token = tokenList[0];
 
                 Operation operation = null;
-                if(token.data == "reverse" || token.data == "rev")
+                if (token.data == "reverse" || token.data == "rev")
                     operation = new Reverse();
-                else if(token.data == "inverse" || token.data == "inv")
+                else if (token.data == "inverse" || token.data == "inv")
                     operation = new Inverse();
-                else if(token.data == "grade")
+                else if (token.data == "grade")
                     operation = new GradePart();
-                else if(token.data == "assign")
+                else if (token.data == "assign")
                     operation = new Assignment();
+                else if (context != null)
+                    operation = context.CreateFunction(token.data);
 
                 if(operation == null)
-                    throw new ParseException(string.Format("Encountered uknown function \"{0}\".", token.data));
+                    throw new ParseException(string.Format("Encountered unknown function \"{0}\".", token.data));
 
                 List<int> argBoundaryList = new List<int>() { 1 };
                 
