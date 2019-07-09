@@ -257,19 +257,6 @@ namespace GeometricAlgebra
             return false;
         }
 
-        // This is really clunky/hacky.  A variation of this might look for an operand in our list by the given name.
-        public Operand GrabArg(string name, EvaluationContext context, Operand defaultOperand)
-        {
-            if (operandList.Count != 1 || !(operandList[0] is Variable variable))
-                throw new EvaluationException("Expected variable argument.");
-
-            string key = variable.name + name;
-            if (!context.operandStorage.ContainsKey(key))
-                return defaultOperand;
-
-            return context.operandStorage[key];
-        }
-
         public override string Print(Format format)
         {
             string name = Name(format);
@@ -1100,8 +1087,11 @@ namespace GeometricAlgebra
 
     public class Assignment : Operation
     {
-        public Assignment() : base()
+        public bool storeEvaluation;
+
+        public Assignment(bool storeEvaluation = false) : base()
         {
+            this.storeEvaluation = storeEvaluation;
         }
 
         public Assignment(List<Operand> operandList)
@@ -1124,8 +1114,13 @@ namespace GeometricAlgebra
             return new Assignment();
         }
 
-        // Notice that we store the un-evaluated r-value in the l-value.  This is necessary if
-        // we want to be able to create a dependency-chain between variables.
+        public override Operand Copy()
+        {
+            var assignment = base.Copy() as Assignment;
+            assignment.storeEvaluation = this.storeEvaluation;
+            return assignment;
+        }
+
         public override Operand Evaluate(EvaluationContext context)
         {
             if (operandList.Count != 2)
@@ -1138,8 +1133,15 @@ namespace GeometricAlgebra
             if (context.operandStorage.ContainsKey(variable.name))
                 context.operandStorage.Remove(variable.name);
 
-            context.operandStorage.Add(variable.name, operandList[1].Copy());
+            // Sometimes we want a dependency-chain; sometimes we don't.
+            if (storeEvaluation)
+            {
+                Operand operand = base.Evaluate(context);
+                if (operand != null)
+                    return operand;
+            }
 
+            context.operandStorage.Add(variable.name, operandList[1].Copy());
             return operandList[1];
         }
 
