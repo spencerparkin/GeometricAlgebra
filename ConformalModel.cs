@@ -12,19 +12,20 @@ namespace GeometricAlgebra.ConformalModel
             operandStorage.Add("i", Operand.FullyEvaluate("e1^e2^e3", this));
             operandStorage.Add("I", Operand.FullyEvaluate("e1^e2^e3^no^ni", this));
 
-            /*funcList.Add(new EuclidVector());
-            funcList.Add(new Point());
-            funcList.Add(new Sphere());
-            funcList.Add(new Sphere(true));
-            funcList.Add(new Plane());
-            funcList.Add(new Line());
-            funcList.Add(new Circle());
-            funcList.Add(new Circle(true));
-            funcList.Add(new PointPair());
-            funcList.Add(new PointPair(true));
-            funcList.Add(new FlatPoint());
-            funcList.Add(new TangentPoint());
-            funcList.Add(new Decompose());*/
+            // Add formulas for the geometric primitives of the conformal model in 3D space.
+            operandStorage.Add("point", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni)", this));
+            operandStorage.Add("sphere", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni)", this));
+            operandStorage.Add("isphere", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni)", this));
+            operandStorage.Add("circle", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this));
+            operandStorage.Add("icircle", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this));
+            operandStorage.Add("pointpair", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this));
+            operandStorage.Add("ipointpair", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this));
+            operandStorage.Add("plane", Operand.FullyEvaluate("@weight * (@normal + (@center . @normal) * ni)", this));
+            operandStorage.Add("line", Operand.FullyEvaluate("@weight * (@normal + (@center ^ @normal) * ni) * @i", this));
+            operandStorage.Add("flatpoint", Operand.FullyEvaluate("@weight * (1 - @center ^ ni) * @i", this));
+            operandStorage.Add("tangentpoint", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni) ^ (@normal + (@center . @normal) * ni)", this));
+
+            //funcList.Add(new Decompose());    // TODO: Write a function that can identify and decompose elements of the conformal model.
         }
 
         public override Operand BilinearForm(string vectorNameA, string vectorNameB)
