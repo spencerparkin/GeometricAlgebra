@@ -38,6 +38,11 @@ namespace GeometricAlgebra
             return new SymbolicScalarTerm(vectorNameA, vectorNameB);
         }
 
+        public virtual bool IsLinearlyDependentSet(List<string> vectorNameList)
+        {
+            return false;
+        }
+
         public virtual Operation CreateFunction(string name)
         {
             IEnumerable<Function> enumerable = from func in funcList where func.Name(Operand.Format.PARSEABLE) == name select func;
@@ -1316,6 +1321,10 @@ namespace GeometricAlgebra
                 for (int j = i + 1; j < vectorList.Count; j++)
                     if (vectorList[i] == vectorList[j])
                         return new NumericScalar(0.0);
+
+            // The context may also have something to say about linear dependence.
+            if (context.IsLinearlyDependentSet(vectorList))
+                return new NumericScalar(0.0);
 
             Operand operand = base.Evaluate(context);
             if (operand != null)

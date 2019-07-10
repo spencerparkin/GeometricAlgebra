@@ -100,6 +100,26 @@ namespace GeometricAlgebra.ConformalModel
 
             return base.BilinearForm(vectorNameA, vectorNameB);
         }
+
+        public override bool IsLinearlyDependentSet(List<string> vectorNameList)
+        {
+            // First of all, any set of cardinality above our dimension must be linearly dependent.
+            if (vectorNameList.Count > 5)
+                return true;
+
+            // Since we're treating all symbolic vectors as being taken from
+            // the euclidean sub-space of our geometric algebra, we can identify
+            // the following case.
+            List<string> basisList = new List<string>() { "e1", "e2", "e3", "no", "ni" };
+            bool has_e1 = vectorNameList.Any(vectorName => vectorName == "e1");
+            bool has_e2 = vectorNameList.Any(vectorName => vectorName == "e2");
+            bool has_e3 = vectorNameList.Any(vectorName => vectorName == "e3");
+            bool has_symb = vectorNameList.Any(vectorName => !basisList.Any(basisName => basisName == vectorName));
+            if (has_e1 && has_e2 && has_e3 && has_symb)
+                return true;
+
+            return false;
+        }
     }
 
     public class Identify : Function
