@@ -57,74 +57,68 @@ namespace GeometricAlgebra
 
             expression = expression.Replace(" ", "");
 
-            List<char> charList = expression.ToArray().ToList();
-
-            while (charList.Count > 0)
-                tokenList.Add(EatToken(charList));
+            while (expression.Length > 0)
+                tokenList.Add(EatToken(ref expression));
 
             return tokenList;
         }
 
-        private Token EatToken(List<char> charList)
+        private Token EatToken(ref string expression)
         {
-            List<char> operatorList = new List<char>() { '+', '-', '*', '/', '^', '.', '~', '!', '=' };
+            Token token = null;
 
-            char ch = charList[0];
-
-            if (operatorList.Contains(ch))
+            List<string> operatorList = new List<string>() { "+", "-", "*", "/", "^", ".", "~", "!", "=", ":=" };
+            foreach(string opName in operatorList)
             {
-                charList.RemoveAt(0);
-                return new Token(Token.Kind.OPERATOR, ch.ToString());
-            }
-
-            if (ch == '(')
-            {
-                charList.RemoveAt(0);
-                return new Token(Token.Kind.LEFT_PARAN, ch.ToString());
-            }
-
-            if (ch == ')')
-            {
-                charList.RemoveAt(0);
-                return new Token(Token.Kind.RIGHT_PARAN, ch.ToString());
-            }
-
-            if(ch == ',')
-            {
-                charList.RemoveAt(0);
-                return new Token(Token.Kind.DELIMITER, ch.ToString());
-            }
-
-            if (Char.IsLetterOrDigit(ch) || ch == '_' || ch == '$' || ch == '@')
-            {
-                Token token = null;
-
-                if(Char.IsDigit(ch))
-                    token = new Token(Token.Kind.NUMBER);
-                else if(Char.IsLetter(ch) || ch == '$' || ch == '@')
-                    token = new Token(Token.Kind.SYMBOL);
-
-                while(charList.Count > 0)
+                if(expression.Length >= opName.Length && expression.Substring(0, opName.Length) == opName)
                 {
-                    ch = charList[0];
-                    if (Char.IsLetterOrDigit(ch) || ch == '_' || (token.kind == Token.Kind.NUMBER && ch == '.') || (token.kind == Token.Kind.SYMBOL && (ch == '$' || ch == '@')))
-                    {
-                        token.data += ch;
-                        charList.RemoveAt(0);
-                    }
-                    else
-                        break;
+                    token = new Token(Token.Kind.OPERATOR, opName);
+                    break;
                 }
-
-                return token;
             }
 
-            throw new ParseException(string.Format("Failed to tokenize at \"{0}\".", string.Join("", charList)));
+            if(token == null)
+            {
+                if (expression[0] == '(')
+                {
+                    token = new Token(Token.Kind.LEFT_PARAN, expression[0].ToString());
+                }
+                else if (expression[0] == ')')
+                {
+                    token = new Token(Token.Kind.RIGHT_PARAN, expression[0].ToString());
+                }
+                else if(expression[0] == ',')
+                {
+                    return new Token(Token.Kind.DELIMITER, expression[0].ToString());
+                }
+                else if (Char.IsLetterOrDigit(expression[0]) || expression[0] == '_' || expression[0] == '$' || expression[0] == '@')
+                {
+                    if(Char.IsDigit(expression[0]))
+                        token = new Token(Token.Kind.NUMBER);
+                    else if(Char.IsLetter(expression[0]) || expression[0] == '$' || expression[0] == '@')
+                        token = new Token(Token.Kind.SYMBOL);
+
+                    for(int i = 0; i < expression.Length; i++)
+                    {
+                        if (Char.IsLetterOrDigit(expression[i]) || expression[i] == '_' || (token.kind == Token.Kind.NUMBER && expression[i] == '.') || (token.kind == Token.Kind.SYMBOL && (expression[i] == '$' || expression[i] == '@')))
+                            token.data += expression[i];
+                        else
+                            break;
+                    }
+                }
+            }
+
+            if(token != null)
+                expression = expression.Substring(token.data.Length, expression.Length - token.data.Length);
+            else
+                throw new ParseException(string.Format("Failed to tokenize at \"{0}\".", expression));
+
+            return token;
         }
 
         private int PrecedenceLevel(string operation)
         {
-            if (operation == "=")
+            if (operation == "=" || operation == ":=")
                 return 0;
             if (operation == "+" || operation == "-")
                 return 1;
@@ -146,7 +140,7 @@ namespace GeometricAlgebra
 
         private Associativity OperatorAssociativity(string operation)
         {
-            if (operation == "=")
+            if (operation == "=" || operation == ":=")
                 return Associativity.RIGHT_TO_LEFT;
             else if (operation == "+" || operation == "-")
                 return Associativity.LEFT_TO_RIGHT;
@@ -241,6 +235,8 @@ namespace GeometricAlgebra
                     operation = new GradePart();
                 else if (token.data == "assign")
                     operation = new Assignment();
+                else if (token.data == "equiv")
+                    operation = new Assignment(false);
                 else if (context != null)
                     operation = context.CreateFunction(token.data);
 
@@ -311,6 +307,8 @@ namespace GeometricAlgebra
                     operation = new OuterProduct();
                 else if (operatorToken.data == "=")
                     operation = new Assignment();
+                else if (operatorToken.data == ":=")
+                    operation = new Assignment(false);
 
                 if (operation == null)
                     throw new ParseException(string.Format("Did not recognized operator token ({0}).", operatorToken.data));
