@@ -25,7 +25,7 @@ namespace GeometricAlgebra.ConformalModel
             operandStorage.Add("flatpoint", Operand.FullyEvaluate("@weight * (1 - @center ^ ni) * @i", this));
             operandStorage.Add("tangentpoint", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni) ^ (@normal + (@center . @normal) * ni)", this));
 
-            //funcList.Add(new Decompose());    // TODO: Write a function that can identify and decompose elements of the conformal model.
+            funcList.Add(new Identify());
         }
 
         public override string TranslateVectorNameForLatex(string vectorName)
@@ -99,6 +99,152 @@ namespace GeometricAlgebra.ConformalModel
                     return new NumericScalar(0.0);
 
             return base.BilinearForm(vectorNameA, vectorNameB);
+        }
+    }
+
+    public class Identify : Function
+    {
+        public Identify() : base()
+        {
+        }
+
+        public override Operand New()
+        {
+            return new Identify();
+        }
+
+        public override string Name(Format format)
+        {
+            if (format == Format.LATEX)
+                return @"\mbox{id}";
+            return "id";
+        }
+
+        public override Operand Evaluate(EvaluationContext context)
+        {
+            Operand operand = base.Evaluate(context);
+            if (operand != null)
+                return operand;
+
+            if (operandList.Count != 1)
+                throw new EvaluationException(string.Format($"Expected exactly 1 argument, got {operandList.Count}."));
+
+            operand = operandList[0];
+            int grade = operand.Grade;
+            if (grade == -1)
+                throw new EvaluationException("Cannot identify an element non-homogenous in terms of grade; specifically, only blades are identified.");
+
+            context.operandStorage.Add("__blade__", operand);
+
+            Operand center = null;
+            Operand normal = null;
+            Operand radius = null;
+            Operand weight = null;
+
+            switch (grade)
+            {
+                case 0:
+                    if (operand.IsAdditiveIdentity)
+                    {
+                        context.Log("The zero set of the blade consumes all of space.");
+                    }
+                    else
+                    {
+                        context.Log("The zero set of the blade is empty.");
+                    }
+                    break;
+                case 1:
+                    Operand.FullyEvaluate("@weight = -@__blade__ . ni", context);
+                    weight = context.operandStorage["weight"];
+                    if (weight.IsAdditiveIdentity)
+                    {
+                        Operand.FullyEvaluate("@normal = no . @__blade__ ^ ni", context);
+                        weight = Operand.FullyEvaluate("@weight = pow(@normal . @normal, 0.5)", context);
+                        normal = Operand.FullyEvaluate("@normal = @normal / @weight", context);
+                        center = Operand.FullyEvaluate("@center = -(no . @__blade__ / @weight) * @normal", context);
+                        context.Log("The blade represents a plane.");
+                    }
+                    else
+                    {
+                        center = Operand.FullyEvaluate("@center = (no ^ ni . @__blade__ ^ no ^ ni) / @weight", context);
+                        Operand radiusSquared = Operand.FullyEvaluate("@__square_radius__ = grade(@center . @center + 2 * no . @__blade__ / @weight, 0)", context);
+                        if(radiusSquared is NumericScalar scalar)
+                        {
+                            if(scalar.value >= 0.0)
+                            {
+                                radius = Operand.FullyEvaluate("@radius = pow(@__square_radius__, 0.5)", context);
+                                if (scalar.value == 0.0)
+                                    context.Log("The blade represents a point.");
+                                else
+                                    context.Log("The blade represents a sphere.");
+                            }
+                            else
+                            {
+                                context.Log("The blade represents an imaginary sphere.");
+                                radius = Operand.FullyEvaluate("@radius = pow(-@__square_radius__, 0.5)", context);
+                            }
+                        }
+                        else
+                        {
+                            context.Log("The blade represents a sphere.");
+                            radius = Operand.FullyEvaluate("@radius = pow(@__square_radius__, 0.5)", context);
+                        }
+                    }
+                    break;
+                case 2:
+                    normal = Operand.FullyEvaluate("no ^ ni . @__blade__ ^ ni", context);
+                    if(normal.IsAdditiveIdentity)
+                    {
+                        // A line?
+                        // I may have a bug, because I don't see w(n + (c^n)ni)i as being homogeneous of grade 2.
+                    }
+                    else
+                    {
+                        weight = Operand.FullyEvaluate("@weight = pow(@normal . @normal, 0.5)", context);
+                        normal = Operand.FullyEvaluate("@normal = @normal / @weight", context);
+                        center = Operand.FullyEvaluate("@center = -@normal * (no ^ ni . @__blade__ ^ no * ni) / @weight", context);
+                        Operand radiusSquared = Operand.FullyEvaluate("@__square_radius__ = grade(@center . @center + 2 * ((no ^ ni . no ^ @__blade__) / @weight + (@center . @normal) * @normal, 0)", context);
+                        if(radiusSquared is NumericScalar scalar)
+                        {
+                            if (scalar.value >= 0.0)
+                            {
+                                radius = Operand.FullyEvaluate("@radius = pow(@__square_radius__, 0.5", context);
+                                if (scalar.value == 0.0)
+                                    context.Log("The blade represents a tangent point.");
+                                else
+                                    context.Log("The blade represents a circle.");
+                            }
+                            else
+                            {
+                                context.Log("The blade represents an imaginary circle.");
+                                radius = Operand.FullyEvaluate("@radius = pow(-@__square_radius__, 0.5", context);
+                            }
+                        }
+                        else
+                        {
+                            context.Log("The blade represents a circle.");
+                            radius = Operand.FullyEvaluate("@radius = pow(@__square_radius__, 0.5", context);
+                        }
+                    }
+                    break;
+                case 3:
+                    break;
+                case 4:
+                    break;
+                case 5:
+                    break;
+            }
+
+            if (weight != null)
+                context.Log("Weight: " + weight.Print(Format.PARSEABLE));
+            if (center != null)
+                context.Log("Center: " + center.Print(Format.PARSEABLE));
+            if (normal != null)
+                context.Log("Normal: " + normal.Print(Format.PARSEABLE));
+            if (radius != null)
+                context.Log("Radius: " + radius.Print(Format.PARSEABLE));
+
+            return null;
         }
     }
 }

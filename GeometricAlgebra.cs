@@ -18,11 +18,18 @@ namespace GeometricAlgebra
     {
         public Dictionary<string, Operand> operandStorage;
         public List<Function> funcList;
+        public List<string> logMessageList;
 
         public EvaluationContext()
         {
             funcList = new List<Function>();
             operandStorage = new Dictionary<string, Operand>();
+            logMessageList = new List<string>();
+        }
+
+        public void Log(string message)
+        {
+            logMessageList.Add(message);
         }
 
         // The operand returned here should have grade zero.
@@ -106,6 +113,8 @@ namespace GeometricAlgebra
 
         public static Operand FullyEvaluate(Operand operand, EvaluationContext context, bool debug = false)
         {
+            context.logMessageList.Clear();
+
             while (true)
             {
                 Operand newOperand = operand.Evaluate(context);
@@ -1302,7 +1311,7 @@ namespace GeometricAlgebra
             if (Grade == 0)
                 return scalar;
 
-            // This is the only way we detect a linearly dependent set of vectors.
+            // Handle an easy case of a linearly dependent set of vectors.
             for (int i = 0; i < vectorList.Count; i++)
                 for (int j = i + 1; j < vectorList.Count; j++)
                     if (vectorList[i] == vectorList[j])
