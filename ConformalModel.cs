@@ -28,6 +28,16 @@ namespace GeometricAlgebra.ConformalModel
             //funcList.Add(new Decompose());    // TODO: Write a function that can identify and decompose elements of the conformal model.
         }
 
+        public override string TranslateVectorNameForLatex(string vectorName)
+        {
+            if(vectorName == "no")
+                return @"\vec{o}";
+            else if(vectorName == "ni")
+                return @"\rev{\infty}";
+
+            return base.TranslateVectorNameForLatex(vectorName);
+        }
+
         public override Operand BilinearForm(string vectorNameA, string vectorNameB)
         {
             if (vectorNameA == "e1")
@@ -77,6 +87,16 @@ namespace GeometricAlgebra.ConformalModel
                         return new NumericScalar(-1.0);
                 }
             }
+
+            // For now, I'm going to treat all symbolic vectors as being
+            // taken from the euclidean sub-space of the conformal space.
+            // That is, until I see the limitation of doing so.
+            if (vectorNameA == "no" || vectorNameA == "ni")
+                if (vectorNameB != "no" && vectorNameB != "ni")
+                    return new NumericScalar(0.0);
+            if (vectorNameB == "no" || vectorNameB == "ni")
+                if (vectorNameA != "no" && vectorNameA != "ni")
+                    return new NumericScalar(0.0);
 
             return base.BilinearForm(vectorNameA, vectorNameB);
         }

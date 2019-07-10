@@ -39,6 +39,32 @@ namespace GeometricAlgebra
 
             return enumerable.ToArray()[0].Copy() as Operation;
         }
+
+        public virtual string TranslateVectorNameForLatex(string vectorName)
+        {
+            return @"\vec{" + SubscriptNameForLatex(vectorName) + "}";
+        }
+
+        public virtual string TranslateScalarNameForLatex(string scalarName)
+        {
+            return SubscriptNameForLatex(scalarName);
+        }
+
+        public virtual string TranslateVariableNameForLatex(string varName)
+        {
+            return @"\textbf{" + SubscriptNameForLatex(varName) + "}";
+        }
+
+        public static string SubscriptNameForLatex(string name)
+        {
+            Regex rx = new Regex(@"^([a-zA-Z]+)([0-9]+)$");
+            MatchCollection collection = rx.Matches(name);
+            if (collection.Count != 1)
+                return name;
+
+            Match match = collection[0];
+            return match.Groups[1].Value + "_{" + match.Groups[2].Value + "}";
+        }
     }
 
     // TODO: We might add a virtual method taking a map that can be used to verify there are no cycles in the operand tree.
@@ -68,7 +94,7 @@ namespace GeometricAlgebra
             LATEX
         }
 
-        public abstract string Print(Format format);
+        public abstract string Print(Format format, EvaluationContext context = null);
         
         // Derivatives overriding this virtual method are to return null
         // if no algebraic manipulation of the sub-tree rooted at this object
@@ -91,7 +117,7 @@ namespace GeometricAlgebra
 
                 if(debug)
                 {
-                    string expression = operand.Print(Format.PARSEABLE);
+                    string expression = operand.Print(Format.PARSEABLE, context);
                     Console.WriteLine(expression + "\n");
                 }
             }
@@ -153,14 +179,14 @@ namespace GeometricAlgebra
             return "?";
         }
 
-        public override string Print(Format format)
+        public override string Print(Format format, EvaluationContext context)
         {
             List<string> printList = new List<string>();
 
             for (int i = 0; i < operandList.Count; i++)
             {
                 Operand operand = operandList[i];
-                string subPrint = operand.Print(format);
+                string subPrint = operand.Print(format, context);
                 if(operand is Operation)
                 {
                     if(format == Format.PARSEABLE)
@@ -257,10 +283,10 @@ namespace GeometricAlgebra
             return false;
         }
 
-        public override string Print(Format format)
+        public override string Print(Format format, EvaluationContext context)
         {
             string name = Name(format);
-            string args = string.Join(", ", from operand in operandList select operand.Print(format));
+            string args = string.Join(", ", from operand in operandList select operand.Print(format, context));
             if (format == Format.PARSEABLE)
                 return name + "(" + args + ")";
             else if (format == Format.LATEX)
@@ -611,7 +637,7 @@ namespace GeometricAlgebra
             switch (format)
             {
                 case Format.LATEX:
-                    return "";      // Juxtaposition.
+                    return @"\times";
                 case Format.PARSEABLE:
                     return "*";
             }
@@ -926,7 +952,7 @@ namespace GeometricAlgebra
             return reverse;
         }
 
-        public override string Print(Format format)
+        public override string Print(Format format, EvaluationContext context)
         {
             if (operandList.Count != 1)
                 return "?";
@@ -934,9 +960,9 @@ namespace GeometricAlgebra
             switch (format)
             {
                 case Format.LATEX:
-                    return @"\left(" + operandList[0].Print(format) + @"\right)^{\tilde}";
+                    return @"\left(" + operandList[0].Print(format, context) + @"\right)^{\tilde}";
                 case Format.PARSEABLE:
-                    return string.Format("reverse({0})", operandList[0].Print(format));
+                    return string.Format("reverse({0})", operandList[0].Print(format, context));
             }
 
             return "?";
@@ -985,7 +1011,7 @@ namespace GeometricAlgebra
             return inverse;
         }
 
-        public override string Print(Format format)
+        public override string Print(Format format, EvaluationContext context)
         {
             if(operandList.Count != 1)
                 return "?";
@@ -993,9 +1019,9 @@ namespace GeometricAlgebra
             switch(format)
             {
                 case Format.LATEX:
-                    return @"\left(" + operandList[0].Print(format) + @"\right)^{-1}";
+                    return @"\left(" + operandList[0].Print(format, context) + @"\right)^{-1}";
                 case Format.PARSEABLE:
-                    return string.Format("inverse({0})", operandList[0].Print(format));
+                    return string.Format("inverse({0})", operandList[0].Print(format, context));
             }
 
             return "?";
@@ -1056,7 +1082,7 @@ namespace GeometricAlgebra
             return null;
         }
 
-        public override string Print(Format format)
+        public override string Print(Format format, EvaluationContext context)
         {
             if(operandList.Count != 2)
                 return "?";
@@ -1071,13 +1097,13 @@ namespace GeometricAlgebra
 
                     int desiredGrade = (int)scalar.value;
                     if (desiredGrade == 0)
-                        return @"\left\langle" + operandList[0].Print(format) + @"\right\rangle";
+                        return @"\left\langle" + operandList[0].Print(format, context) + @"\right\rangle";
 
-                    return @"\left\langle" + operandList[0].Print(format) + @"\right\rangle_{" + desiredGrade.ToString() + "}";
+                    return @"\left\langle" + operandList[0].Print(format, context) + @"\right\rangle_{" + desiredGrade.ToString() + "}";
                 }
                 case Format.PARSEABLE:
                 {
-                    return string.Format("grade({0},{1})", operandList[0].Print(format), operandList[1].Print(format));
+                    return string.Format("grade({0},{1})", operandList[0].Print(format, context), operandList[1].Print(format, context));
                 }
             }
 
@@ -1146,10 +1172,10 @@ namespace GeometricAlgebra
             return operandList[1];
         }
 
-        public override string Print(Format format)
+        public override string Print(Format format, EvaluationContext context)
         {
             if(operandList.Count == 2)
-                return string.Format("{0} = {1}", operandList[0].Print(format), operandList[1].Print(format));
+                return string.Format("{0} = {1}", operandList[0].Print(format, context), operandList[1].Print(format, context));
 
             return "?";
         }
@@ -1243,24 +1269,24 @@ namespace GeometricAlgebra
             return clone;
         }
 
-        public override string Print(Format format)
+        public override string Print(Format format, EvaluationContext context)
         {
             if (Grade == 0)
-                return scalar.Print(format);
+                return scalar.Print(format, context);
 
             string printedBlade = "?";
 
             if(format == Format.LATEX)
-                printedBlade = string.Join(@"\wedge", from vectorName in vectorList select @"\vec{" + vectorName + "}");
+                printedBlade = string.Join(@"\wedge", from vectorName in vectorList select (context == null ? vectorName : context.TranslateVectorNameForLatex(vectorName)));
             else if(format == Format.PARSEABLE)
                 printedBlade = string.Join("^", vectorList);
 
             if(!scalar.IsMultiplicativeIdentity)
             {
                 if(format == Format.LATEX)
-                    printedBlade = @"\left(" + scalar.Print(format) + @"\right)" + printedBlade;
+                    printedBlade = @"\left(" + scalar.Print(format, context) + @"\right)" + printedBlade;
                 else if(format == Format.PARSEABLE)
-                    printedBlade = "(" + scalar.Print(format) + ")*" + printedBlade;
+                    printedBlade = "(" + scalar.Print(format, context) + ")*" + printedBlade;
             }
 
             return printedBlade;
@@ -1415,7 +1441,7 @@ namespace GeometricAlgebra
             return null;
         }
 
-        public override string Print(Format format)
+        public override string Print(Format format, EvaluationContext context)
         {
             switch (format)
             {
@@ -1459,7 +1485,7 @@ namespace GeometricAlgebra
             }
 
             public abstract Factor New();
-            public abstract string PrintSymbol(Format format);
+            public abstract string PrintSymbol(Format format, EvaluationContext context);
             public abstract bool Matches(Factor factor);
             public abstract string SortKey();
 
@@ -1470,9 +1496,9 @@ namespace GeometricAlgebra
                 return factor;
             }
 
-            public string Print(Format format)
+            public string Print(Format format, EvaluationContext context)
             {
-                string symbol = PrintSymbol(format);
+                string symbol = PrintSymbol(format, context);
 
                 if (exponent == 1)
                     return symbol;
@@ -1487,17 +1513,6 @@ namespace GeometricAlgebra
                 }
 
                 return "?";
-            }
-
-            public static string SubscriptNameForLatex(string name)
-            {
-                Regex rx = new Regex(@"^([a-zA-Z]+)([0-9]+)$");
-                MatchCollection collection = rx.Matches(name);
-                if (collection.Count != 1)
-                    return name;
-
-                Match match = collection[0];
-                return match.Groups[0].Value + "_{" + match.Groups[1].Value + "}";
             }
         }
 
@@ -1526,12 +1541,12 @@ namespace GeometricAlgebra
                 return symbol;
             }
 
-            public override string PrintSymbol(Format format)
+            public override string PrintSymbol(Format format, EvaluationContext context)
             {
                 if (format == Format.PARSEABLE)
                     return "$" + name;
                 else if (format == Format.LATEX)
-                    return SubscriptNameForLatex(name);
+                    return context == null ? name : context.TranslateScalarNameForLatex(name);
                 return "?";
             }
 
@@ -1574,12 +1589,12 @@ namespace GeometricAlgebra
                 return dot;
             }
 
-            public override string PrintSymbol(Format format)
+            public override string PrintSymbol(Format format, EvaluationContext context)
             {
                 if (format == Format.PARSEABLE)
                     return "(" + vectorNameA + "." + vectorNameB + ")";
                 else if (format == Format.LATEX)
-                    return @"\left(\vec{" + SubscriptNameForLatex(vectorNameA) + @"}\cdot\vec{" + SubscriptNameForLatex(vectorNameB) + @"}\right)";
+                    return @"\left(" + (context == null ? vectorNameA : context.TranslateVectorNameForLatex(vectorNameA)) + @"\cdot " + (context == null ? vectorNameB : context.TranslateVectorNameForLatex(vectorNameB)) + @"\right)";
                 return "?";
             }
 
@@ -1725,16 +1740,16 @@ namespace GeometricAlgebra
             return null;
         }
 
-        public override string Print(Format format)
+        public override string Print(Format format, EvaluationContext context)
         {
-            List<string> printedFactorList = (from factor in factorList select factor.Print(format)).ToList();
+            List<string> printedFactorList = (from factor in factorList select factor.Print(format, context)).ToList();
 
             if (!scalar.IsMultiplicativeIdentity)
             {
                 if (format == Format.PARSEABLE)
-                    printedFactorList.Insert(0, "(" + scalar.Print(format) + ")");
+                    printedFactorList.Insert(0, "(" + scalar.Print(format, context) + ")");
                 else if (format == Format.LATEX)
-                    printedFactorList.Insert(0, @"\left(" + scalar.Print(format) + @"\right)");
+                    printedFactorList.Insert(0, @"\left(" + scalar.Print(format, context) + @"\right)");
             }
 
             if (format == Format.PARSEABLE)
@@ -1822,13 +1837,13 @@ namespace GeometricAlgebra
             return null;
         }
 
-        public override string Print(Format format)
+        public override string Print(Format format, EvaluationContext context)
         {
             switch(format)
             {
                 case Format.LATEX:
                 {
-                    return this.name;
+                    return context.TranslateVariableNameForLatex(this.name);
                 }
                 case Format.PARSEABLE:
                 {

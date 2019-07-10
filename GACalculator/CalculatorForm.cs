@@ -50,10 +50,10 @@ namespace GACalculator
                     Parser parser = new Parser(context);
 
                     Operand operand = parser.Parse(expression);
-                    outputTextBox.AppendText("Input: " + operand.Print(Operand.Format.PARSEABLE) + "\r\n\r\n");
+                    outputTextBox.AppendText("Input: " + operand.Print(Operand.Format.PARSEABLE, context) + "\r\n\r\n");
 
                     operand = Operand.FullyEvaluate(operand, context, true);
-                    outputTextBox.AppendText("Output: " + operand.Print(Operand.Format.PARSEABLE) + "\r\n\r\n");
+                    outputTextBox.AppendText("Output: " + operand.Print(Operand.Format.PARSEABLE, context) + "\r\n\r\n");
 
                     inputTextBox.Clear();
 

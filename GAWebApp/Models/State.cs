@@ -14,7 +14,7 @@ namespace GAWebApp.Models
 
         public State()
         {
-            context = new EvaluationContext();
+            context = new GeometricAlgebra.ConformalModel.Conformal3D_EvaluationContext();
             history = new List<(string, string)>();
         }
 
@@ -27,10 +27,14 @@ namespace GAWebApp.Models
 
                 Parser parser = new Parser();
                 Operand operand = parser.Parse(expression);
-                string inputExpression = operand.Print(Operand.Format.LATEX);
+                string inputExpression = operand.Print(Operand.Format.LATEX, context);
 
                 operand = Operand.FullyEvaluate(operand, context);
-                string outputExpression = operand.Print(Operand.Format.LATEX);
+                string outputExpression = operand.Print(Operand.Format.LATEX, context);
+
+                // Ugh...this fixes an encoding issue in the URIs, but sometimes a space is needed for valid latex.
+                inputExpression = inputExpression.Replace(" ", "");
+                outputExpression = outputExpression.Replace(" ", "");
 
                 history.Add((inputExpression, outputExpression));
             }
