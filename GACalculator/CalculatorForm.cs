@@ -62,8 +62,11 @@ namespace GACalculator
                 }
                 catch (Exception exc)
                 {
-                    outputTextBox.Text += "Error: " + exc.ToString() + "\n\n";
+                    outputTextBox.Text += "Error: " + exc.Message + "\n\n";
                 }
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
             }
             else if (history.Count > 0 && (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down))
             {
