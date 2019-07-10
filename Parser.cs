@@ -89,7 +89,7 @@ namespace GeometricAlgebra
                 }
                 else if(expression[0] == ',')
                 {
-                    return new Token(Token.Kind.DELIMITER, expression[0].ToString());
+                    token = new Token(Token.Kind.DELIMITER, expression[0].ToString());
                 }
                 else if (Char.IsLetterOrDigit(expression[0]) || expression[0] == '_' || expression[0] == '$' || expression[0] == '@')
                 {
