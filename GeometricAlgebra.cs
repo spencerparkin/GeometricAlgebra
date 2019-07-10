@@ -67,9 +67,6 @@ namespace GeometricAlgebra
         }
     }
 
-    // TODO: We might add a virtual method taking a map that can be used to verify there are no cycles in the operand tree.
-    // TODO: Another test is to make sure that no two trees, one copied from another, share the same operand.  I think I've found a bug where this is the culprit.
-
     // Note that eliminating redundancy in code or representation (data-structures) is often a programmer's goal,
     // and it certainly is here, because it reduces the number of cases that need to be considered and maintained.
     // There is, however, some redundancy going on here in our data-structure.  For example, there is more than one
@@ -308,6 +305,13 @@ namespace GeometricAlgebra
         public Collectable()
         {
             scalar = null;
+        }
+
+        public override Operand Copy()
+        {
+            Collectable collectable = New() as Collectable;
+            collectable.scalar = this.scalar.Copy();
+            return collectable;
         }
 
         public override Operand Evaluate(EvaluationContext context)
@@ -1265,8 +1269,7 @@ namespace GeometricAlgebra
 
         public override Operand Copy()
         {
-            Blade clone = new Blade();
-            clone.scalar = this.scalar;
+            Blade clone = base.Copy() as Blade;
             clone.vectorList = (from vectorName in this.vectorList select vectorName).ToList();
             return clone;
         }
@@ -1670,7 +1673,9 @@ namespace GeometricAlgebra
 
         public override Operand Copy()
         {
-            return new SymbolicScalarTerm((from factor in factorList select factor.Copy()).ToList());
+            SymbolicScalarTerm clone = base.Copy() as SymbolicScalarTerm;
+            clone.factorList = (from factor in factorList select factor.Copy()).ToList();
+            return clone;
         }
 
         public override Operand New()
