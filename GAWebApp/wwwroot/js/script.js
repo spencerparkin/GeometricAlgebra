@@ -11,7 +11,12 @@ function textbox_keydown(textbox) {
             },
             success: renderedHtml => {
                 $('#historyView').html(renderedHtml);
+
+                // TODO: This doesn't work.  Why?  Maybe do it after page has refreshed?
+                $("#historyView").scrollTop($("#historyView")[0].scrollHeight);
             }
         });
     }
 }
+
+// TODO: Add button to clear all output.
