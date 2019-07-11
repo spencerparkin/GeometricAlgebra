@@ -103,8 +103,7 @@ namespace GeometricAlgebra.ConformalModel
 
         public override bool IsLinearlyDependentSet(List<string> vectorNameList)
         {
-            // First of all, any set of cardinality above our dimension must be linearly dependent.
-            if (vectorNameList.Count > 5)
+            if (base.IsLinearlyDependentSet(vectorNameList))
                 return true;
 
             // Since we're treating all symbolic vectors as being taken from
@@ -119,6 +118,11 @@ namespace GeometricAlgebra.ConformalModel
                 return true;
 
             return false;
+        }
+
+        public override List<string> ReturnBasisVectors()
+        {
+            return new List<string>() { "e1", "e2", "e3", "no", "ni" };
         }
     }
 

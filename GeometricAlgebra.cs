@@ -62,7 +62,19 @@ namespace GeometricAlgebra
 
         public virtual bool IsLinearlyDependentSet(List<string> vectorNameList)
         {
+            List<string> basisVectorList = ReturnBasisVectors();
+            if(basisVectorList != null)
+            {
+                if (vectorNameList.Count > basisVectorList.Count)
+                    return true;
+            }
+
             return false;
+        }
+
+        public virtual List<string> ReturnBasisVectors()
+        {
+            return null;
         }
 
         public virtual Operation CreateFunction(string name)
@@ -161,7 +173,7 @@ namespace GeometricAlgebra
             // TODO: We're not done yet.  This is where we might re-evaluate the result
             //       under expansion of all symbolic vectors in terms of the basis, if any.
             //       We then take that result, examine its grades, and then cull any grade
-            //       in the original result that does not appear in the expansion results.
+            //       in the original result that does not appear in the expansion result.
 
             return result;
         }
@@ -309,7 +321,6 @@ namespace GeometricAlgebra
 
         public Function(List<Operand> operandList) : base(operandList)
         {
-
         }
 
         public abstract string Name(Format format);
@@ -336,6 +347,11 @@ namespace GeometricAlgebra
         }
     }
 
+    public interface ITranslator
+    {
+        Operand Translate(Operand operand, EvaluationContext context);
+    }
+
     public abstract class Collectable : Operand
     {
         public Operand scalar;
@@ -343,6 +359,7 @@ namespace GeometricAlgebra
         public abstract bool Like(Collectable collectable);
         public abstract Operand Collect(Collectable collectable);
         public abstract bool CanAbsorb(Operand operand);
+        public abstract Operand Explode(ITranslator translator, EvaluationContext context);
 
         public Collectable()
         {
@@ -1112,6 +1129,8 @@ namespace GeometricAlgebra
             if (operandList.Count != 2)
                 throw new EvaluationException(string.Format("Grade-part operation expects exactly two arguments, got {0}.", operandList.Count));
 
+            // TODO: Allow multiple integer arguments for selecting more than one grade.
+
             int determinedGrade = operandList[0].Grade;
             if (determinedGrade != -1)
             {
@@ -1444,6 +1463,20 @@ namespace GeometricAlgebra
             // TODO: Write this.
             return null;
         }
+
+        public override Operand Explode(ITranslator translator, EvaluationContext context)
+        {
+            OuterProduct outerProduct = new OuterProduct();
+
+            outerProduct.operandList.Add(translator.Translate(scalar.Copy(), context));
+
+            foreach(string vectorName in vectorList)
+            {
+                outerProduct.operandList.Add(translator.Translate(new Blade(vectorName), context));
+            }
+
+            return outerProduct;
+        }
     }
 
     public class NumericScalar : Operand
@@ -1537,10 +1570,16 @@ namespace GeometricAlgebra
                 exponent = 1;
             }
 
+            public Factor(int exponent)
+            {
+                this.exponent = exponent;
+            }
+
             public abstract Factor New();
             public abstract string PrintSymbol(Format format, EvaluationContext context);
             public abstract bool Matches(Factor factor);
             public abstract string SortKey();
+            public abstract Operand Explode(ITranslator translator, EvaluationContext context);
 
             public virtual Factor Copy()
             {
@@ -1556,11 +1595,11 @@ namespace GeometricAlgebra
                 if (exponent == 1)
                     return symbol;
 
-                if(format == Format.PARSEABLE)
+                if (format == Format.PARSEABLE)
                 {
                     return string.Format("pow({0},{1})", symbol, exponent);
                 }
-                else if(format == Format.LATEX)
+                else if (format == Format.LATEX)
                 {
                     return symbol + "^{" + exponent.ToString() + "}";
                 }
@@ -1577,7 +1616,7 @@ namespace GeometricAlgebra
             {
             }
 
-            public Symbol(string name) : base()
+            public Symbol(string name, int exponent) : base(exponent)
             {
                 this.name = name;
             }
@@ -1612,6 +1651,21 @@ namespace GeometricAlgebra
             {
                 return this.name;
             }
+
+            public override Operand Explode(ITranslator translator, EvaluationContext context)
+            {
+                GeometricProduct geometricProduct = new GeometricProduct();
+
+                for(int i = 0; i < Math.Abs(exponent); i++)
+                {
+                    geometricProduct.operandList.Add(translator.Translate(new SymbolicScalarTerm(this.name), context));
+                }
+
+                if(exponent < 0)
+                    return new Inverse(new List<Operand>() { geometricProduct });
+
+                return geometricProduct;
+            }
         }
 
         public class SymbolicDot : Factor
@@ -1623,7 +1677,7 @@ namespace GeometricAlgebra
             {
             }
 
-            public SymbolicDot(string vectorNameA, string vectorNameB) : base()
+            public SymbolicDot(string vectorNameA, string vectorNameB, int exponent) : base(exponent)
             {
                 this.vectorNameA = vectorNameA;
                 this.vectorNameB = vectorNameB;
@@ -1661,6 +1715,25 @@ namespace GeometricAlgebra
             {
                 return this.vectorNameA + this.vectorNameB;
             }
+
+            public override Operand Explode(ITranslator translator, EvaluationContext context)
+            {
+                GeometricProduct geometricProduct = new GeometricProduct();
+
+                for (int i = 0; i < Math.Abs(exponent); i++)
+                {
+                    InnerProduct innerProduct = new InnerProduct();
+                    innerProduct.operandList.Add(translator.Translate(new Blade(this.vectorNameA), context));
+                    innerProduct.operandList.Add(translator.Translate(new Blade(this.vectorNameB), context));
+
+                    geometricProduct.operandList.Add(innerProduct);
+                }
+
+                if (exponent < 0)
+                    return new Inverse(new List<Operand>() { geometricProduct });
+
+                return geometricProduct;
+            }
         }
 
         public List<Factor> factorList;
@@ -1695,15 +1768,15 @@ namespace GeometricAlgebra
             this.scalar = new NumericScalar(1.0);
         }
 
-        public SymbolicScalarTerm(string name) : base()
+        public SymbolicScalarTerm(string name, int exponent = 1) : base()
         {
-            factorList = new List<Factor>() { new Symbol(name) };
+            factorList = new List<Factor>() { new Symbol(name, exponent) };
             this.scalar = new NumericScalar(1.0);
         }
 
-        public SymbolicScalarTerm(string vectorNameA, string vectorNameB) : base()
+        public SymbolicScalarTerm(string vectorNameA, string vectorNameB, int exponent = 1) : base()
         {
-            factorList = new List<Factor>() { new SymbolicDot(vectorNameA, vectorNameB) };
+            factorList = new List<Factor>() { new SymbolicDot(vectorNameA, vectorNameB, exponent) };
             this.scalar = new NumericScalar(1.0);
         }
 
@@ -1740,17 +1813,17 @@ namespace GeometricAlgebra
             if (operand != null)
                 return operand;
 
-            for(int i = 0; i < factorList.Count; i++)
+            for (int i = 0; i < factorList.Count; i++)
             {
                 Factor factor = factorList[i];
-                if(factor.exponent == 0)
+                if (factor.exponent == 0)
                 {
                     factorList.RemoveAt(i);
                     return this;
                 }
             }
 
-            for(int i = 0; i < factorList.Count; i++)
+            for (int i = 0; i < factorList.Count; i++)
             {
                 SymbolicDot dot = factorList[i] as SymbolicDot;
                 if (dot != null && string.Compare(dot.vectorNameA, dot.vectorNameB) > 0)
@@ -1762,7 +1835,7 @@ namespace GeometricAlgebra
                 }
             }
 
-            for(int i = 0; i < factorList.Count; i++)
+            for (int i = 0; i < factorList.Count; i++)
             {
                 Factor factorA = factorList[i];
 
@@ -1770,7 +1843,7 @@ namespace GeometricAlgebra
                 {
                     Factor factorB = factorList[j];
 
-                    if(factorA.Matches(factorB))
+                    if (factorA.Matches(factorB))
                     {
                         factorList.RemoveAt(j);
                         factorA.exponent += factorB.exponent;
@@ -1779,12 +1852,12 @@ namespace GeometricAlgebra
                 }
             }
 
-            for(int i = 0; i < factorList.Count - 1; i++)
+            for (int i = 0; i < factorList.Count - 1; i++)
             {
                 Factor factorA = factorList[i];
                 Factor factorB = factorList[i + 1];
 
-                if(string.Compare(factorA.SortKey(), factorB.SortKey()) > 0)
+                if (string.Compare(factorA.SortKey(), factorB.SortKey()) > 0)
                 {
                     factorList[i] = factorB;
                     factorList[i + 1] = factorA;
@@ -1817,11 +1890,11 @@ namespace GeometricAlgebra
 
         public override bool Like(Collectable collectable)
         {
-            if(collectable is SymbolicScalarTerm term)
+            if (collectable is SymbolicScalarTerm term)
             {
-                if(Enumerable.SequenceEqual<string>(from factor in factorList select factor.SortKey(), from factor in term.factorList select factor.SortKey()))
+                if (Enumerable.SequenceEqual<string>(from factor in factorList select factor.SortKey(), from factor in term.factorList select factor.SortKey()))
                 {
-                    if(Enumerable.SequenceEqual<int>(from factor in factorList select factor.exponent, from factor in term.factorList select factor.exponent))
+                    if (Enumerable.SequenceEqual<int>(from factor in factorList select factor.exponent, from factor in term.factorList select factor.exponent))
                     {
                         return true;
                     }
@@ -1861,6 +1934,20 @@ namespace GeometricAlgebra
         public override Operand Reverse()
         {
             return this;
+        }
+
+        public override Operand Explode(ITranslator translator, EvaluationContext context)
+        {
+            GeometricProduct geometricProduct = new GeometricProduct();
+
+            geometricProduct.operandList.Add(translator.Translate(scalar.Copy(), context));
+
+            foreach(Factor factor in factorList)
+            {
+                geometricProduct.operandList.Add(factor.Explode(translator, context));
+            }
+
+            return geometricProduct;
         }
     }
 
@@ -1912,6 +1999,87 @@ namespace GeometricAlgebra
         public override string LexicographicSortKey()
         {
             return this.name;
+        }
+    }
+
+    public class BasisExpander : Operation, ITranslator
+    {
+        public BasisExpander() : base()
+        {
+        }
+
+        public BasisExpander(List<Operand> operandList) : base(operandList)
+        {
+        }
+
+        public override Operand New()
+        {
+            return new BasisExpander();
+        }
+
+        public override bool IsAssociative()
+        {
+            return false;
+        }
+
+        public override bool IsDistributiveOver(Operation operation)
+        {
+            return true;
+        }
+
+        public override Operand EvaluationStep(EvaluationContext context)
+        {
+            if (operandList.Count != 1)
+                throw new EvaluationException("Exactly one argument required by basis expander.");
+
+            List<string> basisVectorList = context.ReturnBasisVectors();
+            if (basisVectorList == null)
+                return operandList[0];
+
+            Operand operand = base.EvaluationStep(context);
+            if (operand != null)
+                return operand;
+
+            operand = operandList[0];
+
+            if (operand is Collectable collectable)
+            {
+                return collectable.Explode(this, context);
+            }
+
+            return operand;
+        }
+
+        public Operand Translate(Operand operand, EvaluationContext context)
+        {
+            if (operand is SymbolicScalarTerm)
+            {
+                return operand;
+            }
+            else if(operand is Blade blade)
+            {
+                List<string> basisVectorList = context.ReturnBasisVectors();
+                string vectorName = blade.vectorList[0];
+                if (basisVectorList.Contains(vectorName))
+                    return operand;
+
+                return ExpandVectorInTermsOfBasis(vectorName, basisVectorList);
+            }
+
+            return new BasisExpander(new List<Operand>() { operand });
+        }
+
+        private Operand ExpandVectorInTermsOfBasis(string vectorName, List<string> basisVectorList)
+        {
+            Sum sum = new Sum();
+
+            foreach (string basisVectorName in basisVectorList)
+            {
+                InnerProduct dot = new InnerProduct(new List<Operand>() { new Blade(vectorName), new Blade(basisVectorName) });
+                sum.operandList.Add(new GeometricProduct(new List<Operand>() { dot, new Blade(vectorName) }));
+            }
+
+            return sum;
         }
     }
 }
