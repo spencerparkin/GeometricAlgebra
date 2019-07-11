@@ -9,21 +9,21 @@ namespace GeometricAlgebra.ConformalModel
     {
         public Conformal3D_EvaluationContext() : base()
         {
-            SetStorage("i", Operand.FullyEvaluate("e1^e2^e3", this));
-            SetStorage("I", Operand.FullyEvaluate("e1^e2^e3^no^ni", this));
+            SetStorage("i", Operand.Evaluate("e1^e2^e3", this));
+            SetStorage("I", Operand.Evaluate("e1^e2^e3^no^ni", this));
 
             // Add formulas for the geometric primitives of the conformal model in 3D space.
-            SetStorage("point", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni)", this));
-            SetStorage("sphere", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni)", this));
-            SetStorage("isphere", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni)", this));
-            SetStorage("circle", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this));
-            SetStorage("icircle", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this));
-            SetStorage("pointpair", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this));
-            SetStorage("ipointpair", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this));
-            SetStorage("plane", Operand.FullyEvaluate("@weight * (@normal + (@center . @normal) * ni)", this));
-            SetStorage("line", Operand.FullyEvaluate("@weight * (@normal + (@center ^ @normal) * ni) * @i", this));
-            SetStorage("flatpoint", Operand.FullyEvaluate("@weight * (1 - @center ^ ni) * @i", this));
-            SetStorage("tangentpoint", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni) ^ (@normal + (@center . @normal) * ni)", this));
+            SetStorage("point", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni)", this));
+            SetStorage("sphere", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni)", this));
+            SetStorage("isphere", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni)", this));
+            SetStorage("circle", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this));
+            SetStorage("icircle", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this));
+            SetStorage("pointpair", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this));
+            SetStorage("ipointpair", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this));
+            SetStorage("plane", Operand.Evaluate("@weight * (@normal + (@center . @normal) * ni)", this));
+            SetStorage("line", Operand.Evaluate("@weight * (@normal + (@center ^ @normal) * ni) * @i", this));
+            SetStorage("flatpoint", Operand.Evaluate("@weight * (1 - @center ^ ni) * @i", this));
+            SetStorage("tangentpoint", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni) ^ (@normal + (@center . @normal) * ni)", this));
 
             funcList.Add(new Identify());
         }
@@ -120,21 +120,6 @@ namespace GeometricAlgebra.ConformalModel
 
             return false;
         }
-
-        public override void RefineEvaluation(ref Operand root)
-        {
-            SetStorage("@__result__", root);
-
-            for(int i = 0; i <= 5; i++)
-            {
-                Operand part = Operand.FullyEvaluate($"grade(@__result__, {i})", this);
-                if(part.IsAdditiveIdentity)
-                    continue;
-
-                // TODO: Walk tree and replace any symbolic vector, say v, with (v.e1)*e1 + (v.e2)*e2 + (v.e3)*e3.
-                //       Now re-evaluate the part.  If it goes to zero, we can remove it.
-            }
-        }
     }
 
     public class Identify : Function
@@ -155,9 +140,9 @@ namespace GeometricAlgebra.ConformalModel
             return "id";
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context);
+            Operand operand = base.EvaluationStep(context);
             if (operand != null)
                 return operand;
 
@@ -189,25 +174,25 @@ namespace GeometricAlgebra.ConformalModel
                     }
                     break;
                 case 1:
-                    Operand.FullyEvaluate("@weight = -@__blade__ . ni", context);
+                    Operand.Evaluate("@weight = -@__blade__ . ni", context);
                     context.GetStorage("weight", ref weight);
                     if (weight.IsAdditiveIdentity)
                     {
-                        Operand.FullyEvaluate("@normal = no . @__blade__ ^ ni", context);
-                        weight = Operand.FullyEvaluate("@weight = pow(@normal . @normal, 0.5)", context);
-                        normal = Operand.FullyEvaluate("@normal = @normal / @weight", context);
-                        center = Operand.FullyEvaluate("@center = -(no . @__blade__ / @weight) * @normal", context);
+                        Operand.Evaluate("@normal = no . @__blade__ ^ ni", context);
+                        weight = Operand.Evaluate("@weight = pow(@normal . @normal, 0.5)", context);
+                        normal = Operand.Evaluate("@normal = @normal / @weight", context);
+                        center = Operand.Evaluate("@center = -(no . @__blade__ / @weight) * @normal", context);
                         context.Log("The blade represents a plane.");
                     }
                     else
                     {
-                        center = Operand.FullyEvaluate("@center = (no ^ ni . @__blade__ ^ no ^ ni) / @weight", context);
-                        Operand radiusSquared = Operand.FullyEvaluate("@__square_radius__ = grade(@center . @center + 2 * no . @__blade__ / @weight, 0)", context);
+                        center = Operand.Evaluate("@center = (no ^ ni . @__blade__ ^ no ^ ni) / @weight", context);
+                        Operand radiusSquared = Operand.Evaluate("@__square_radius__ = grade(@center . @center + 2 * no . @__blade__ / @weight, 0)", context);
                         if(radiusSquared is NumericScalar scalar)
                         {
                             if(scalar.value >= 0.0)
                             {
-                                radius = Operand.FullyEvaluate("@radius = pow(@__square_radius__, 0.5)", context);
+                                radius = Operand.Evaluate("@radius = pow(@__square_radius__, 0.5)", context);
                                 if (scalar.value == 0.0)
                                     context.Log("The blade represents a point.");
                                 else
@@ -216,33 +201,33 @@ namespace GeometricAlgebra.ConformalModel
                             else
                             {
                                 context.Log("The blade represents an imaginary sphere.");
-                                radius = Operand.FullyEvaluate("@radius = pow(-@__square_radius__, 0.5)", context);
+                                radius = Operand.Evaluate("@radius = pow(-@__square_radius__, 0.5)", context);
                             }
                         }
                         else
                         {
                             context.Log("The blade represents a sphere.");
-                            radius = Operand.FullyEvaluate("@radius = pow(@__square_radius__, 0.5)", context);
+                            radius = Operand.Evaluate("@radius = pow(@__square_radius__, 0.5)", context);
                         }
                     }
                     break;
                 case 2:
-                    normal = Operand.FullyEvaluate("no ^ ni . @__blade__ ^ ni", context);
+                    normal = Operand.Evaluate("no ^ ni . @__blade__ ^ ni", context);
                     if(normal.IsAdditiveIdentity)
                     {
 
                     }
                     else
                     {
-                        weight = Operand.FullyEvaluate("@weight = pow(@normal . @normal, 0.5)", context);
-                        normal = Operand.FullyEvaluate("@normal = @normal / @weight", context);
-                        center = Operand.FullyEvaluate("@center = -@normal * (no ^ ni . @__blade__ ^ no * ni) / @weight", context);
-                        Operand radiusSquared = Operand.FullyEvaluate("@__square_radius__ = grade(@center . @center + 2 * ((no ^ ni . no ^ @__blade__) / @weight + (@center . @normal) * @normal, 0)", context);
+                        weight = Operand.Evaluate("@weight = pow(@normal . @normal, 0.5)", context);
+                        normal = Operand.Evaluate("@normal = @normal / @weight", context);
+                        center = Operand.Evaluate("@center = -@normal * (no ^ ni . @__blade__ ^ no * ni) / @weight", context);
+                        Operand radiusSquared = Operand.Evaluate("@__square_radius__ = grade(@center . @center + 2 * ((no ^ ni . no ^ @__blade__) / @weight + (@center . @normal) * @normal, 0)", context);
                         if(radiusSquared is NumericScalar scalar)
                         {
                             if (scalar.value >= 0.0)
                             {
-                                radius = Operand.FullyEvaluate("@radius = pow(@__square_radius__, 0.5", context);
+                                radius = Operand.Evaluate("@radius = pow(@__square_radius__, 0.5", context);
                                 if (scalar.value == 0.0)
                                     context.Log("The blade represents a tangent point.");
                                 else
@@ -251,13 +236,13 @@ namespace GeometricAlgebra.ConformalModel
                             else
                             {
                                 context.Log("The blade represents an imaginary circle.");
-                                radius = Operand.FullyEvaluate("@radius = pow(-@__square_radius__, 0.5", context);
+                                radius = Operand.Evaluate("@radius = pow(-@__square_radius__, 0.5", context);
                             }
                         }
                         else
                         {
                             context.Log("The blade represents a circle.");
-                            radius = Operand.FullyEvaluate("@radius = pow(@__square_radius__, 0.5", context);
+                            radius = Operand.Evaluate("@radius = pow(@__square_radius__, 0.5", context);
                         }
                     }
                     break;

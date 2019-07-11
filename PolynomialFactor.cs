@@ -26,7 +26,7 @@ namespace GeometricAlgebra
             return false;
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
             // TODO: Here we evaluate our argument until, if ever, we find that it
             //       becomes a symbolic polynomial in the scalar algebra.  In that case,

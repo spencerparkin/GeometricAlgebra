@@ -65,10 +65,6 @@ namespace GeometricAlgebra
             return false;
         }
 
-        public virtual void RefineEvaluation(ref Operand opreand)
-        {
-        }
-
         public virtual Operation CreateFunction(string name)
         {
             IEnumerable<Function> enumerable = from func in funcList where func.Name(Operand.Format.PARSEABLE) == name select func;
@@ -137,38 +133,44 @@ namespace GeometricAlgebra
         // if no algebraic manipulation of the sub-tree rooted at this object
         // is performed.  On the other hand, if such a manipulation is performed,
         // then the new or existing root should be returned.
-        public virtual Operand Evaluate(EvaluationContext context)
+        public virtual Operand EvaluationStep(EvaluationContext context)
         {
             return null;
         }
 
-        public static Operand FullyEvaluate(Operand operand, EvaluationContext context, bool debug = false)
+        private static Operand ExhaustEvaluation(Operand operand, EvaluationContext context)
         {
-            context.logMessageList.Clear();
-
             while (true)
             {
-                Operand newOperand = operand.Evaluate(context);
+                Operand newOperand = operand.EvaluationStep(context);
                 if (newOperand != null)
                     operand = newOperand;
                 else
                     break;
-
-                if(debug)
-                {
-                    string expression = operand.Print(Format.PARSEABLE, context);
-                    Console.WriteLine(expression + "\n");
-                }
             }
 
             return operand;
         }
 
-        public static Operand FullyEvaluate(string expression, EvaluationContext context, bool debug = false)
+        public static Operand Evaluate(Operand operand, EvaluationContext context)
+        {
+            context.logMessageList.Clear();
+
+            Operand result = ExhaustEvaluation(operand, context);
+
+            // TODO: We're not done yet.  This is where we might re-evaluate the result
+            //       under expansion of all symbolic vectors in terms of the basis, if any.
+            //       We then take that result, examine its grades, and then cull any grade
+            //       in the original result that does not appear in the expansion results.
+
+            return result;
+        }
+
+        public static Operand Evaluate(string expression, EvaluationContext context)
         {
             Parser parser = new Parser(context);
             Operand operand = parser.Parse(expression);
-            return FullyEvaluate(operand, context, debug);
+            return Evaluate(operand, context);
         }
 
         public virtual string LexicographicSortKey()
@@ -240,7 +242,7 @@ namespace GeometricAlgebra
             return string.Join(PrintJoiner(format), printList);
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
             if (operandList.Count == 1 && (this is Sum || this is Product))
                 return operandList[0];
@@ -281,7 +283,7 @@ namespace GeometricAlgebra
             for (int i = 0; i < operandList.Count; i++)
             {
                 Operand oldOperand = operandList[i];
-                Operand newOperand = oldOperand.Evaluate(context);
+                Operand newOperand = oldOperand.EvaluationStep(context);
 
                 if (newOperand != null)
                 {
@@ -354,14 +356,14 @@ namespace GeometricAlgebra
             return collectable;
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
             if (scalar != null)
             {
                 if (scalar.IsAdditiveIdentity)
                     return scalar;
 
-                Operand newScalar = scalar.Evaluate(context);
+                Operand newScalar = scalar.EvaluationStep(context);
                 if (newScalar != null)
                 {
                     this.scalar = newScalar;
@@ -426,12 +428,12 @@ namespace GeometricAlgebra
             }
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
             if (operandList.Count == 0)
                 return new Blade(0.0);
 
-            Operand operand = base.Evaluate(context);
+            Operand operand = base.EvaluationStep(context);
             if (operand != null)
                 return operand;
 
@@ -531,7 +533,7 @@ namespace GeometricAlgebra
             return operation is Sum;
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
             if (operandList.Count == 0)
                 return new NumericScalar(1.0);
@@ -653,7 +655,7 @@ namespace GeometricAlgebra
                 }
             }
 
-            return base.Evaluate(context);
+            return base.EvaluationStep(context);
         }
     }
 
@@ -702,9 +704,9 @@ namespace GeometricAlgebra
             }
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context);
+            Operand operand = base.EvaluationStep(context);
             if (operand != null)
                 return operand;
 
@@ -827,9 +829,9 @@ namespace GeometricAlgebra
             }
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context);
+            Operand operand = base.EvaluationStep(context);
             if (operand != null)
                 return operand;
 
@@ -930,9 +932,9 @@ namespace GeometricAlgebra
             }
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context);
+            Operand operand = base.EvaluationStep(context);
             if (operand != null)
                 return operand;
 
@@ -982,9 +984,9 @@ namespace GeometricAlgebra
             return new Reverse();
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context);
+            Operand operand = base.EvaluationStep(context);
             if(operand != null)
                 return operand;
 
@@ -1041,9 +1043,9 @@ namespace GeometricAlgebra
             return new Inverse();
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
-            Operand operand = base.Evaluate(context);
+            Operand operand = base.EvaluationStep(context);
             if(operand != null)
                 return operand;
 
@@ -1105,7 +1107,7 @@ namespace GeometricAlgebra
         // our main argument as long as its grade remains indeterminant.  How good the optimization
         // is depends on how well we can determine the grade of an arbitrary operand tree.
         // Of course, some trees well never have a grade, such as a sum of blades of non-homogeneous grade.
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
             if (operandList.Count != 2)
                 throw new EvaluationException(string.Format("Grade-part operation expects exactly two arguments, got {0}.", operandList.Count));
@@ -1121,7 +1123,7 @@ namespace GeometricAlgebra
                 }
             }
 
-            Operand operand = base.Evaluate(context);
+            Operand operand = base.EvaluationStep(context);
             if (operand != null)
                 return operand;
 
@@ -1194,7 +1196,7 @@ namespace GeometricAlgebra
             return assignment;
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
             if (operandList.Count != 2)
                 throw new EvaluationException(string.Format("Assignment operation expects exactly two operands, got {0}.", operandList.Count));
@@ -1209,7 +1211,7 @@ namespace GeometricAlgebra
             // Sometimes we want a dependency-chain; sometimes we don't.
             if (storeEvaluation)
             {
-                Operand operand = base.Evaluate(context);
+                Operand operand = base.EvaluationStep(context);
                 if (operand != null)
                     return operand;
             }
@@ -1339,7 +1341,7 @@ namespace GeometricAlgebra
             return printedBlade;
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
             if (Grade == 0)
                 return scalar;
@@ -1354,7 +1356,7 @@ namespace GeometricAlgebra
             if (context.IsLinearlyDependentSet(vectorList))
                 return new NumericScalar(0.0);
 
-            Operand operand = base.Evaluate(context);
+            Operand operand = base.EvaluationStep(context);
             if (operand != null)
                 return operand;
 
@@ -1487,7 +1489,7 @@ namespace GeometricAlgebra
             return new NumericScalar();
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
             return null;
         }
@@ -1729,12 +1731,12 @@ namespace GeometricAlgebra
             return new SymbolicScalarTerm();
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
             if (factorList.Count == 0)
                 return scalar;
 
-            Operand operand = base.Evaluate(context);
+            Operand operand = base.EvaluationStep(context);
             if (operand != null)
                 return operand;
 
@@ -1881,7 +1883,7 @@ namespace GeometricAlgebra
             return new Variable();
         }
 
-        public override Operand Evaluate(EvaluationContext context)
+        public override Operand EvaluationStep(EvaluationContext context)
         {
             Operand operand = null;
             if(context.GetStorage(this.name, ref operand))

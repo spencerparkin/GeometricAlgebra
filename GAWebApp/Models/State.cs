@@ -29,7 +29,7 @@ namespace GAWebApp.Models
                 Operand operand = parser.Parse(expression);
                 string inputExpression = operand.Print(Operand.Format.LATEX, context);
 
-                operand = Operand.FullyEvaluate(operand, context);
+                operand = Operand.Evaluate(operand, context);
                 string outputExpression = operand.Print(Operand.Format.LATEX, context);
 
                 // Ugh...this fixes an encoding issue in the URIs, but sometimes a space is needed for valid latex.

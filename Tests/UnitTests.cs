@@ -78,7 +78,7 @@ namespace Tests
             Parser parser = new Parser();
             string inputText = "($a*($b + $c))*(x^y)";
             Operand operand = parser.Parse(inputText);
-            operand = Operand.FullyEvaluate(operand, context);
+            operand = Operand.Evaluate(operand, context);
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("($a*$b + $a*$c)*x^y", outputText);
         }
@@ -90,7 +90,7 @@ namespace Tests
             Parser parser = new Parser();
             string inputText = "3*(2+1)";
             Operand operand = parser.Parse(inputText);
-            operand = Operand.FullyEvaluate(operand, context);
+            operand = Operand.Evaluate(operand, context);
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("9", outputText);
         }
@@ -102,7 +102,7 @@ namespace Tests
             Parser parser = new Parser();
             string inputText = "1/(1+1)";
             Operand operand = parser.Parse(inputText);
-            operand = Operand.FullyEvaluate(operand, context);
+            operand = Operand.Evaluate(operand, context);
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("0.5", outputText);
         }
@@ -111,9 +111,9 @@ namespace Tests
         public void ConformalPoint()
         {
             EvaluationContext context = new GeometricAlgebra.ConformalModel.Conformal3D_EvaluationContext();
-            Operand.FullyEvaluate("@v = $x*e1 + $y*e2 + $z*e3", context);
-            Operand.FullyEvaluate("@p = no + @v + 0.5*(@v.@v)*ni", context);
-            Operand operand = Operand.FullyEvaluate("@p.@p", context);
+            Operand.Evaluate("@v = $x*e1 + $y*e2 + $z*e3", context);
+            Operand.Evaluate("@p = no + @v + 0.5*(@v.@v)*ni", context);
+            Operand operand = Operand.Evaluate("@p.@p", context);
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("0", outputText);
         }
@@ -129,7 +129,7 @@ namespace Tests
             Parser parser = new Parser();
             string inputText = "a - b";
             Operand operand = parser.Parse(inputText);
-            operand = Operand.FullyEvaluate(operand, context);
+            operand = Operand.Evaluate(operand, context);
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("a + (-1)*b", outputText);
         }
@@ -141,7 +141,7 @@ namespace Tests
             Parser parser = new Parser();
             string inputText = "c^b^a";
             Operand operand = parser.Parse(inputText);
-            operand = Operand.FullyEvaluate(operand, context);
+            operand = Operand.Evaluate(operand, context);
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("(-1)*a^b^c", outputText);
         }
@@ -153,7 +153,7 @@ namespace Tests
             Parser parser = new Parser();
             string inputText = "c^b^a^c";
             Operand operand = parser.Parse(inputText);
-            operand = Operand.FullyEvaluate(operand, context);
+            operand = Operand.Evaluate(operand, context);
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("0", outputText);
         }
@@ -165,7 +165,7 @@ namespace Tests
             Parser parser = new Parser();
             string inputText = "reverse(a^b^c)";
             Operand operand = parser.Parse(inputText);
-            operand = Operand.FullyEvaluate(operand, context);
+            operand = Operand.Evaluate(operand, context);
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("(-1)*a^b^c", outputText);
         }
@@ -179,7 +179,7 @@ namespace Tests
             Parser parser = new Parser();
             string inputText = "a^b + b^a";
             Operand operand = parser.Parse(inputText);
-            operand = Operand.FullyEvaluate(operand, context);
+            operand = Operand.Evaluate(operand, context);
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("0", outputText);
         }
@@ -195,12 +195,12 @@ namespace Tests
             Parser parser = new Parser();
             string inputText = "@a = a^b";
             Operand operand = parser.Parse(inputText);
-            operand = Operand.FullyEvaluate(operand, context);
+            operand = Operand.Evaluate(operand, context);
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("a^b", outputText);
             inputText = "@a";
             operand = parser.Parse(inputText);
-            operand = Operand.FullyEvaluate(operand, context);
+            operand = Operand.Evaluate(operand, context);
             outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("a^b", outputText);
         }
