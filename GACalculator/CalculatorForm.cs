@@ -62,7 +62,7 @@ namespace GACalculator
                 }
                 catch (Exception exc)
                 {
-                    outputTextBox.Text += "Error: " + exc.Message + "\n\n";
+                    outputTextBox.Text += "Error: " + exc.Message + "\r\n\r\n";
                 }
 
                 e.Handled = true;
@@ -85,6 +85,11 @@ namespace GACalculator
 
                 inputTextBox.Text = history[historyLocation];
             }
+        }
+
+        private void ClearScreenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            outputTextBox.Clear();
         }
     }
 }

@@ -9,21 +9,21 @@ namespace GeometricAlgebra.ConformalModel
     {
         public Conformal3D_EvaluationContext() : base()
         {
-            operandStorage.Add("i", Operand.FullyEvaluate("e1^e2^e3", this));
-            operandStorage.Add("I", Operand.FullyEvaluate("e1^e2^e3^no^ni", this));
+            SetStorage("i", Operand.FullyEvaluate("e1^e2^e3", this));
+            SetStorage("I", Operand.FullyEvaluate("e1^e2^e3^no^ni", this));
 
             // Add formulas for the geometric primitives of the conformal model in 3D space.
-            operandStorage.Add("point", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni)", this));
-            operandStorage.Add("sphere", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni)", this));
-            operandStorage.Add("isphere", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni)", this));
-            operandStorage.Add("circle", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this));
-            operandStorage.Add("icircle", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this));
-            operandStorage.Add("pointpair", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this));
-            operandStorage.Add("ipointpair", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this));
-            operandStorage.Add("plane", Operand.FullyEvaluate("@weight * (@normal + (@center . @normal) * ni)", this));
-            operandStorage.Add("line", Operand.FullyEvaluate("@weight * (@normal + (@center ^ @normal) * ni) * @i", this));
-            operandStorage.Add("flatpoint", Operand.FullyEvaluate("@weight * (1 - @center ^ ni) * @i", this));
-            operandStorage.Add("tangentpoint", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni) ^ (@normal + (@center . @normal) * ni)", this));
+            SetStorage("point", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni)", this));
+            SetStorage("sphere", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni)", this));
+            SetStorage("isphere", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni)", this));
+            SetStorage("circle", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this));
+            SetStorage("icircle", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this));
+            SetStorage("pointpair", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this));
+            SetStorage("ipointpair", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this));
+            SetStorage("plane", Operand.FullyEvaluate("@weight * (@normal + (@center . @normal) * ni)", this));
+            SetStorage("line", Operand.FullyEvaluate("@weight * (@normal + (@center ^ @normal) * ni) * @i", this));
+            SetStorage("flatpoint", Operand.FullyEvaluate("@weight * (1 - @center ^ ni) * @i", this));
+            SetStorage("tangentpoint", Operand.FullyEvaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni) ^ (@normal + (@center . @normal) * ni)", this));
 
             funcList.Add(new Identify());
         }
@@ -120,6 +120,21 @@ namespace GeometricAlgebra.ConformalModel
 
             return false;
         }
+
+        public override void RefineEvaluation(ref Operand root)
+        {
+            SetStorage("@__result__", root);
+
+            for(int i = 0; i <= 5; i++)
+            {
+                Operand part = Operand.FullyEvaluate($"grade(@__result__, {i})", this);
+                if(part.IsAdditiveIdentity)
+                    continue;
+
+                // TODO: Walk tree and replace any symbolic vector, say v, with (v.e1)*e1 + (v.e2)*e2 + (v.e3)*e3.
+                //       Now re-evaluate the part.  If it goes to zero, we can remove it.
+            }
+        }
     }
 
     public class Identify : Function
@@ -154,7 +169,7 @@ namespace GeometricAlgebra.ConformalModel
             if (grade == -1)
                 throw new EvaluationException("Cannot identify an element non-homogenous in terms of grade; specifically, only blades are identified.");
 
-            context.operandStorage.Add("__blade__", operand);
+            context.SetStorage("__blade__", operand);
 
             Operand center = null;
             Operand normal = null;
@@ -175,7 +190,7 @@ namespace GeometricAlgebra.ConformalModel
                     break;
                 case 1:
                     Operand.FullyEvaluate("@weight = -@__blade__ . ni", context);
-                    weight = context.operandStorage["weight"];
+                    context.GetStorage("weight", ref weight);
                     if (weight.IsAdditiveIdentity)
                     {
                         Operand.FullyEvaluate("@normal = no . @__blade__ ^ ni", context);
@@ -215,8 +230,7 @@ namespace GeometricAlgebra.ConformalModel
                     normal = Operand.FullyEvaluate("no ^ ni . @__blade__ ^ ni", context);
                     if(normal.IsAdditiveIdentity)
                     {
-                        // A line?
-                        // I may have a bug, because I don't see w(n + (c^n)ni)i as being homogeneous of grade 2.
+
                     }
                     else
                     {

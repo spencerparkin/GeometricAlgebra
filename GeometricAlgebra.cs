@@ -16,7 +16,7 @@ namespace GeometricAlgebra
 
     public class EvaluationContext
     {
-        public Dictionary<string, Operand> operandStorage;
+        private Dictionary<string, Operand> operandStorage;
         public List<Function> funcList;
         public List<string> logMessageList;
 
@@ -32,6 +32,28 @@ namespace GeometricAlgebra
             logMessageList.Add(message);
         }
 
+        public void ClearStorage(string variableName)
+        {
+            if (operandStorage.ContainsKey(variableName))
+                operandStorage.Remove(variableName);
+        }
+
+        public void SetStorage(string variableName, Operand operand)
+        {
+            ClearStorage(variableName);
+
+            operandStorage.Add(variableName, operand.Copy());
+        }
+
+        public bool GetStorage(string variableName, ref Operand operand)
+        {
+            if(!operandStorage.ContainsKey(variableName))
+                return false;
+
+            operand = operandStorage[variableName].Copy();
+            return true;
+        }
+
         // The operand returned here should have grade zero.
         public virtual Operand BilinearForm(string vectorNameA, string vectorNameB)
         {
@@ -41,6 +63,10 @@ namespace GeometricAlgebra
         public virtual bool IsLinearlyDependentSet(List<string> vectorNameList)
         {
             return false;
+        }
+
+        public virtual void RefineEvaluation(ref Operand opreand)
+        {
         }
 
         public virtual Operation CreateFunction(string name)
@@ -106,7 +132,7 @@ namespace GeometricAlgebra
         }
 
         public abstract string Print(Format format, EvaluationContext context = null);
-        
+
         // Derivatives overriding this virtual method are to return null
         // if no algebraic manipulation of the sub-tree rooted at this object
         // is performed.  On the other hand, if such a manipulation is performed,
@@ -1177,8 +1203,8 @@ namespace GeometricAlgebra
             if(variable == null)
                 throw new EvaluationException("Assignment operation expects an l-value of type variable.");
 
-            if (context.operandStorage.ContainsKey(variable.name))
-                context.operandStorage.Remove(variable.name);
+            // This is important so that our l-value doesn't evaluate as something other than a variable before we have a chance to assign it.
+            context.ClearStorage(variable.name);
 
             // Sometimes we want a dependency-chain; sometimes we don't.
             if (storeEvaluation)
@@ -1188,7 +1214,9 @@ namespace GeometricAlgebra
                     return operand;
             }
 
-            context.operandStorage.Add(variable.name, operandList[1].Copy());
+            // Perform the assignment.
+            context.SetStorage(variable.name, operandList[1].Copy());
+
             return operandList[1];
         }
 
@@ -1855,9 +1883,9 @@ namespace GeometricAlgebra
 
         public override Operand Evaluate(EvaluationContext context)
         {
-            Operand operand;
-            if (context.operandStorage.TryGetValue(this.name, out operand))
-                return operand.Copy();
+            Operand operand = null;
+            if(context.GetStorage(this.name, ref operand))
+                return operand;
 
             return null;
         }

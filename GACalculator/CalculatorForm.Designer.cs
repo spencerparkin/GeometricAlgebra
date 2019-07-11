@@ -34,6 +34,8 @@
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.calculatorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.clearScreenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -102,15 +104,29 @@
             // calculatorToolStripMenuItem
             // 
             this.calculatorToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.clearScreenToolStripMenuItem,
+            this.toolStripSeparator1,
             this.exitToolStripMenuItem});
             this.calculatorToolStripMenuItem.Name = "calculatorToolStripMenuItem";
             this.calculatorToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
             this.calculatorToolStripMenuItem.Text = "Calculator";
             // 
+            // clearScreenToolStripMenuItem
+            // 
+            this.clearScreenToolStripMenuItem.Name = "clearScreenToolStripMenuItem";
+            this.clearScreenToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.clearScreenToolStripMenuItem.Text = "Clear Screen";
+            this.clearScreenToolStripMenuItem.Click += new System.EventHandler(this.ClearScreenToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(92, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
             // 
@@ -160,6 +176,8 @@
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.TextBox outputTextBox;
         private System.Windows.Forms.TextBox inputTextBox;
+        private System.Windows.Forms.ToolStripMenuItem clearScreenToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }
 

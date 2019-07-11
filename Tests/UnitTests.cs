@@ -196,7 +196,6 @@ namespace Tests
             string inputText = "@a = a^b";
             Operand operand = parser.Parse(inputText);
             operand = Operand.FullyEvaluate(operand, context);
-            Assert.IsTrue(context.operandStorage.Count == 1);
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("a^b", outputText);
             inputText = "@a";
