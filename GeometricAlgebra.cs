@@ -199,6 +199,7 @@ namespace GeometricAlgebra
                 parser = new Parser(context, true);
                 Operand basisResult = parser.Parse(expression);
                 basisResult = ExhaustEvaluation(basisResult, context);
+                
                 HashSet<int> gradeSetB = DiscoverGrades(basisResult, context);
 
                 if(gradeSetB.IsProperSubsetOf(gradeSetA))

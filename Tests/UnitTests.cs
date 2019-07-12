@@ -203,6 +203,7 @@ namespace Tests
         public void Case1()
         {
             // (a^b)*@i = (a.(b*@i))
+            // 0.5*(a*b - b*a)*@i = 0.5*(a*b*@i - b*@i*a)
         }
     }
 }

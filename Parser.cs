@@ -204,7 +204,7 @@ namespace GeometricAlgebra
                                 foreach (string basisVectorName in basisVectorList)
                                 {
                                     InnerProduct dot = new InnerProduct(new List<Operand>() { new Blade(vectorName), new Blade(basisVectorName) });
-                                    sum.operandList.Add(new GeometricProduct(new List<Operand>() { dot, new Blade(vectorName) }));
+                                    sum.operandList.Add(new GeometricProduct(new List<Operand>() { dot, new Blade(basisVectorName) }));
                                 }
 
                                 return sum;
