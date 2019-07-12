@@ -180,36 +180,47 @@ namespace GeometricAlgebra
             return gradeSet;
         }
 
-        public static (Operand input, Operand output) Evaluate(string expression, EvaluationContext context)
+        public static (Operand input, Operand output, string error) Evaluate(string expression, EvaluationContext context)
         {
-            Parser parser = new Parser(context, false);
-            Operand inputResult = parser.Parse(expression);
-            Operand outputResult = ExhaustEvaluation(inputResult, context);
+            Operand inputResult = null;
+            Operand outputResult = null;
+            string error = "";
 
-            // If a symbolic vector was generated during parsing, then the
-            // evaluation of the expression does not always reduce all
-            // grade parts to zero that can be.  The only sure solution
-            // I can think of is to redo the calculation, but only allow
-            // basis vectors.  This will give us an expression that does
-            // fully reduce in terms of grade cancellation.
-            if(parser.generatedSymbolicVector)
+            try
             {
-                HashSet<int> gradeSetA = DiscoverGrades(outputResult, context);
+                Parser parser = new Parser(context, false);
+                inputResult = parser.Parse(expression);
+                outputResult = ExhaustEvaluation(inputResult.Copy(), context);
 
-                parser = new Parser(context, true);
-                Operand basisResult = parser.Parse(expression);
-                basisResult = ExhaustEvaluation(basisResult, context);
-                
-                HashSet<int> gradeSetB = DiscoverGrades(basisResult, context);
-
-                if(gradeSetB.IsProperSubsetOf(gradeSetA))
+                // If a symbolic vector was generated during parsing, then the
+                // evaluation of the expression does not always reduce all
+                // grade parts to zero that can be.  The only sure solution
+                // I can think of is to redo the calculation, but only allow
+                // basis vectors.  This will give us an expression that does
+                // fully reduce in terms of grade cancellation.
+                if(parser.generatedSymbolicVector)
                 {
-                    outputResult = new GradePart(new List<Operand>() { outputResult }.Concat(from i in gradeSetB select new NumericScalar(i)).ToList());
-                    outputResult = ExhaustEvaluation(outputResult, context);
+                    HashSet<int> gradeSetA = DiscoverGrades(outputResult, context);
+
+                    parser = new Parser(context, true);
+                    Operand basisResult = parser.Parse(expression);
+                    basisResult = ExhaustEvaluation(basisResult, context);
+                
+                    HashSet<int> gradeSetB = DiscoverGrades(basisResult, context);
+
+                    if(gradeSetB.IsProperSubsetOf(gradeSetA))
+                    {
+                        outputResult = new GradePart(new List<Operand>() { outputResult }.Concat(from i in gradeSetB select new NumericScalar(i)).ToList());
+                        outputResult = ExhaustEvaluation(outputResult, context);
+                    }
                 }
             }
+            catch(Exception exc)
+            {
+                error = exc.Message;
+            }
 
-            return (inputResult, outputResult);
+            return (inputResult, outputResult, error);
         }
 
         public virtual string LexicographicSortKey()

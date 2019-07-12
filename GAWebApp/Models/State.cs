@@ -6,42 +6,56 @@ using GeometricAlgebra;
 
 namespace GAWebApp.Models
 {
+    public class HistoryItem
+    {
+        public string input;
+        public string output;
+        public string error;
+
+        public HistoryItem()
+        {
+            input = "?";
+            output = "?";
+            error = "";
+        }
+    }
+
     public class State
     {
         public EvaluationContext context;
-        public List<(string, string)> history;
-        public string errorMessage;
+        public List<HistoryItem> history;
 
         public State()
         {
             context = new GeometricAlgebra.ConformalModel.Conformal3D_EvaluationContext();
-            history = new List<(string, string)>();
+            history = new List<HistoryItem>();
         }
 
         public void Calculate(string expression)
         {
-            try
-            {
-                // TODO: We should probably do this in a task and then wait with time-out.
-                errorMessage = null;
+            HistoryItem item = new HistoryItem();
 
-                var result = Operand.Evaluate(expression, context);
+            // TODO: We should probably do this in a task and then wait with time-out.
+            var result = Operand.Evaluate(expression, context);
 
-                string inputExpression = result.input.Print(Operand.Format.LATEX, context);
-                string outputExpression = result.output.Print(Operand.Format.LATEX, context);
+            item.input = result.input == null ? "" : result.input.Print(Operand.Format.LATEX, context);
+            item.output = result.output == null ? "" : result.output.Print(Operand.Format.LATEX, context);
+            item.error = result.error;
 
-                // Ugh...this fixes an encoding issue in the URIs, but sometimes a space is needed for valid latex.
-                // Can we replace spaces with something else?
-                inputExpression = inputExpression.Replace(" ", "");
-                outputExpression = outputExpression.Replace(" ", "");
+            // Ugh...this fixes an encoding issue in the URIs, but sometimes a space is needed for valid latex.
+            // Can we replace spaces with something else?
+            item.input = item.input.Replace(" ", "");
+            item.output = item.output.Replace(" ", "");
 
-                history.Add((inputExpression, outputExpression));
-            }
-            catch (Exception exc)
-            {
-                // TODO: We need to display this somewhere on the page.
-                errorMessage = exc.Message;
-            }
+            history.Add(item);
+        }
+
+        public void RunScript(string script)
+        {
+            List<string> expressionList = script.Split(';').ToList();
+            foreach(string expression in expressionList)
+                if(expression.Length > 0)
+                    Calculate(expression);
         }
     }
 }

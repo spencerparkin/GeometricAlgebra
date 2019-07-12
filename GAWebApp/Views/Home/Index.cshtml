@@ -1,6 +1,6 @@
 ﻿@model GAWebApp.Models.State
 
-<center><h2>Geometric Algebra Calculator</h2></center>
+<center><h2>GA Calculator</h2></center>
 
 @if (Model.history.Count > 0)
 {
@@ -20,4 +20,6 @@ else
 }
 
 <br />
-<input type="text" onkeydown="textbox_keydown(this)">
+<input type="text" onkeydown="textboxKeydown(this)" id="expressionBox"/>
+<br />
+<input type="file" id="scriptBox"/>

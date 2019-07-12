@@ -27,6 +27,14 @@ namespace GAWebApp.Controllers
             return PartialView("HistoryView", state);
         }
 
+        [HttpGet]
+        public IActionResult RunScript(string script)
+        {
+            State state = GetState();
+            state.RunScript(script);
+            return PartialView("HistoryView", state);
+        }
+
         // TODO: Add parameter that identifies client, then retrieve state from a database or something based on that identification.
         // TODO: Use the async/await stuff for this.
         private State GetState()

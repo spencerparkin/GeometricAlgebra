@@ -61,6 +61,8 @@ namespace GeometricAlgebra
             var tokenList = new List<Token>();
 
             expression = expression.Replace(" ", "");
+            expression = expression.Replace("\n", "");
+            expression = expression.Replace("\r", "");
 
             while (expression.Length > 0)
                 tokenList.Add(EatToken(ref expression));

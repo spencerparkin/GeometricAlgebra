@@ -44,23 +44,24 @@ namespace GACalculator
         {
             if (e.KeyCode == Keys.Enter && inputTextBox.Text.Length > 0)
             {
-                try
-                {
-                    string expression = inputTextBox.Text;
+                string expression = inputTextBox.Text;
 
-                    var result = Operand.Evaluate(expression, context);
+                var result = Operand.Evaluate(expression, context);
 
+                if(result.input != null)
                     outputTextBox.AppendText("Input: " + result.input.Print(Operand.Format.PARSEABLE, context) + "\r\n\r\n");
+
+                if(result.output != null)
                     outputTextBox.AppendText("Output: " + result.output.Print(Operand.Format.PARSEABLE, context) + "\r\n\r\n");
 
+                if(result.error != "")
+                    outputTextBox.Text += "Error: " + result.error + "\r\n\r\n";
+                else
+                {
                     inputTextBox.Clear();
 
                     history.Add(expression);
                     historyLocation = 0;
-                }
-                catch (Exception exc)
-                {
-                    outputTextBox.Text += "Error: " + exc.Message + "\r\n\r\n";
                 }
 
                 e.Handled = true;

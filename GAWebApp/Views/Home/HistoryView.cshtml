@@ -1,17 +1,23 @@
 ﻿@model GAWebApp.Models.State
 
+<!--TODO: Find different latex server that can handle larger expressions.-->
 <table>
     <tbody>
-        @foreach (var pair in Model.history)
-        {
+        @foreach (var item in Model.history) {
             <tr>
                 <td class="historyInput">
-                    <img src=@($"https://latex.codecogs.com/gif.latex?{@pair.Item1}")>
+                    @if(item.input.Length > 0) {
+                        <img src=@($"https://latex.codecogs.com/gif.latex?{@item.input}")>
+                    }
                 </td>
             </tr>
             <tr>
                 <td class="historyOutput">
-                    <img src=@($"https://latex.codecogs.com/gif.latex?{@pair.Item2}")>
+                    @if(item.error.Length > 0) {
+                        <div>@item.error</div>
+                    } else if(item.output.Length > 0) {
+                        <img src=@($"https://latex.codecogs.com/gif.latex?{@item.output}")>
+                    }
                 </td>
             </tr>
         }
