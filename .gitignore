@@ -58,6 +58,7 @@ GACalculator/bin/
 packages/
 Tests/bin/
 GAWebApp/bin/
+bin/
 
 # DevStudio...
 .vs/

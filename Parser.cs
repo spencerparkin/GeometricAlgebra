@@ -37,15 +37,20 @@ namespace GeometricAlgebra
 
     public class Parser
     {
-        public EvaluationContext context;
+        private EvaluationContext context;
+        private bool basisVectorsOnly;
+        public bool generatedSymbolicVector;
 
-        public Parser(EvaluationContext context = null)
+        public Parser(EvaluationContext context = null, bool basisVectorsOnly = false)
         {
             this.context = context;
+            this.basisVectorsOnly = basisVectorsOnly;
+            this.generatedSymbolicVector = false;
         }
 
         public Operand Parse(string expression)
         {
+            generatedSymbolicVector = false;
             List<Token> tokenList = Tokenize(expression);
             Operand root = BuildOperandTree(tokenList);
             return root;
@@ -188,6 +193,25 @@ namespace GeometricAlgebra
                         if(token.data[0] == '$')
                             return new SymbolicScalarTerm(token.data.Substring(1));
 
+                        if(basisVectorsOnly)
+                        {
+                            string vectorName = token.data;
+                            List<string> basisVectorList = context.ReturnBasisVectors();
+                            if(!basisVectorList.Contains(vectorName))
+                            {
+                                Sum sum = new Sum();
+
+                                foreach (string basisVectorName in basisVectorList)
+                                {
+                                    InnerProduct dot = new InnerProduct(new List<Operand>() { new Blade(vectorName), new Blade(basisVectorName) });
+                                    sum.operandList.Add(new GeometricProduct(new List<Operand>() { dot, new Blade(vectorName) }));
+                                }
+
+                                return sum;
+                            }
+                        }
+
+                        generatedSymbolicVector = true;
                         return new Blade(token.data);
                     }
                     case Token.Kind.NUMBER:

@@ -77,8 +77,7 @@ namespace Tests
             EvaluationContext context = new EvaluationContext();
             Parser parser = new Parser();
             string inputText = "($a*($b + $c))*(x^y)";
-            Operand operand = parser.Parse(inputText);
-            operand = Operand.Evaluate(operand, context);
+            Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("($a*$b + $a*$c)*x^y", outputText);
         }
@@ -89,8 +88,7 @@ namespace Tests
             EvaluationContext context = new EvaluationContext();
             Parser parser = new Parser();
             string inputText = "3*(2+1)";
-            Operand operand = parser.Parse(inputText);
-            operand = Operand.Evaluate(operand, context);
+            Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("9", outputText);
         }
@@ -101,8 +99,7 @@ namespace Tests
             EvaluationContext context = new EvaluationContext();
             Parser parser = new Parser();
             string inputText = "1/(1+1)";
-            Operand operand = parser.Parse(inputText);
-            operand = Operand.Evaluate(operand, context);
+            Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("0.5", outputText);
         }
@@ -113,7 +110,7 @@ namespace Tests
             EvaluationContext context = new GeometricAlgebra.ConformalModel.Conformal3D_EvaluationContext();
             Operand.Evaluate("@v = $x*e1 + $y*e2 + $z*e3", context);
             Operand.Evaluate("@p = no + @v + 0.5*(@v.@v)*ni", context);
-            Operand operand = Operand.Evaluate("@p.@p", context);
+            Operand operand = Operand.Evaluate("@p.@p", context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("0", outputText);
         }
@@ -128,8 +125,7 @@ namespace Tests
             EvaluationContext context = new EvaluationContext();
             Parser parser = new Parser();
             string inputText = "a - b";
-            Operand operand = parser.Parse(inputText);
-            operand = Operand.Evaluate(operand, context);
+            Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("a + (-1)*b", outputText);
         }
@@ -140,8 +136,7 @@ namespace Tests
             EvaluationContext context = new EvaluationContext();
             Parser parser = new Parser();
             string inputText = "c^b^a";
-            Operand operand = parser.Parse(inputText);
-            operand = Operand.Evaluate(operand, context);
+            Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("(-1)*a^b^c", outputText);
         }
@@ -152,8 +147,7 @@ namespace Tests
             EvaluationContext context = new EvaluationContext();
             Parser parser = new Parser();
             string inputText = "c^b^a^c";
-            Operand operand = parser.Parse(inputText);
-            operand = Operand.Evaluate(operand, context);
+            Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("0", outputText);
         }
@@ -164,8 +158,7 @@ namespace Tests
             EvaluationContext context = new EvaluationContext();
             Parser parser = new Parser();
             string inputText = "reverse(a^b^c)";
-            Operand operand = parser.Parse(inputText);
-            operand = Operand.Evaluate(operand, context);
+            Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("(-1)*a^b^c", outputText);
         }
@@ -178,8 +171,7 @@ namespace Tests
             EvaluationContext context = new EvaluationContext();
             Parser parser = new Parser();
             string inputText = "a^b + b^a";
-            Operand operand = parser.Parse(inputText);
-            operand = Operand.Evaluate(operand, context);
+            Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("0", outputText);
         }
@@ -194,15 +186,23 @@ namespace Tests
             EvaluationContext context = new EvaluationContext();
             Parser parser = new Parser();
             string inputText = "@a = a^b";
-            Operand operand = parser.Parse(inputText);
-            operand = Operand.Evaluate(operand, context);
+            Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("a^b", outputText);
             inputText = "@a";
-            operand = parser.Parse(inputText);
-            operand = Operand.Evaluate(operand, context);
+            operand = Operand.Evaluate(inputText, context).output;
             outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("a^b", outputText);
+        }
+    }
+
+    [TestClass]
+    public class UnitTests_Identities
+    {
+        [TestMethod]
+        public void Case1()
+        {
+            // (a^b)*@i = (a.(b*@i))
         }
     }
 }

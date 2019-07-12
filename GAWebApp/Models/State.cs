@@ -25,14 +25,13 @@ namespace GAWebApp.Models
                 // TODO: We should probably do this in a task and then wait with time-out.
                 errorMessage = null;
 
-                Parser parser = new Parser();
-                Operand operand = parser.Parse(expression);
-                string inputExpression = operand.Print(Operand.Format.LATEX, context);
+                var result = Operand.Evaluate(expression, context);
 
-                operand = Operand.Evaluate(operand, context);
-                string outputExpression = operand.Print(Operand.Format.LATEX, context);
+                string inputExpression = result.input.Print(Operand.Format.LATEX, context);
+                string outputExpression = result.output.Print(Operand.Format.LATEX, context);
 
                 // Ugh...this fixes an encoding issue in the URIs, but sometimes a space is needed for valid latex.
+                // Can we replace spaces with something else?
                 inputExpression = inputExpression.Replace(" ", "");
                 outputExpression = outputExpression.Replace(" ", "");
 

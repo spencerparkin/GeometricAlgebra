@@ -150,7 +150,7 @@ namespace GeometricAlgebra
             return null;
         }
 
-        private static Operand ExhaustEvaluation(Operand operand, EvaluationContext context)
+        public static Operand ExhaustEvaluation(Operand operand, EvaluationContext context)
         {
             while (true)
             {
@@ -164,25 +164,51 @@ namespace GeometricAlgebra
             return operand;
         }
 
-        public static Operand Evaluate(Operand operand, EvaluationContext context)
+        public static HashSet<int> DiscoverGrades(Operand operand, EvaluationContext context)
         {
-            context.logMessageList.Clear();
+            List<string> basisVectorList = context.ReturnBasisVectors();
+            HashSet<int> gradeSet = new HashSet<int>();
 
-            Operand result = ExhaustEvaluation(operand, context);
+            for(int i = 0; i <= basisVectorList.Count; i++)
+            {
+                Operand gradePart = new GradePart(new List<Operand>() { operand.Copy(), new NumericScalar(i) });
+                gradePart = ExhaustEvaluation(gradePart, context);
+                if(!gradePart.IsAdditiveIdentity)
+                    gradeSet.Add(i);
+            }
 
-            // TODO: We're not done yet.  This is where we might re-evaluate the result
-            //       under expansion of all symbolic vectors in terms of the basis, if any.
-            //       We then take that result, examine its grades, and then cull any grade
-            //       in the original result that does not appear in the expansion result.
-
-            return result;
+            return gradeSet;
         }
 
-        public static Operand Evaluate(string expression, EvaluationContext context)
+        public static (Operand input, Operand output) Evaluate(string expression, EvaluationContext context)
         {
-            Parser parser = new Parser(context);
-            Operand operand = parser.Parse(expression);
-            return Evaluate(operand, context);
+            Parser parser = new Parser(context, false);
+            Operand inputResult = parser.Parse(expression);
+            Operand outputResult = ExhaustEvaluation(inputResult, context);
+
+            // If a symbolic vector was generated during parsing, then the
+            // evaluation of the expression does not always reduce all
+            // grade parts to zero that can be.  The only sure solution
+            // I can think of is to redo the calculation, but only allow
+            // basis vectors.  This will give us an expression that does
+            // fully reduce in terms of grade cancellation.
+            if(parser.generatedSymbolicVector)
+            {
+                HashSet<int> gradeSetA = DiscoverGrades(outputResult, context);
+
+                parser = new Parser(context, true);
+                Operand basisResult = parser.Parse(expression);
+                basisResult = ExhaustEvaluation(basisResult, context);
+                HashSet<int> gradeSetB = DiscoverGrades(basisResult, context);
+
+                if(gradeSetB.IsProperSubsetOf(gradeSetA))
+                {
+                    outputResult = new GradePart(new List<Operand>() { outputResult }.Concat(from i in gradeSetB select new NumericScalar(i)).ToList());
+                    outputResult = ExhaustEvaluation(outputResult, context);
+                }
+            }
+
+            return (inputResult, outputResult);
         }
 
         public virtual string LexicographicSortKey()
@@ -1126,25 +1152,33 @@ namespace GeometricAlgebra
         // Of course, some trees well never have a grade, such as a sum of blades of non-homogeneous grade.
         public override Operand EvaluationStep(EvaluationContext context)
         {
-            if (operandList.Count != 2)
-                throw new EvaluationException(string.Format("Grade-part operation expects exactly two arguments, got {0}.", operandList.Count));
+            if (operandList.Count < 2)
+                throw new EvaluationException(string.Format("Grade-part operation expects two or more arguments, got {0}.", operandList.Count));
 
-            // TODO: Allow multiple integer arguments for selecting more than one grade.
-
-            int determinedGrade = operandList[0].Grade;
-            if (determinedGrade != -1)
+            int grade = operandList[0].Grade;
+            if (grade == -1)
             {
-                NumericScalar scalar = operandList[1] as NumericScalar;
-                if (scalar != null)
-                {
-                    int desiredGrade = (int)scalar.value;
-                    return determinedGrade == desiredGrade ? operandList[0] : new NumericScalar(0.0);
-                }
+                Operand operand = base.EvaluationStep(context);
+                if (operand != null)
+                    return operand;
             }
+            else
+            {
+                var gradeSet = new HashSet<int>();
+                for(int i = 1; i < operandList.Count; i++)
+                {
+                    NumericScalar scalar = operandList[i] as NumericScalar;
+                    if(scalar == null)
+                        throw new EvaluationException("Encountered non-numeric-scalar when looking for grade arguments.");
 
-            Operand operand = base.EvaluationStep(context);
-            if (operand != null)
-                return operand;
+                    gradeSet.Add((int)scalar.value);
+                }
+
+                if(gradeSet.Contains(grade))
+                    return operandList[0];
+
+                return new NumericScalar(0.0);
+            }
 
             return null;
         }
@@ -1999,87 +2033,6 @@ namespace GeometricAlgebra
         public override string LexicographicSortKey()
         {
             return this.name;
-        }
-    }
-
-    public class BasisExpander : Operation, ITranslator
-    {
-        public BasisExpander() : base()
-        {
-        }
-
-        public BasisExpander(List<Operand> operandList) : base(operandList)
-        {
-        }
-
-        public override Operand New()
-        {
-            return new BasisExpander();
-        }
-
-        public override bool IsAssociative()
-        {
-            return false;
-        }
-
-        public override bool IsDistributiveOver(Operation operation)
-        {
-            return true;
-        }
-
-        public override Operand EvaluationStep(EvaluationContext context)
-        {
-            if (operandList.Count != 1)
-                throw new EvaluationException("Exactly one argument required by basis expander.");
-
-            List<string> basisVectorList = context.ReturnBasisVectors();
-            if (basisVectorList == null)
-                return operandList[0];
-
-            Operand operand = base.EvaluationStep(context);
-            if (operand != null)
-                return operand;
-
-            operand = operandList[0];
-
-            if (operand is Collectable collectable)
-            {
-                return collectable.Explode(this, context);
-            }
-
-            return operand;
-        }
-
-        public Operand Translate(Operand operand, EvaluationContext context)
-        {
-            if (operand is SymbolicScalarTerm)
-            {
-                return operand;
-            }
-            else if(operand is Blade blade)
-            {
-                List<string> basisVectorList = context.ReturnBasisVectors();
-                string vectorName = blade.vectorList[0];
-                if (basisVectorList.Contains(vectorName))
-                    return operand;
-
-                return ExpandVectorInTermsOfBasis(vectorName, basisVectorList);
-            }
-
-            return new BasisExpander(new List<Operand>() { operand });
-        }
-
-        private Operand ExpandVectorInTermsOfBasis(string vectorName, List<string> basisVectorList)
-        {
-            Sum sum = new Sum();
-
-            foreach (string basisVectorName in basisVectorList)
-            {
-                InnerProduct dot = new InnerProduct(new List<Operand>() { new Blade(vectorName), new Blade(basisVectorName) });
-                sum.operandList.Add(new GeometricProduct(new List<Operand>() { dot, new Blade(vectorName) }));
-            }
-
-            return sum;
         }
     }
 }

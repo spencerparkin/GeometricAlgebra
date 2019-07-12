@@ -47,13 +47,11 @@ namespace GACalculator
                 try
                 {
                     string expression = inputTextBox.Text;
-                    Parser parser = new Parser(context);
 
-                    Operand operand = parser.Parse(expression);
-                    outputTextBox.AppendText("Input: " + operand.Print(Operand.Format.PARSEABLE, context) + "\r\n\r\n");
+                    var result = Operand.Evaluate(expression, context);
 
-                    operand = Operand.Evaluate(operand, context);
-                    outputTextBox.AppendText("Output: " + operand.Print(Operand.Format.PARSEABLE, context) + "\r\n\r\n");
+                    outputTextBox.AppendText("Input: " + result.input.Print(Operand.Format.PARSEABLE, context) + "\r\n\r\n");
+                    outputTextBox.AppendText("Output: " + result.output.Print(Operand.Format.PARSEABLE, context) + "\r\n\r\n");
 
                     inputTextBox.Clear();
 
