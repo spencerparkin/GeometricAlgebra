@@ -205,5 +205,12 @@ namespace Tests
             // (a^b)*@i = (a.(b*@i))
             // 0.5*(a*b - b*a)*@i = 0.5*(a*b*@i - b*@i*a)
         }
+
+        [TestMethod]
+        public void Case2()
+        {
+            // This expression is causing the evaluator to either loop way too long, or perhaps forever!  :(
+            // (a^b)*(reverse(a^b)*inverse((a^b).(a^b)))
+        }
     }
 }

@@ -41,9 +41,9 @@ namespace GeometricAlgebra
         private bool basisVectorsOnly;
         public bool generatedSymbolicVector;
 
-        public Parser(EvaluationContext context, bool basisVectorsOnly = false)
+        public Parser(EvaluationContext context = null, bool basisVectorsOnly = false)
         {
-            this.context = context;
+            this.context = context == null ? new EvaluationContext() : context;
             this.basisVectorsOnly = basisVectorsOnly;
             this.generatedSymbolicVector = false;
         }
@@ -230,7 +230,7 @@ namespace GeometricAlgebra
                     }
                 }
             }
-            else if (tokenList[0].kind == Token.Kind.OPERATOR && ((tokenList[1].kind == Token.Kind.LEFT_PARAN && tokenList[tokenList.Count - 1].kind == Token.Kind.RIGHT_PARAN) || tokenList.Count == 2))
+            else if (tokenList[0].kind == Token.Kind.OPERATOR && (ParansMatch(tokenList, 1, tokenList.Count - 1) || tokenList.Count == 2))
             {
                 Token token = tokenList[0];
 
@@ -239,7 +239,7 @@ namespace GeometricAlgebra
 
                 throw new ParseException(string.Format("Encounterd unary operator ({0}) that isn't recognized on the left.", token.data));
             }
-            else if (tokenList[tokenList.Count - 1].kind == Token.Kind.OPERATOR && ((tokenList[0].kind == Token.Kind.LEFT_PARAN && tokenList[tokenList.Count - 2].kind == Token.Kind.RIGHT_PARAN) || tokenList.Count == 2))
+            else if (tokenList[tokenList.Count - 1].kind == Token.Kind.OPERATOR && (ParansMatch(tokenList, 0, tokenList.Count - 2) || tokenList.Count == 2))
             {
                 Token token = tokenList[tokenList.Count - 1];
 
@@ -248,7 +248,7 @@ namespace GeometricAlgebra
 
                 throw new ParseException(string.Format("Encountered unary operator ({0}) that isn't recognized on the right.", token.data));
             }
-            else if (tokenList[0].kind == Token.Kind.SYMBOL && tokenList[1].kind == Token.Kind.LEFT_PARAN && tokenList[tokenList.Count - 1].kind == Token.Kind.RIGHT_PARAN)
+            else if (tokenList[0].kind == Token.Kind.SYMBOL && ParansMatch(tokenList, 1, tokenList.Count - 1))
             {
                 Token token = tokenList[0];
 
@@ -364,6 +364,20 @@ namespace GeometricAlgebra
 
                 yield return token;
             }
+        }
+
+        private bool ParansMatch(List<Token> tokenList, int i, int j)
+        {
+            if(tokenList[i].kind != Token.Kind.LEFT_PARAN)
+                return false;
+
+            if(tokenList[j].kind != Token.Kind.RIGHT_PARAN)
+                return false;
+
+            if(j != FindMatchingParan(tokenList, i))
+                return false;
+
+            return true;
         }
 
         public int FindMatchingParan(List<Token> tokenList, int i)

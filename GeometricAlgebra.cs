@@ -196,6 +196,12 @@ namespace GeometricAlgebra
                 inputResult = parser.Parse(expression);
                 outputResult = ExhaustEvaluation(inputResult.Copy(), context);
 
+                // Sadly, I've come across cases where it just takes way too long
+                // to perform the following calculation, so I'm just going to have
+                // to comment this out for now.  The solution did work, however, for
+                // the case I encountered where it was needed.  Until I can think of
+                // something else, it has to go.
+#if false
                 // If a symbolic vector was generated during parsing, then the
                 // evaluation of the expression does not always reduce all
                 // grade parts to zero that can be.  The only sure solution
@@ -218,6 +224,7 @@ namespace GeometricAlgebra
                         outputResult = ExhaustEvaluation(outputResult, context);
                     }
                 }
+#endif
             }
             catch(Exception exc)
             {
@@ -572,6 +579,20 @@ namespace GeometricAlgebra
                 }
             }
 
+            return null;
+        }
+
+        public override Operand Inverse()
+        {
+            // TODO: Here we really have to know how to invert general multivectors.
+            //       This amounts to setting up and solving a linear system of equations.
+            //       We will eventually be called once our sum becomes that of a set of blades.
+            //       Note that solving such a system of equations numerically is staright-forward,
+            //       but not so symbolically.  In any case, soming up with the system of equations
+            //       isn't terribly easy.  Here, the best I can think of is to make copies of the
+            //       the tree where in one, I take the reverse and inject symbolic scalars, then
+            //       multiply the two copies together, then read the equations from the result.
+            //       Seems hacky.
             return null;
         }
     }
@@ -1520,10 +1541,21 @@ namespace GeometricAlgebra
             return new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), this });
         }
 
+        // Note that this isn't terribly helpful, because an inverse isn't taken/considered until
+        // the element to be inverted is fully expanded, at which point it is not easily recognized
+        // as a blade (that is, unless a factorization algorithm was applied.)  Such an algorithm, however,
+        // should not be needed at all, though, because the inverter should just consider the general
+        // case of multivectors.
         public override Operand Inverse()
         {
-            // TODO: Write this.
-            return null;
+            GeometricProduct geometricProduct = new GeometricProduct();
+
+            // This is correct up to sign.
+            // TODO: Determine correct sign.
+            geometricProduct.operandList.Add(new Reverse(new List<Operand>() { this.Copy() }));
+            geometricProduct.operandList.Add(new Inverse(new List<Operand>(){ new InnerProduct(new List<Operand>() { this.Copy(), this.Copy() }) }));
+
+            return geometricProduct;
         }
 
         public override Operand Explode(ITranslator translator, EvaluationContext context)
