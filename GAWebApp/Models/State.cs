@@ -8,14 +8,19 @@ namespace GAWebApp.Models
 {
     public class HistoryItem
     {
-        public string input;
-        public string output;
+        public string inputLatex;
+        public string outputLatex;
+        public string inputPlain;
+        public string outputPlain;
+        public string expression;
         public string error;
 
         public HistoryItem()
         {
-            input = "?";
-            output = "?";
+            inputLatex = "?";
+            outputLatex = "?";
+            inputPlain = "?";
+            outputPlain = "?";
             error = "";
         }
     }
@@ -38,14 +43,17 @@ namespace GAWebApp.Models
             // TODO: We should probably do this in a task and then wait with time-out.
             var result = Operand.Evaluate(expression, context);
 
-            item.input = result.input == null ? "" : result.input.Print(Operand.Format.LATEX, context);
-            item.output = result.output == null ? "" : result.output.Print(Operand.Format.LATEX, context);
+            item.expression = expression;
+            item.inputLatex = result.input == null ? "" : result.input.Print(Operand.Format.LATEX, context);
+            item.outputLatex = result.output == null ? "" : result.output.Print(Operand.Format.LATEX, context);
+            item.inputPlain = result.input == null ? "" : result.input.Print(Operand.Format.PARSEABLE, context);
+            item.outputPlain = result.output == null ? "" : result.output.Print(Operand.Format.PARSEABLE, context);
             item.error = result.error;
 
             // Ugh...this fixes an encoding issue in the URIs, but sometimes a space is needed for valid latex.
             // Can we replace spaces with something else?
-            item.input = item.input.Replace(" ", "");
-            item.output = item.output.Replace(" ", "");
+            item.inputLatex = item.inputLatex.Replace(" ", "");
+            item.outputLatex = item.outputLatex.Replace(" ", "");
 
             history.Add(item);
         }

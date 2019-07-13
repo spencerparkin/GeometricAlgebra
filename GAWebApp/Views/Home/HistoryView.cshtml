@@ -6,17 +6,19 @@
         @foreach (var item in Model.history) {
             <tr>
                 <td class="historyInput">
-                    @if(item.input.Length > 0) {
-                        <img src=@($"https://latex.codecogs.com/gif.latex?{@item.input}")>
+                    @if(item.error.Length > 0) {
+                        <div style="color: red;">@item.expression</div>
+                    } else if(item.inputLatex.Length > 0) {
+                        <img src=@($"https://latex.codecogs.com/gif.latex?{@item.inputLatex}")>
                     }
                 </td>
             </tr>
             <tr>
                 <td class="historyOutput">
                     @if(item.error.Length > 0) {
-                        <div>@item.error</div>
-                    } else if(item.output.Length > 0) {
-                        <img src=@($"https://latex.codecogs.com/gif.latex?{@item.output}")>
+                        <div style="color: red;">@item.error</div>
+                    } else if(item.outputLatex.Length > 0) {
+                        <img src=@($"https://latex.codecogs.com/gif.latex?{@item.outputLatex}")>
                     }
                 </td>
             </tr>
