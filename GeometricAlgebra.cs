@@ -240,7 +240,7 @@ namespace GeometricAlgebra
         }
         
         // This is with respect to the geometric product.
-        public virtual Operand Inverse()
+        public virtual Operand Inverse(EvaluationContext context)
         {
             return null;
         }
@@ -582,17 +582,40 @@ namespace GeometricAlgebra
             return null;
         }
 
-        public override Operand Inverse()
+        public override Operand Inverse(EvaluationContext context)
         {
-            // TODO: Here we really have to know how to invert general multivectors.
-            //       This amounts to setting up and solving a linear system of equations.
-            //       We will eventually be called once our sum becomes that of a set of blades.
-            //       Note that solving such a system of equations numerically is staright-forward,
-            //       but not so symbolically.  In any case, soming up with the system of equations
-            //       isn't terribly easy.  Here, the best I can think of is to make copies of the
-            //       the tree where in one, I take the reverse and inject symbolic scalars, then
-            //       multiply the two copies together, then read the equations from the result.
-            //       Seems hacky.
+            // This is a super hard problem, but maybe we can handle the following case.
+
+            if(!operandList.All(operand => operand is Blade))
+                return null;
+
+            if(!operandList.All(operand => (operand as Blade).scalar is NumericScalar))
+                return null;
+
+            List<string> basisVectorList = context.ReturnBasisVectors();
+            if(!operandList.All(operand => (operand as Blade).vectorList.All(vectorName => basisVectorList.Contains(vectorName))))
+                return null;
+
+            Sum multivectorA = this.Copy() as Sum;
+            Sum multivectorB = this.Copy() as Sum;
+
+            for(int i = 0; i < multivectorB.operandList.Count; i++)
+            {
+                Blade blade = multivectorB.operandList[i] as Blade;
+                string scalarName = string.Format("__x{0}__", i);
+                blade.scalar = new GeometricProduct(new List<Operand>() { new SymbolicScalarTerm(scalarName), blade.scalar });
+            }
+
+            GeometricProduct geometricProduct = new GeometricProduct();
+            geometricProduct.operandList.Add(multivectorA);
+            geometricProduct.operandList.Add(multivectorB);
+
+            Operand result = ExhaustEvaluation(geometricProduct, context);
+
+            // TODO: Now read the linear equations off of each part of the resulting multivector.
+            //       The grade zero part should be one; all others zero.  Build a matrix; solve the system.
+            //       I'll need to get my hands on a linear algebra library, or heaven forbid, write my own.
+
             return null;
         }
     }
@@ -1145,7 +1168,7 @@ namespace GeometricAlgebra
             if(operandList[0].IsAdditiveIdentity)
                 throw new EvaluationException("Cannot invert the additive identity.");
 
-            Operand inverse = operandList[0].Inverse();
+            Operand inverse = operandList[0].Inverse(context);
             return inverse;
         }
 
@@ -1546,7 +1569,7 @@ namespace GeometricAlgebra
         // as a blade (that is, unless a factorization algorithm was applied.)  Such an algorithm, however,
         // should not be needed at all, though, because the inverter should just consider the general
         // case of multivectors.
-        public override Operand Inverse()
+        public override Operand Inverse(EvaluationContext context)
         {
             GeometricProduct geometricProduct = new GeometricProduct();
 
@@ -1634,7 +1657,7 @@ namespace GeometricAlgebra
             return "?";
         }
 
-        public override Operand Inverse()
+        public override Operand Inverse(EvaluationContext context)
         {
             try
             {
@@ -2016,7 +2039,7 @@ namespace GeometricAlgebra
             return string.Join("", (from factor in factorList select factor.SortKey()).ToList());
         }
 
-        public override Operand Inverse()
+        public override Operand Inverse(EvaluationContext context)
         {
             SymbolicScalarTerm term = this.Copy() as SymbolicScalarTerm;
             term.scalar = new Inverse(new List<Operand>() { term.scalar });

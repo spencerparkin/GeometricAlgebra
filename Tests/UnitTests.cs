@@ -61,7 +61,7 @@ namespace Tests
         public void ParseFunction()
         {
             Parser parser = new Parser();
-            string inputText = "grade((a + b)*c,grade(a,1*(2 + 3)))";
+            string inputText = "grade((a + b)*c, grade(a, 1*(2 + 3)))";
             Operand operand = parser.Parse(inputText);
             string outputText = operand.Print(Operand.Format.PARSEABLE);
             Assert.AreEqual(inputText, outputText);
