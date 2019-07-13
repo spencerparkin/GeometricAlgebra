@@ -5,7 +5,7 @@
     <tbody>
         @foreach (var item in Model.history) {
             <tr>
-                <td class="historyInput">
+                <td class="@("historyInput " + (Model.showLatex ? "historyInputLatex" : ""))">
                     @if(item.error.Length > 0) {
                         <div style="color: red;">@item.expression</div>
                     } else if(Model.showLatex && item.inputLatex.Length > 0) {
@@ -16,7 +16,7 @@
                 </td>
             </tr>
             <tr>
-                <td class="historyOutput">
+                <td class="@("historyOutput " + (Model.showLatex ? "historyOutputLatex" : ""))">
                     @if(item.error.Length > 0) {
                         <div style="color: red;">@item.error</div>
                     } else if(Model.showLatex && item.outputLatex.Length > 0) {

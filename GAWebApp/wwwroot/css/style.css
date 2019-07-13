@@ -4,7 +4,7 @@
     height: 500px;
     resize: vertical;
     overflow-y: auto;
-    background-color: lavender;
+    background-color: #00000054;
 }
 
 table {
@@ -16,16 +16,28 @@ td {
     width: 100%;
 }
 
+tr {
+    color: white;
+}
+
 tr:nth-child(even) {
-    background-color: white;
+    background-color: #000000aa;
 }
 
 .historyInput {
     text-align: left;
 }
 
+.historyInputLatex {
+    background-color: white;
+}
+
 .historyOutput {
     text-align: right;
+}
+
+.historyOutputLatex {
+    background-color: #e2e2e2;
 }
 
 input {
