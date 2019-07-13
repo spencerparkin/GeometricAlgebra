@@ -1158,15 +1158,27 @@ namespace GeometricAlgebra
 
         public override Operand EvaluationStep(EvaluationContext context)
         {
-            Operand operand = base.EvaluationStep(context);
-            if(operand != null)
-                return operand;
-
             if (operandList.Count != 1)
                 throw new EvaluationException(string.Format("Inverse operation expects exactly one operand, got {0}.", operandList.Count));
 
-            if(operandList[0].IsAdditiveIdentity)
+            if (operandList[0].IsAdditiveIdentity)
                 throw new EvaluationException("Cannot invert the additive identity.");
+
+            if(operandList[0] is GeometricProduct oldGeometricProduct)
+            {
+                GeometricProduct newGeometricProduct = new GeometricProduct();
+
+                for(int i = oldGeometricProduct.operandList.Count - 1; i >= 0; i--)
+                {
+                    newGeometricProduct.operandList.Add(new Inverse(new List<Operand>() { oldGeometricProduct.operandList[i] }));
+                }
+
+                return newGeometricProduct;
+            }
+
+            Operand operand = base.EvaluationStep(context);
+            if(operand != null)
+                return operand;            
 
             Operand inverse = operandList[0].Inverse(context);
             return inverse;
