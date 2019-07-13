@@ -25,6 +25,10 @@ namespace GeometricAlgebra
             funcList = new List<Function>();
             operandStorage = new Dictionary<string, Operand>();
             logMessageList = new List<string>();
+
+            funcList.Add(new Inverse());
+            funcList.Add(new Reverse());
+            funcList.Add(new GradePart());
         }
 
         public void Log(string message)
@@ -1012,7 +1016,7 @@ namespace GeometricAlgebra
         }
     }
 
-    public class Reverse : Operation
+    public class Reverse : Function
     {
         public Reverse() : base()
         {
@@ -1037,6 +1041,11 @@ namespace GeometricAlgebra
         public override Operand New()
         {
             return new Reverse();
+        }
+
+        public override string Name(Format format)
+        {
+            return "reverse";
         }
 
         public override Operand EvaluationStep(EvaluationContext context)
@@ -1065,14 +1074,14 @@ namespace GeometricAlgebra
                 case Format.LATEX:
                     return @"\left(" + operandList[0].Print(format, context) + @"\right)^{\tilde}";
                 case Format.PARSEABLE:
-                    return string.Format("reverse({0})", operandList[0].Print(format, context));
+                    return base.Print(format, context);
             }
 
             return "?";
         }
     }
 
-    public class Inverse : Operation
+    public class Inverse : Function
     {
         public Inverse() : base()
         {
@@ -1096,6 +1105,11 @@ namespace GeometricAlgebra
         public override Operand New()
         {
             return new Inverse();
+        }
+
+        public override string Name(Format format)
+        {
+            return "inverse";
         }
 
         public override Operand EvaluationStep(EvaluationContext context)
@@ -1124,14 +1138,14 @@ namespace GeometricAlgebra
                 case Format.LATEX:
                     return @"\left(" + operandList[0].Print(format, context) + @"\right)^{-1}";
                 case Format.PARSEABLE:
-                    return string.Format("inverse({0})", operandList[0].Print(format, context));
+                    return base.Print(format, context);
             }
 
             return "?";
         }
     }
 
-    public class GradePart : Operation
+    public class GradePart : Function
     {
         public GradePart() : base()
         {
@@ -1157,6 +1171,11 @@ namespace GeometricAlgebra
             return new GradePart();
         }
 
+        public override string Name(Format format)
+        {
+            return "grade";
+        }
+
         // Notice that we try to cull by grade first before evaluating our main argument.
         // This is what may be an optimization by early detection of grade.  We must evaluate
         // our main argument as long as its grade remains indeterminant.  How good the optimization
@@ -1171,7 +1190,7 @@ namespace GeometricAlgebra
             if (grade == -1)
             {
                 Operand operand = base.EvaluationStep(context);
-                if (operand != null)
+                if(operand != null)
                     return operand;
             }
             else
@@ -1181,7 +1200,16 @@ namespace GeometricAlgebra
                 {
                     NumericScalar scalar = operandList[i] as NumericScalar;
                     if(scalar == null)
+                    {
+                        Operand operand = operandList[i].EvaluationStep(context);
+                        if(operand != null)
+                        {
+                            operandList[i] = operand;
+                            return this;
+                        }
+
                         throw new EvaluationException("Encountered non-numeric-scalar when looking for grade arguments.");
+                    }
 
                     gradeSet.Add((int)scalar.value);
                 }
@@ -1197,26 +1225,15 @@ namespace GeometricAlgebra
 
         public override string Print(Format format, EvaluationContext context)
         {
-            if(operandList.Count != 2)
-                return "?";
-
-            switch(format)
+            switch (format)
             {
                 case Format.LATEX:
                 {
-                    NumericScalar scalar = operandList[1] as NumericScalar;
-                    if (scalar == null)
-                        return "?";
-
-                    int desiredGrade = (int)scalar.value;
-                    if (desiredGrade == 0)
-                        return @"\left\langle" + operandList[0].Print(format, context) + @"\right\rangle";
-
-                    return @"\left\langle" + operandList[0].Print(format, context) + @"\right\rangle_{" + desiredGrade.ToString() + "}";
+                    return @"\left\langle" + operandList[0].Print(format, context) + @"\right\rangle_{" + string.Join(",", (from operand in operandList.Skip(1) select operand.Print(format, context)).ToList()) + "}";
                 }
                 case Format.PARSEABLE:
                 {
-                    return string.Format("grade({0},{1})", operandList[0].Print(format, context), operandList[1].Print(format, context));
+                    return base.Print(format, context);
                 }
             }
 
@@ -1228,7 +1245,6 @@ namespace GeometricAlgebra
     {
         public bool storeEvaluation;
 
-        // TODO: Expose the other varient ":=" in the parser.
         public Assignment(bool storeEvaluation = true) : base()
         {
             this.storeEvaluation = storeEvaluation;

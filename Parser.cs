@@ -41,7 +41,7 @@ namespace GeometricAlgebra
         private bool basisVectorsOnly;
         public bool generatedSymbolicVector;
 
-        public Parser(EvaluationContext context = null, bool basisVectorsOnly = false)
+        public Parser(EvaluationContext context, bool basisVectorsOnly = false)
         {
             this.context = context;
             this.basisVectorsOnly = basisVectorsOnly;
@@ -252,20 +252,7 @@ namespace GeometricAlgebra
             {
                 Token token = tokenList[0];
 
-                Operation operation = null;
-                if (token.data == "reverse" || token.data == "rev")
-                    operation = new Reverse();
-                else if (token.data == "inverse" || token.data == "inv")
-                    operation = new Inverse();
-                else if (token.data == "grade")
-                    operation = new GradePart();
-                else if (token.data == "assign")
-                    operation = new Assignment();
-                else if (token.data == "equiv")
-                    operation = new Assignment(false);
-                else if (context != null)
-                    operation = context.CreateFunction(token.data);
-
+                Operation operation = context.CreateFunction(token.data);
                 if(operation == null)
                     throw new ParseException(string.Format("Encountered unknown function \"{0}\".", token.data));
 
