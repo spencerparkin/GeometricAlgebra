@@ -20,6 +20,22 @@ namespace GAWebApp.Controllers
         }
 
         [HttpGet]
+        public IActionResult ClearHistory()
+        {
+            State state = GetState();
+            state.history.Clear();
+            return PartialView("HistoryView", state);
+        }
+
+        [HttpGet]
+        public IActionResult ShowLatex(bool showLatex)
+        {
+            State state = GetState();
+            state.showLatex = showLatex;
+            return PartialView("HistoryView", state);
+        }
+
+        [HttpGet]
         public IActionResult Calculate(string expression)
         {
             State state = GetState();
@@ -35,10 +51,12 @@ namespace GAWebApp.Controllers
             return PartialView("HistoryView", state);
         }
 
-        // TODO: Add parameter that identifies client, then retrieve state from a database or something based on that identification.
-        // TODO: Use the async/await stuff for this.
         private State GetState()
         {
+            // TODO: For correctness, we need to retrieve the correct state for the client based on
+            //       an identification of the client.  For now, just return whatever state we have.
+            //       This could have lots of weird consequences depending on how the web-server application
+            //       is scaled horizontally or otherwise allocated for clients.
             return defaultState;
         }
     }

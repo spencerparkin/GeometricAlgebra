@@ -29,11 +29,13 @@ namespace GAWebApp.Models
     {
         public EvaluationContext context;
         public List<HistoryItem> history;
+        public bool showLatex;
 
         public State()
         {
             context = new GeometricAlgebra.ConformalModel.Conformal3D_EvaluationContext();
             history = new List<HistoryItem>();
+            showLatex = true;
         }
 
         public void Calculate(string expression)

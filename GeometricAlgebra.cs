@@ -1089,6 +1089,9 @@ namespace GeometricAlgebra
 
         public override string Name(Format format)
         {
+            if (format == Format.LATEX)
+                return @"\mbox{reverse}";
+
             return "reverse";
         }
 
@@ -1153,6 +1156,9 @@ namespace GeometricAlgebra
 
         public override string Name(Format format)
         {
+            if(format == Format.LATEX)
+                return @"\mbox{inverse}";
+
             return "inverse";
         }
 
@@ -1229,6 +1235,9 @@ namespace GeometricAlgebra
 
         public override string Name(Format format)
         {
+            if (format == Format.LATEX)
+                return @"\mbox{grade}";
+
             return "grade";
         }
 

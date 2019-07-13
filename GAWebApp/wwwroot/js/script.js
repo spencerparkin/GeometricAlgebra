@@ -5,6 +5,29 @@ function refreshHistoryView(renderedHtml) {
 
     // TODO: This doesn't work.  Why?  Maybe do it after page has refreshed?
     $("#historyView").scrollTop($("#historyView")[0].scrollHeight);
+
+    document.getElementById('expressionBox').value = '';
+}
+
+function showLatexCheckboxClicked(event) {
+    var checkbox = document.getElementById('showLatexCheckbox');
+    $.ajax({
+        url: 'Home/ShowLatex',
+        type: 'GET',
+        data: {
+            'showLatex': checkbox.checked
+        },
+        success: refreshHistoryView
+    });
+}
+
+function clearHistoryButtonClicked(event) {
+    $.ajax({
+        url: 'Home/ClearHistory',
+        type: 'GET',
+        data: {},
+        success: refreshHistoryView
+    });
 }
 
 function textboxKeydown(textbox) {
@@ -43,5 +66,3 @@ function processScriptFile(event) {
 $(document).ready(function () {
     document.getElementById('scriptBox').addEventListener('change', processScriptFile, false);
 });
-
-// TODO: Add button to clear all output.  This amounts to an ajax request.
