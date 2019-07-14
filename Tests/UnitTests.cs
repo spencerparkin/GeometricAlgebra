@@ -75,7 +75,6 @@ namespace Tests
         public void Distribute()
         {
             Context context = new Context();
-            Parser parser = new Parser();
             string inputText = "($a*($b + $c))*(x^y)";
             Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
@@ -86,7 +85,6 @@ namespace Tests
         public void Arithmetic()
         {
             Context context = new Context();
-            Parser parser = new Parser();
             string inputText = "3*(2+1)";
             Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
@@ -97,7 +95,6 @@ namespace Tests
         public void Divide()
         {
             Context context = new Context();
-            Parser parser = new Parser();
             string inputText = "1/(1+1)";
             Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
@@ -123,7 +120,6 @@ namespace Tests
         public void Subtract()
         {
             Context context = new Context();
-            Parser parser = new Parser();
             string inputText = "a - b";
             Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
@@ -134,7 +130,6 @@ namespace Tests
         public void SortVectors()
         {
             Context context = new Context();
-            Parser parser = new Parser();
             string inputText = "c^b^a";
             Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
@@ -145,7 +140,6 @@ namespace Tests
         public void LinearlyDependentVectors()
         {
             Context context = new Context();
-            Parser parser = new Parser();
             string inputText = "c^b^a^c";
             Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
@@ -156,7 +150,6 @@ namespace Tests
         public void BladeReverse()
         {
             Context context = new Context();
-            Parser parser = new Parser();
             string inputText = "reverse(a^b^c)";
             Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
@@ -169,7 +162,6 @@ namespace Tests
         public void BladeCancellation()
         {
             Context context = new Context();
-            Parser parser = new Parser();
             string inputText = "a^b + b^a";
             Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
@@ -184,7 +176,6 @@ namespace Tests
         public void StorageAndRetrieval()
         {
             Context context = new Context();
-            Parser parser = new Parser();
             string inputText = "@a = a^b";
             Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
@@ -211,6 +202,20 @@ namespace Tests
         {
             // This expression is causing the evaluator to either loop way too long, or perhaps forever!  :(
             // (a^b)*(reverse(a^b)*inverse((a^b).(a^b)))
+        }
+    }
+
+    [TestClass]
+    public class UnitTests_Inverse
+    {
+        [TestMethod]
+        public void Case1()
+        {
+            Context context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
+            Operand.Evaluate("@multivector = 5 - e1 + 2 * e2 + 7 * e1 ^ e3", context);
+            Operand.Evaluate("@multivectorInv = inverse(@multivector)", context);
+            Operand result = Operand.Evaluate("@multivector * @multivectorInv", context).output;
+            Assert.IsTrue(result.IsMultiplicativeIdentity);     // TODO: Must check approximately.
         }
     }
 }

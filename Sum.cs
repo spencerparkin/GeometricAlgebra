@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Reflection;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
@@ -179,65 +180,110 @@ namespace GeometricAlgebra
             }
         }
 
+        private static void PopulateMatrixArray(double[,] matrixArray, int row, Sum sum)
+        {
+            Regex rx = new Regex("x([0-9]+)");
+
+            foreach(SymbolicScalarTerm term in from operand in sum.operandList where operand is SymbolicScalarTerm select operand as SymbolicScalarTerm)
+            {
+                var symbol = term.factorList[0] as SymbolicScalarTerm.Symbol;
+                MatchCollection collection = rx.Matches(symbol.name);
+                Match match = collection[0];
+                int col = Convert.ToInt32(match.Groups[1].Value);
+                matrixArray[row, col] = (term.scalar as NumericScalar).value;
+            }
+        }
+
         public override Operand Inverse(Context context)
         {
             // This is a super hard problem, but maybe we can handle the following case.
 
-            if (!operandList.All(operand => operand is Blade))
+            if (!operandList.All(operand => operand is Blade || operand is NumericScalar))
                 return null;
 
-            if (!operandList.All(operand => (operand as Blade).scalar is NumericScalar))
+            if (!(from operand in operandList where operand is Blade select operand as Blade).All(blade => blade.scalar is NumericScalar))
                 return null;
 
             List<string> basisVectorList = context.ReturnBasisVectors();
-            if (!operandList.All(operand => (operand as Blade).vectorList.All(vectorName => basisVectorList.Contains(vectorName))))
+            if (!(from operand in operandList where operand is Blade select operand as Blade).All(blade => blade.vectorList.All(vectorName => basisVectorList.Contains(vectorName))))
                 return null;
 
-            HashSet<string> subBasis = new HashSet<string>();
-            foreach (Operand operand in operandList)
-                foreach (string vectorName in (operand as Blade).vectorList)
-                    if (!subBasis.Contains(vectorName))
-                        subBasis.Add(vectorName);
-
-            Sum multivectorA = this.Copy() as Sum;
-            Sum multivectorB = new Sum();
-
-            int i = 0;
-            foreach (Blade basisBlade in GenerateBasisBlades(subBasis.ToList()))
+            try
             {
-                Blade blade = basisBlade.Copy() as Blade;
-                string scalarName = string.Format("__x{0}__", i++);
-                blade.scalar = new SymbolicScalarTerm(scalarName);
-                multivectorB.operandList.Add(blade);
+                HashSet<string> subBasis = new HashSet<string>();
+                foreach (Blade blade in (from operand in operandList where operand is Blade select operand as Blade))
+                    foreach (string vectorName in blade.vectorList)
+                        if (!subBasis.Contains(vectorName))
+                            subBasis.Add(vectorName);
+
+                Sum multivectorInverse = new Sum();
+
+                int count = 0;
+                foreach (Blade basisBlade in GenerateBasisBlades(subBasis.ToList()))
+                {
+                    Blade blade = basisBlade.Copy() as Blade;
+                    string scalarName = string.Format("x{0}", count++);
+                    blade.scalar = new SymbolicScalarTerm(scalarName);
+                    multivectorInverse.operandList.Add(blade);
+                }
+
+                GeometricProduct geometricProduct = new GeometricProduct();
+                geometricProduct.operandList.Add(this.Copy());
+                geometricProduct.operandList.Add(multivectorInverse.Copy());
+
+                string debug = geometricProduct.Print(Format.PARSEABLE, context);
+
+                Operand result = ExhaustEvaluation(geometricProduct, context);
+
+                debug = result.Print(Format.PARSEABLE, context);
+
+                double[,] matrixArray = new double[count, count];
+                for(int i = 0; i < count; i++)
+                    for(int j = 0; j < count; j++)
+                        matrixArray[i,j] = 0.0;
+
+                PopulateMatrixArray(matrixArray, 0, result as Sum);
+
+                foreach(Blade bladeA in from operand in (result as Operation).operandList where operand is Blade select operand as Blade)
+                {
+                    for(int i = 0; i < multivectorInverse.operandList.Count; i++)
+                    {
+                        Blade bladeB = multivectorInverse.operandList[i] as Blade;
+                        if(bladeB != null && bladeB.Like(bladeA))
+                        {
+                            PopulateMatrixArray(matrixArray, i, bladeA.scalar as Sum);
+                        }
+                    }
+                }
+
+                Matrix<double> matrix = DenseMatrix.OfArray(matrixArray);
+
+                double[] vectorArray = new double[count];
+                for (int i = 0; i < count; i++)
+                    vectorArray[i] = i > 0 ? 0.0 : 1.0;
+
+                Vector<double> vectorA = DenseVector.OfArray(vectorArray);
+                Vector<double> vectorB = Vector<double>.Build.Dense(count);
+
+                // This should throw an exception is our matrix is singular.
+                matrix.Solve(vectorA, vectorB);
+
+                multivectorInverse = new Sum();
+
+                count = 0;
+                foreach (Blade basisBlade in GenerateBasisBlades(subBasis.ToList()))
+                {
+                    Blade blade = basisBlade.Copy() as Blade;
+                    blade.scalar = new NumericScalar(vectorB[count++]);
+                    multivectorInverse.operandList.Add(blade);
+                }
+
+                return multivectorInverse;
             }
-
-            GeometricProduct geometricProduct = new GeometricProduct();
-            geometricProduct.operandList.Add(multivectorA);
-            geometricProduct.operandList.Add(multivectorB);
-
-            Operand result = ExhaustEvaluation(geometricProduct, context);
-
-            double[,] matrixArray = new double[i, i];
-
-            //...
-
-            Matrix<double> matrix = DenseMatrix.OfArray(matrixArray);
-
-            double[] vectorArray = new double[i];
-            for (int j = 0; j < i; j++)
-                vectorArray[j] = j > 0 ? 0.0 : 1.0;
-
-            Vector<double> vectorA = DenseVector.OfArray(vectorArray);
-            Vector<double> vectorB = Vector<double>.Build.Dense(i);
-
-            double det = matrix.Determinant();
-            if (det == 0.0)      // Just being close to zero can be a problem.
+            catch(Exception exc)
             {
+                throw new MathException(string.Format("Failed to calculate inverse ({0}).", exc.Message));
             }
-
-            matrix.Solve(vectorA, vectorB);   // Will this throw an exception if singular?
-
-            //...
 
             return null;
         }
