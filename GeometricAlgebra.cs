@@ -652,15 +652,27 @@ namespace GeometricAlgebra
 
             Operand result = ExhaustEvaluation(geometricProduct, context);
 
-            double[,] array = new double[i,i];
+            double[,] matrixArray = new double[i,i];
 
             //...
 
-            Matrix<double> matrix = DenseMatrix.OfArray(array);
+            Matrix<double> matrix = DenseMatrix.OfArray(matrixArray);
 
-            // TODO: Now read the linear equations off of each part of the resulting multivector.
-            //       The grade zero part should be one; all others zero.  Build a matrix; solve the system.
-            //       I'll need to get my hands on a linear algebra library, or heaven forbid, write my own.
+            double[] vectorArray = new double[i];
+            for(int j = 0; j < i; j++)
+                vectorArray[j] = j > 0 ? 0.0 : 1.0;
+
+            Vector<double> vectorA = DenseVector.OfArray(vectorArray);
+            Vector<double> vectorB = Vector<double>.Build.Dense(i);
+
+            double det = matrix.Determinant();
+            if(det == 0.0)      // Just being close to zero can be a problem.
+            {
+            }
+
+            matrix.Solve(vectorA, vectorB);   // Will this throw an exception if singular?
+
+            //...
 
             return null;
         }
