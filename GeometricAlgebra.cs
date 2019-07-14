@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace GeometricAlgebra
 {
@@ -582,6 +584,36 @@ namespace GeometricAlgebra
             return null;
         }
 
+        private static IEnumerable<Blade> GenerateBasisBladesOfGrade(List<string> basisVectorList, Blade blade, int depth, int maxDepth, int j)
+        {
+            if(depth < maxDepth)
+            {
+                for(int i = j; i < basisVectorList.Count; i++)
+                {
+                    blade.vectorList.Add(basisVectorList[i]);
+                    
+                    foreach(Blade basisBlade in GenerateBasisBladesOfGrade(basisVectorList, blade, depth + 1, maxDepth, i + 1))
+                        yield return basisBlade;
+
+                    blade.vectorList.RemoveAt(blade.vectorList.Count - 1);
+                }
+            }
+            else
+            {
+                yield return blade;
+            }
+        }
+
+        private static IEnumerable<Blade> GenerateBasisBlades(List<string> basisVectorList)
+        {
+            Blade blade = new Blade();
+            for (int i = 0; i <= basisVectorList.Count; i++)
+            {
+                foreach(Blade basisBlade in GenerateBasisBladesOfGrade(basisVectorList, blade, 0, i, 0))
+                    yield return basisBlade;
+            }
+        }
+
         public override Operand Inverse(EvaluationContext context)
         {
             // This is a super hard problem, but maybe we can handle the following case.
@@ -596,14 +628,22 @@ namespace GeometricAlgebra
             if(!operandList.All(operand => (operand as Blade).vectorList.All(vectorName => basisVectorList.Contains(vectorName))))
                 return null;
 
-            Sum multivectorA = this.Copy() as Sum;
-            Sum multivectorB = this.Copy() as Sum;
+            HashSet<string> subBasis = new HashSet<string>();
+            foreach(Operand operand in operandList)
+                foreach(string vectorName in (operand as Blade).vectorList)
+                    if(!subBasis.Contains(vectorName))
+                        subBasis.Add(vectorName);
 
-            for(int i = 0; i < multivectorB.operandList.Count; i++)
+            Sum multivectorA = this.Copy() as Sum;
+            Sum multivectorB = new Sum();
+
+            int i = 0;
+            foreach(Blade basisBlade in GenerateBasisBlades(subBasis.ToList()))
             {
-                Blade blade = multivectorB.operandList[i] as Blade;
-                string scalarName = string.Format("__x{0}__", i);
-                blade.scalar = new GeometricProduct(new List<Operand>() { new SymbolicScalarTerm(scalarName), blade.scalar });
+                Blade blade = basisBlade.Copy() as Blade;
+                string scalarName = string.Format("__x{0}__", i++);
+                blade.scalar = new SymbolicScalarTerm(scalarName);
+                multivectorB.operandList.Add(blade);
             }
 
             GeometricProduct geometricProduct = new GeometricProduct();
@@ -611,6 +651,12 @@ namespace GeometricAlgebra
             geometricProduct.operandList.Add(multivectorB);
 
             Operand result = ExhaustEvaluation(geometricProduct, context);
+
+            double[,] array = new double[i,i];
+
+            //...
+
+            Matrix<double> matrix = DenseMatrix.OfArray(array);
 
             // TODO: Now read the linear equations off of each part of the resulting multivector.
             //       The grade zero part should be one; all others zero.  Build a matrix; solve the system.
