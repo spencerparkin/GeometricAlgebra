@@ -217,5 +217,15 @@ namespace Tests
             Operand result = Operand.Evaluate("@multivector * @multivectorInv", context).output;
             Assert.IsTrue(result.IsMultiplicativeIdentity);     // TODO: Must check approximately.
         }
+
+        [TestMethod]
+        public void Case2()
+        {
+            Context context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
+            Operand.Evaluate("@multivector = e1 + no + 5 * ni ^ no", context);
+            Operand.Evaluate("@multivectorInv = inverse(@multivector)", context);
+            Operand result = Operand.Evaluate("@multivector * @multivectorInv", context).output;
+            Assert.IsTrue(result.IsMultiplicativeIdentity);     // TODO: Must check approximately.
+        }
     }
 }
