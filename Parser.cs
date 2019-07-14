@@ -37,13 +37,13 @@ namespace GeometricAlgebra
 
     public class Parser
     {
-        private EvaluationContext context;
+        private Context context;
         private bool basisVectorsOnly;
         public bool generatedSymbolicVector;
 
-        public Parser(EvaluationContext context = null, bool basisVectorsOnly = false)
+        public Parser(Context context = null, bool basisVectorsOnly = false)
         {
-            this.context = context == null ? new EvaluationContext() : context;
+            this.context = context == null ? new Context() : context;
             this.basisVectorsOnly = basisVectorsOnly;
             this.generatedSymbolicVector = false;
         }

@@ -5,8 +5,5 @@ using System.Text;
 
 namespace GeometricAlgebra
 {
-    class BladeFactor
-    {
-        // TODO: It sure would be rad if I had some support for blade factorization.  This is an interesting research topic.
-    }
+    // TODO: Add support for blade factorization.  This would be quite a challenge.
 }

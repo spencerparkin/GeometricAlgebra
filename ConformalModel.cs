@@ -5,9 +5,9 @@ using System.Text;
 
 namespace GeometricAlgebra.ConformalModel
 {
-    public class Conformal3D_EvaluationContext : EvaluationContext
+    public class Conformal3D_Context : Context
     {
-        public Conformal3D_EvaluationContext() : base()
+        public Conformal3D_Context() : base()
         {
             SetStorage("i", Operand.Evaluate("e1^e2^e3", this).output);
             SetStorage("I", Operand.Evaluate("e1^e2^e3^no^ni", this).output);
@@ -144,19 +144,19 @@ namespace GeometricAlgebra.ConformalModel
             return "id";
         }
 
-        public override Operand EvaluationStep(EvaluationContext context)
+        public override Operand EvaluationStep(Context context)
         {
             Operand operand = base.EvaluationStep(context);
             if (operand != null)
                 return operand;
 
             if (operandList.Count != 1)
-                throw new EvaluationException(string.Format($"Expected exactly 1 argument, got {operandList.Count}."));
+                throw new MathException(string.Format($"Expected exactly 1 argument, got {operandList.Count}."));
 
             operand = operandList[0];
             int grade = operand.Grade;
             if (grade == -1)
-                throw new EvaluationException("Cannot identify an element non-homogenous in terms of grade; specifically, only blades are identified.");
+                throw new MathException("Cannot identify an element non-homogenous in terms of grade; specifically, only blades are identified.");
 
             context.SetStorage("__blade__", operand);
 

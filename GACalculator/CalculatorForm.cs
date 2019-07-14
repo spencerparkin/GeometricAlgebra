@@ -13,13 +13,13 @@ namespace GACalculator
 {
     public partial class CalculatorForm : Form
     {
-        private EvaluationContext context;
+        private Context context;
         private List<string> history = new List<string>();
         private int historyLocation = 0;
 
         public CalculatorForm()
         {
-            context = new GeometricAlgebra.ConformalModel.Conformal3D_EvaluationContext();
+            context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
 
             InitializeComponent();
 

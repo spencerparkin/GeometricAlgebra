@@ -27,13 +27,13 @@ namespace GAWebApp.Models
 
     public class State
     {
-        public EvaluationContext context;
+        public Context context;
         public List<HistoryItem> history;
         public bool showLatex;
 
         public State()
         {
-            context = new GeometricAlgebra.ConformalModel.Conformal3D_EvaluationContext();
+            context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
             history = new List<HistoryItem>();
             showLatex = true;
         }

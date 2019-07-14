@@ -74,7 +74,7 @@ namespace Tests
         [TestMethod]
         public void Distribute()
         {
-            EvaluationContext context = new EvaluationContext();
+            Context context = new Context();
             Parser parser = new Parser();
             string inputText = "($a*($b + $c))*(x^y)";
             Operand operand = Operand.Evaluate(inputText, context).output;
@@ -85,7 +85,7 @@ namespace Tests
         [TestMethod]
         public void Arithmetic()
         {
-            EvaluationContext context = new EvaluationContext();
+            Context context = new Context();
             Parser parser = new Parser();
             string inputText = "3*(2+1)";
             Operand operand = Operand.Evaluate(inputText, context).output;
@@ -96,7 +96,7 @@ namespace Tests
         [TestMethod]
         public void Divide()
         {
-            EvaluationContext context = new EvaluationContext();
+            Context context = new Context();
             Parser parser = new Parser();
             string inputText = "1/(1+1)";
             Operand operand = Operand.Evaluate(inputText, context).output;
@@ -107,7 +107,7 @@ namespace Tests
         [TestMethod]
         public void ConformalPoint()
         {
-            EvaluationContext context = new GeometricAlgebra.ConformalModel.Conformal3D_EvaluationContext();
+            Context context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
             Operand.Evaluate("@v = $x*e1 + $y*e2 + $z*e3", context);
             Operand.Evaluate("@p = no + @v + 0.5*(@v.@v)*ni", context);
             Operand operand = Operand.Evaluate("@p.@p", context).output;
@@ -122,7 +122,7 @@ namespace Tests
         [TestMethod]
         public void Subtract()
         {
-            EvaluationContext context = new EvaluationContext();
+            Context context = new Context();
             Parser parser = new Parser();
             string inputText = "a - b";
             Operand operand = Operand.Evaluate(inputText, context).output;
@@ -133,7 +133,7 @@ namespace Tests
         [TestMethod]
         public void SortVectors()
         {
-            EvaluationContext context = new EvaluationContext();
+            Context context = new Context();
             Parser parser = new Parser();
             string inputText = "c^b^a";
             Operand operand = Operand.Evaluate(inputText, context).output;
@@ -144,7 +144,7 @@ namespace Tests
         [TestMethod]
         public void LinearlyDependentVectors()
         {
-            EvaluationContext context = new EvaluationContext();
+            Context context = new Context();
             Parser parser = new Parser();
             string inputText = "c^b^a^c";
             Operand operand = Operand.Evaluate(inputText, context).output;
@@ -155,7 +155,7 @@ namespace Tests
         [TestMethod]
         public void BladeReverse()
         {
-            EvaluationContext context = new EvaluationContext();
+            Context context = new Context();
             Parser parser = new Parser();
             string inputText = "reverse(a^b^c)";
             Operand operand = Operand.Evaluate(inputText, context).output;
@@ -168,7 +168,7 @@ namespace Tests
         [TestMethod]
         public void BladeCancellation()
         {
-            EvaluationContext context = new EvaluationContext();
+            Context context = new Context();
             Parser parser = new Parser();
             string inputText = "a^b + b^a";
             Operand operand = Operand.Evaluate(inputText, context).output;
@@ -183,7 +183,7 @@ namespace Tests
         [TestMethod]
         public void StorageAndRetrieval()
         {
-            EvaluationContext context = new EvaluationContext();
+            Context context = new Context();
             Parser parser = new Parser();
             string inputText = "@a = a^b";
             Operand operand = Operand.Evaluate(inputText, context).output;

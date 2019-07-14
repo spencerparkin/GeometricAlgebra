@@ -48,12 +48,29 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assignment.cs" />
+    <Compile Include="Blade.cs" />
     <Compile Include="BladeFactor.cs" />
+    <Compile Include="Collectable.cs" />
     <Compile Include="ConformalModel.cs" />
-    <Compile Include="GeometricAlgebra.cs" />
+    <Compile Include="Context.cs" />
+    <Compile Include="Function.cs" />
+    <Compile Include="GeometricProduct.cs" />
+    <Compile Include="GradePart.cs" />
+    <Compile Include="InnerProduct.cs" />
+    <Compile Include="Inverse.cs" />
+    <Compile Include="NumericScalar.cs" />
+    <Compile Include="Operand.cs" />
+    <Compile Include="Operation.cs" />
+    <Compile Include="OuterProduct.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="PolynomialFactor.cs" />
+    <Compile Include="Product.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Reverse.cs" />
+    <Compile Include="Sum.cs" />
+    <Compile Include="SymbolicScalarTerm.cs" />
+    <Compile Include="Variable.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
