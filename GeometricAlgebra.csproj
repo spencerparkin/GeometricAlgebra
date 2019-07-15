@@ -49,6 +49,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Functions\Delete.cs" />
+    <Compile Include="Functions\Power.cs" />
+    <Compile Include="Functions\Trig.cs" />
     <Compile Include="Operations\Assignment.cs" />
     <Compile Include="Collectables\Blade.cs" />
     <Compile Include="Functions\BladeFactor.cs" />

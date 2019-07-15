@@ -37,7 +37,7 @@ namespace GeometricAlgebra
             if (format == Format.LATEX)
                 return @"\mbox{inverse}";
 
-            return "inverse";
+            return "inv";
         }
 
         public override Operand EvaluationStep(Context context)

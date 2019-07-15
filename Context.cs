@@ -24,6 +24,11 @@ namespace GeometricAlgebra
             funcList.Add(new GradePart());
             funcList.Add(new Trim());
             funcList.Add(new Delete());
+            funcList.Add(new Sine());
+            funcList.Add(new Cosine());
+            funcList.Add(new Power());
+            funcList.Add(new Exponent());
+            funcList.Add(new Logarithm());
         }
 
         public void Log(string message)
