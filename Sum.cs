@@ -269,7 +269,6 @@ namespace GeometricAlgebra
                 Vector<double> vectorA = DenseVector.OfArray(vectorArray);
                 Vector<double> vectorB = Vector<double>.Build.Dense(count);
 
-                // This should throw an exception is our matrix is singular.
                 matrix.Solve(vectorA, vectorB);
 
                 multivectorInverse = new Sum();
