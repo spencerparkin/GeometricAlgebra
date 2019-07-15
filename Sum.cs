@@ -231,11 +231,7 @@ namespace GeometricAlgebra
                 geometricProduct.operandList.Add(this.Copy());
                 geometricProduct.operandList.Add(multivectorInverse.Copy());
 
-                string debug = geometricProduct.Print(Format.PARSEABLE, context);
-
                 Operand result = ExhaustEvaluation(geometricProduct, context);
-
-                debug = result.Print(Format.PARSEABLE, context);
 
                 double[,] matrixArray = new double[count, count];
                 for(int i = 0; i < count; i++)
@@ -262,7 +258,8 @@ namespace GeometricAlgebra
                 Matrix<double> matrix = DenseMatrix.OfArray(matrixArray);
 
                 double epsilon = 1e-7;
-                if(Math.Abs(matrix.Determinant()) < epsilon)
+                double det = matrix.Determinant();
+                if (Math.Abs(det) < epsilon)
                     throw new MathException("Cannot invert singular matrix.");
 
                 double[] vectorArray = new double[count];
