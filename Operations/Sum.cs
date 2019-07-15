@@ -166,7 +166,9 @@ namespace GeometricAlgebra
             }
             else
             {
-                yield return blade;
+                Blade basisBlade = blade.Copy() as Blade;
+                basisBlade.vectorList.Sort();
+                yield return basisBlade;
             }
         }
 
