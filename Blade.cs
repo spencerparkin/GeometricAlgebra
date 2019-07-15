@@ -214,19 +214,14 @@ namespace GeometricAlgebra
             return new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), this });
         }
 
-        // Note that this isn't terribly helpful, because an inverse isn't taken/considered until
-        // the element to be inverted is fully expanded, at which point it is not easily recognized
-        // as a blade (that is, unless a factorization algorithm was applied.)  Such an algorithm, however,
-        // should not be needed at all, though, because the inverter should just consider the general
-        // case of multivectors.
         public override Operand Inverse(Context context)
         {
             GeometricProduct geometricProduct = new GeometricProduct();
 
-            // This is correct up to sign.
-            // TODO: Determine correct sign.
+            // Without loss of generality, we can always write a blade in terms of an orthogonal basis.
+            // It's then easy to realizing that a blade times its reverse is always a scalar.
             geometricProduct.operandList.Add(new Reverse(new List<Operand>() { this.Copy() }));
-            geometricProduct.operandList.Add(new Inverse(new List<Operand>() { new InnerProduct(new List<Operand>() { this.Copy(), this.Copy() }) }));
+            geometricProduct.operandList.Add(new Inverse(new List<Operand>() { new GeometricProduct(new List<Operand>() { this.Copy(), new Reverse(new List<Operand>() { this.Copy() }) }) }));
 
             return geometricProduct;
         }

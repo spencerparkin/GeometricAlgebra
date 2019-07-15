@@ -22,6 +22,7 @@ namespace GeometricAlgebra
             funcList.Add(new Inverse());
             funcList.Add(new Reverse());
             funcList.Add(new GradePart());
+            funcList.Add(new Trim());
         }
 
         public void Log(string message)

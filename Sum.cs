@@ -258,6 +258,10 @@ namespace GeometricAlgebra
 
                 Matrix<double> matrix = DenseMatrix.OfArray(matrixArray);
 
+                double epsilon = 1e-7;
+                if(Math.Abs(matrix.Determinant()) < epsilon)
+                    throw new MathException("Cannot invert singular matrix.");
+
                 double[] vectorArray = new double[count];
                 for (int i = 0; i < count; i++)
                     vectorArray[i] = i > 0 ? 0.0 : 1.0;
@@ -282,10 +286,8 @@ namespace GeometricAlgebra
             }
             catch(Exception exc)
             {
-                throw new MathException(string.Format("Failed to calculate inverse ({0}).", exc.Message));
+                throw new MathException(string.Format("Failed to calculate inverse: {0}", exc.Message));
             }
-
-            return null;
         }
     }
 }

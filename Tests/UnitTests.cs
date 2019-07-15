@@ -214,18 +214,8 @@ namespace Tests
             Context context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
             Operand.Evaluate("@multivector = 5 - e1 + 2 * e2 + 7 * e1 ^ e3", context);
             Operand.Evaluate("@multivectorInv = inverse(@multivector)", context);
-            Operand result = Operand.Evaluate("@multivector * @multivectorInv", context).output;
-            Assert.IsTrue(result.IsMultiplicativeIdentity);     // TODO: Must check approximately.
-        }
-
-        [TestMethod]
-        public void Case2()
-        {
-            Context context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
-            Operand.Evaluate("@multivector = e1 + no + 5 * ni ^ no", context);
-            Operand.Evaluate("@multivectorInv = inverse(@multivector)", context);
-            Operand result = Operand.Evaluate("@multivector * @multivectorInv", context).output;
-            Assert.IsTrue(result.IsMultiplicativeIdentity);     // TODO: Must check approximately.
+            Operand result = Operand.Evaluate("trim(@multivector * @multivectorInv - 1)", context).output;
+            Assert.IsTrue(result.IsAdditiveIdentity);
         }
     }
 }

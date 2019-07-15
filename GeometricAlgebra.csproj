@@ -70,6 +70,7 @@
     <Compile Include="Reverse.cs" />
     <Compile Include="Sum.cs" />
     <Compile Include="SymbolicScalarTerm.cs" />
+    <Compile Include="Trim.cs" />
     <Compile Include="Variable.cs" />
   </ItemGroup>
   <ItemGroup>
