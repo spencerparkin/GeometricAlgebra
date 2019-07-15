@@ -217,5 +217,14 @@ namespace Tests
             Operand result = Operand.Evaluate("trim(@multivector * @multivectorInv - 1)", context).output;
             Assert.IsTrue(result.IsAdditiveIdentity);
         }
+
+        [TestMethod]
+        public void Case2()
+        {
+            // inverse(e2 + ni) -> This causes a strange error.
+            // Also, note that I've failed to calculate the inverse of a circle due to singular matrix.
+            // That seems fishy to me.  Try calculating the inverse in other ways to show it really does have an inverse.
+            // Then try to figure out why we can't compute the inverse directly.
+        }
     }
 }
