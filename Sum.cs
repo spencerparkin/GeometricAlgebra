@@ -251,6 +251,9 @@ namespace GeometricAlgebra
                         Blade bladeB = multivectorInverse.operandList[i] as Blade;
                         if(bladeB != null && bladeB.Like(bladeA))
                         {
+                            if(!(bladeA.scalar is Sum))
+                                bladeA.scalar = new Sum(new List<Operand>() { bladeA.scalar });
+
                             PopulateMatrixArray(matrixArray, i, bladeA.scalar as Sum);
                         }
                     }
@@ -279,7 +282,8 @@ namespace GeometricAlgebra
                 {
                     Blade blade = basisBlade.Copy() as Blade;
                     blade.scalar = new NumericScalar(vectorB[count++]);
-                    multivectorInverse.operandList.Add(blade);
+                    if(Math.Abs((blade.scalar as NumericScalar).value) >= epsilon)
+                        multivectorInverse.operandList.Add(blade);
                 }
 
                 return multivectorInverse;
