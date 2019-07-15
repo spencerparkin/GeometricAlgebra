@@ -23,6 +23,7 @@ namespace GeometricAlgebra
             funcList.Add(new Reverse());
             funcList.Add(new GradePart());
             funcList.Add(new Trim());
+            funcList.Add(new Delete());
         }
 
         public void Log(string message)
@@ -40,7 +41,8 @@ namespace GeometricAlgebra
         {
             ClearStorage(variableName);
 
-            operandStorage.Add(variableName, operand.Copy());
+            if(operand != null)
+                operandStorage.Add(variableName, operand.Copy());
         }
 
         public bool GetStorage(string variableName, ref Operand operand)
