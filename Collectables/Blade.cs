@@ -221,7 +221,7 @@ namespace GeometricAlgebra
             // Without loss of generality, we can always write a blade in terms of an orthogonal basis.
             // It's then easy to realizing that a blade times its reverse is always a scalar.
             geometricProduct.operandList.Add(new Reverse(new List<Operand>() { this.Copy() }));
-            geometricProduct.operandList.Add(new Inverse(new List<Operand>() { new GeometricProduct(new List<Operand>() { this.Copy(), new Reverse(new List<Operand>() { this.Copy() }) }) }));
+            geometricProduct.operandList.Add(new Inverse(new List<Operand>() { new InnerProduct(new List<Operand>() { this.Copy(), new Reverse(new List<Operand>() { this.Copy() }) }) }));
 
             return geometricProduct;
         }
