@@ -30,15 +30,51 @@ namespace GeometricAlgebra
 
         public override Operand EvaluationStep(Context context)
         {
-            // TODO: Use x^y = 1/(x^(-y)) if needed.
-            // TODO: Use x^{y+z} = (x^y)(x^z) if needed.
-            // TODO: Use x^y = exp(log(x^y)) = exp(y log(x)) if needed.
-            return null;
+            if(operandList.Count != 2)
+                throw new MathException(string.Format("Power function expected exactly 2 arguments, got {0}.", operandList.Count));
+
+            Operand operand = base.EvaluationStep(context);
+            if(operand != null)
+                return operand;
+
+            Operand baseOperand = operandList[0];
+            Operand exponentOperand = operandList[1];
+            GeometricProduct geometricProduct = new GeometricProduct();
+
+            if (exponentOperand is Sum sumExponent)
+            {
+                for(int i = 0; i < sumExponent.operandList.Count; i++)
+                    geometricProduct.operandList.Add(new Power(new List<Operand>() { baseOperand.Copy(), sumExponent.operandList[i] }));
+
+                return geometricProduct;
+            }
+
+            if(exponentOperand is NumericScalar numericScalarExponent)
+            {
+                if(baseOperand is NumericScalar numericScalarBase)
+                {
+                    return new NumericScalar(Math.Pow(numericScalarBase.value, numericScalarExponent.value));
+                }
+                else if(Math.Round(numericScalarExponent.value) == numericScalarExponent.value)
+                {
+                    for(int i = 0; i < (int)Math.Abs(numericScalarExponent.value); i++)
+                        geometricProduct.operandList.Add(baseOperand.Copy());
+
+                    if(numericScalarExponent.value >= 0.0)
+                        return geometricProduct;
+
+                    return new Inverse(new List<Operand>() { geometricProduct });
+                }
+            }
+
+            geometricProduct.operandList.Add(exponentOperand);
+            geometricProduct.operandList.Add(new Logarithm(new List<Operand>() { baseOperand }));
+            return new Exponent(new List<Operand>() { geometricProduct });
         }
 
         public override string Print(Format format, Context context)
         {
-            // TODO: x^{y}.
+            // TODO: Print x^{y}.
             return base.Print(format, context);
         }
     }
