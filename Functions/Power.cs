@@ -104,7 +104,50 @@ namespace GeometricAlgebra
 
         public override Operand EvaluationStep(Context context)
         {
-            // TODO: If arg's a blade and its geometric square is a scalar and < 0, then write in terms of sine and cosine.
+            if (operandList.Count != 1)
+                throw new MathException(string.Format("Exponential function expected exactly 1 argument, got {0}.", operandList.Count));
+
+            Operand operand = base.EvaluationStep(context);
+            if (operand != null)
+                return operand;
+
+            Operand exponentOperand = operandList[0];
+
+            if (exponentOperand is Sum sumExponent)
+            {
+                GeometricProduct geometricProduct = new GeometricProduct();
+
+                for (int i = 0; i < sumExponent.operandList.Count; i++)
+                    geometricProduct.operandList.Add(new Exponent(new List<Operand>() { sumExponent.operandList[i] }));
+
+                return geometricProduct;
+            }
+
+            if(exponentOperand is Blade blade)
+            {
+                Blade basisBlade = new Blade(new NumericScalar(1.0), blade.vectorList.ToList());
+                InnerProduct innerProduct = new InnerProduct();
+                innerProduct.operandList.Add(new NumericScalar(-1.0));
+                innerProduct.operandList.Add(basisBlade.Copy());
+                innerProduct.operandList.Add(basisBlade.Copy());
+                Operand result = Operand.ExhaustEvaluation(innerProduct, context);
+                if(result.IsMultiplicativeIdentity)
+                {
+                    Sum sum = new Sum();
+                    sum.operandList.Add(new Cosine(new List<Operand>() { blade.scalar.Copy() }));
+                    sum.operandList.Add(new GeometricProduct(new List<Operand>() { basisBlade.Copy(), new Sine(new List<Operand>() { blade.scalar.Copy() }) }));
+                    return sum;
+                }
+                else if(result.IsAdditiveIdentity)
+                {
+                    // What if it's a null blade?
+                }
+                else
+                {
+                    // Hyperbolic cosine/sine?
+                }
+            }
+
             return null;
         }
     }
