@@ -54,6 +54,7 @@ tr:nth-child(even) {
 
 #controlBarDiv {
     margin-top: 10px;
+    color: white;
 }
 
 #clearButton {

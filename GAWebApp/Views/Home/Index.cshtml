@@ -22,7 +22,7 @@ else
 <div id="controlsDiv">
     <input type="text" onkeydown="textboxKeydown(this)" id="expressionBox" spellcheck="false" />
     <div id="controlBarDiv">
-        <input type="file" id="scriptBox" />
+        <!--<input type="file" id="scriptBox" />-->
         <input type="checkbox" id="showLatexCheckbox" onclick="showLatexCheckboxClicked()" checked />Show Latex
         <input type="button" id="clearButton" onclick="clearHistoryButtonClicked()" value="Clear" />
     </div>
@@ -85,10 +85,10 @@ else
     <p>
         The inner, outer and geometric products are invoked using <code>.</code>, <code>^</code>
         and <code>*</code>, respectively.  Addition, as you'd expect, is given by <code>+</code>.
+        You can also use <code>-</code>
+        or <code>/</code> as binary operators.
         The outer product takes precedence over the inner product, and the geometric product
         takes precedence over the inner and outer products.
-    </p>
-    <p>
         The parser will also recognize some unary operators such as <code>-</code> on the left, and
         <code>~</code> on the right.
     </p>

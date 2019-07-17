@@ -64,5 +64,5 @@ function processScriptFile(event) {
 }
 
 $(document).ready(function () {
-    document.getElementById('scriptBox').addEventListener('change', processScriptFile, false);
+    //document.getElementById('scriptBox').addEventListener('change', processScriptFile, false);
 });
