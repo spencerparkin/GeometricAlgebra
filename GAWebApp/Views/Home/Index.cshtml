@@ -19,7 +19,11 @@ else
     </div>
 }
 
-<input type="text" onkeydown="textboxKeydown(this)" id="expressionBox" /><br />
-<input type="file" id="scriptBox" /><br />
-<input type="checkbox" id="showLatexCheckbox" onclick="showLatexCheckboxClicked()" checked/>Show Latex<br />
-<input type="button" onclick="clearHistoryButtonClicked()" value="Clear" /><br />
+<div id="controlsDiv">
+    <input type="text" onkeydown="textboxKeydown(this)" id="expressionBox" spellcheck="false" />
+    <div id="controlBarDiv">
+        <input type="file" id="scriptBox" />
+        <input type="checkbox" id="showLatexCheckbox" onclick="showLatexCheckboxClicked()" checked />Show Latex
+        <input type="button" id="clearButton" onclick="clearHistoryButtonClicked()" value="Clear" />
+    </div>
+</div>
