@@ -74,7 +74,7 @@ namespace GeometricAlgebra
         {
             Token token = null;
 
-            List<string> operatorList = new List<string>() { "+", "-", "*", "/", "^", ".", "~", "!", "=", ":=" };
+            List<string> operatorList = new List<string>() { "+", "-", "*", "/", "^", ".", "~", "!", "=", ":=", ";" };
             foreach(string opName in operatorList)
             {
                 if(expression.Length >= opName.Length && expression.Substring(0, opName.Length) == opName)
@@ -125,16 +125,18 @@ namespace GeometricAlgebra
 
         private int PrecedenceLevel(string operation)
         {
-            if (operation == "=" || operation == ":=")
+            if (operation == ";")
                 return 0;
-            if (operation == "+" || operation == "-")
+            if (operation == "=" || operation == ":=")
                 return 1;
-            if (operation == ".")
+            if (operation == "+" || operation == "-")
                 return 2;
-            if (operation == "^")
+            if (operation == ".")
                 return 3;
-            if (operation == "*" || operation == "/")
+            if (operation == "^")
                 return 4;
+            if (operation == "*" || operation == "/")
+                return 5;
 
             throw new ParseException(string.Format("Cannot determine precedence level of \"{0}\".", operation));
         }
@@ -147,7 +149,9 @@ namespace GeometricAlgebra
 
         private Associativity OperatorAssociativity(string operation)
         {
-            if (operation == "=" || operation == ":=")
+            if (operation == ";")
+                return Associativity.LEFT_TO_RIGHT;
+            else if (operation == "=" || operation == ":=")
                 return Associativity.RIGHT_TO_LEFT;
             else if (operation == "+" || operation == "-")
                 return Associativity.LEFT_TO_RIGHT;
@@ -310,7 +314,9 @@ namespace GeometricAlgebra
 
                 Operation operation = null;
 
-                if (operatorToken.data == "+" || operatorToken.data == "-")
+                if (operatorToken.data == ";")
+                    operation = new Sequence();
+                else if (operatorToken.data == "+" || operatorToken.data == "-")
                     operation = new Sum();
                 else if (operatorToken.data == "*" || operatorToken.data == "/")
                     operation = new GeometricProduct();

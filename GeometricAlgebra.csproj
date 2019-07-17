@@ -66,6 +66,7 @@
     <Compile Include="Operand.cs" />
     <Compile Include="Operation.cs" />
     <Compile Include="Operations\OuterProduct.cs" />
+    <Compile Include="Operations\Sequence.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Functions\PolynomialFactor.cs" />
     <Compile Include="Operations\Product.cs" />

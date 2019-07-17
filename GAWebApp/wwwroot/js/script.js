@@ -44,25 +44,13 @@ function textboxKeydown(textbox) {
     }
 }
 
-function processScriptFile(event) {
-    var file = event.target.files[0];
-    if (!file)
-        return;
-    var reader = new FileReader();
-    reader.onload = function (event) {
-        var scriptText = event.target.result;
-        $.ajax({
-            url: 'Home/RunScript',
-            type: 'GET',
-            data: {
-                'script': scriptText
-            },
-            success: refreshHistoryView
-        });
+function toggleGuideButtonClicked() {
+    let button = document.getElementById('toggleGuideButton');
+    if (button.value === 'Show Quick Guide') {
+        $('#quickGuide').show();
+        button.value = 'Hide Quick Guide';
+    } else if (button.value === 'Hide Quick Guide') {
+        $('#quickGuide').hide();
+        button.value = 'Show Quick Guide';
     }
-    reader.readAsText(file);
 }
-
-$(document).ready(function () {
-    //document.getElementById('scriptBox').addEventListener('change', processScriptFile, false);
-});

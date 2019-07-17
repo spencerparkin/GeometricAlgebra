@@ -43,14 +43,6 @@ namespace GAWebApp.Controllers
             return PartialView("HistoryView", state);
         }
 
-        [HttpGet]
-        public IActionResult RunScript(string script)
-        {
-            State state = GetState();
-            state.RunScript(script);
-            return PartialView("HistoryView", state);
-        }
-
         private State GetState()
         {
             // TODO: This is a problem that must be solved before the web-app is ever launched.

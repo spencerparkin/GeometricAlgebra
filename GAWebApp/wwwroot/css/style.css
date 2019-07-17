@@ -71,25 +71,6 @@ body {
     font-family: "Courier New";
 }
 
-#scriptBox::-webkit-file-upload-button {
-    visibility: hidden;
-}
-
-#scriptBox::before {
-    content: 'Process Script...';
-    display: inline-block;
-    background: linear-gradient(top, #f9f9f9, #e3e3e3);
-    background-color: lightgrey;
-    border: 1px solid #999;
-    border-radius: 3px;
-    padding: 5px 8px;
-    outline: none;
-    white-space: nowrap;
-    -webkit-user-select: none;
-    cursor: pointer;
-    width: 200px;
-}
-
 code {
     color: red;
     font-weight: bold;
@@ -97,4 +78,5 @@ code {
 
 #quickGuide {
     background: #ffffffee;
+    display: none;
 }

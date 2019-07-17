@@ -59,13 +59,5 @@ namespace GAWebApp.Models
 
             history.Add(item);
         }
-
-        public void RunScript(string script)
-        {
-            List<string> expressionList = script.Split(';').ToList();
-            foreach(string expression in expressionList)
-                if(expression.Length > 0)
-                    Calculate(expression);
-        }
     }
 }

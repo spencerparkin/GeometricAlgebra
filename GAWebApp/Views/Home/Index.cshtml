@@ -1,6 +1,6 @@
 ﻿@model GAWebApp.Models.State
 
-<center><h2>GA Calculator</h2></center>
+<center><h2 style="color: white">GA Calculator</h2></center>
 
 @if (Model.history.Count > 0)
 {
@@ -12,7 +12,7 @@ else
 {
     <div id="historyView">
         <div style="width: 100%; height: 100%; position: relative">
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: auto; height: auto">
+            <div style="color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: auto; height: auto">
                 Nothing to show yet.  Please enter an expression in the box below.
             </div>
         </div>
@@ -22,9 +22,9 @@ else
 <div id="controlsDiv">
     <input type="text" onkeydown="textboxKeydown(this)" id="expressionBox" spellcheck="false" />
     <div id="controlBarDiv">
-        <!--<input type="file" id="scriptBox" />-->
         <input type="checkbox" id="showLatexCheckbox" onclick="showLatexCheckboxClicked()" checked />Show Latex
         <input type="button" id="clearButton" onclick="clearHistoryButtonClicked()" value="Clear" />
+        <input type="button" id="toggleGuideButton" onclick="toggleGuideButtonClicked()" value="Show Quick Guide"/>
     </div>
 </div>
 
