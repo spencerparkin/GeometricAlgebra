@@ -88,3 +88,12 @@ body {
     cursor: pointer;
     width: 200px;
 }
+
+code {
+    color: red;
+    font-weight: bold;
+}
+
+#quickGuide {
+    background: #ffffffee;
+}

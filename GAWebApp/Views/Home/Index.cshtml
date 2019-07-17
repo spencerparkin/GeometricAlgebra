@@ -27,3 +27,84 @@ else
         <input type="button" id="clearButton" onclick="clearHistoryButtonClicked()" value="Clear" />
     </div>
 </div>
+
+<div id="quickGuide">
+    <h3>Quick guide to using the calculator...</h3>
+    <p>
+        Expressions entered show left-aligned with their evaluations right-aligned in the scrolling list above.
+        Bare words are treated as symbolic vectors, those prefixed with <code>$</code> are treated as symbolic
+        scalars, and those prefixed with <code>@@</code> are considered variables.
+    </p>
+    <p>
+        Symbolic vectors may or may not be recognized as basis vectors.  The currently recognized basis
+        vectors are <code>no</code>, <code>ni</code>, <code>e1</code>, <code>e2</code> and <code>e3</code>.
+        All symbolic vectors are considered to be an unknown linear combination of the latter 3 basis vectors.
+    </p>
+    <p>
+        Symbolic scalars represent an unknown real scalar value.
+    </p>
+    <p>
+        Variables represent an unknown multivector value, unless an expression is assigned at the storage
+        location indicated by the name of the variable.  This can be done using the <code>=</code> or
+        <code>:=</code> operators.  In the case of <code>=</code>, the r-value is evaluated before
+        it is stored in the l-value.  In the case of <code>:=</code>, the r-value is <b><i>not</i></b> evaluated before
+        it is stored in the l-value.
+    </p>
+    <p>
+        For example, <code>@@a = @@b</code> takes the value stored in <code>@@b</code> and stores it
+        in <code>@@a</code>.  No change to <code>@@b</code> changes the result of evaluating <code>@@a</code>.
+        On the other hand, <code>@@a := @@b</code> stores the expression <code>@@b</code> in <code>@@a</code>,
+        meaning that any change to <code>@@b</code> effects a change in the evaluations of <code>@@a</code>.
+        In short, use <code>:=</code> to create dependency chains; use <code>=</code> to store constants.
+    </p>
+    <p>
+        There are some pre-defined variables available; namely, <code>@@point</code>, <code>@@sphere</code>,
+        <code>@@circle</code>, and <code>@@pointpair</code> for the dual rounds of the conformal model.
+        Additinally, there is <code>@@plane</code>, <code>@@line</code>, and <code>@@flatpoint</code> for
+        the dual flats.  Use <code>@@isphere</code>, <code>@@icircle</code> and <code>@@ipointpair</code>
+        for the imaginary rounds.
+    </p>
+    <p>
+        In all cases, you'll notice that these variables store expressions written in terms of one or more
+        of the following undefined variables: <code>@@weight</code>, <code>@@center</code>, <code>@@normal</code>,
+        and <code>@@radius</code>, each where applicable.
+    </p>
+    <p>
+        Also defined are <code>@@I</code> and <code>@@i</code>.  These are unit-psuedo scalars; the first
+        for the geometric algebra of the 3D conformal model, the second for its largest euclidean sub-algebra.
+    </p>
+    <p>
+        A number of built-in functions are also available.  Use <code>del()</code> to delete a variable.
+        Use <code>grade()</code> to take a given grade-part of any multivector.  Use <code>rev()</code>
+        to compute the reverse of the given multivector, and <code>inv()</code> to compute the inverse.
+        Use <code>trim()</code> to remove all parts of a multivector near zero.  Use <code>id()</code>
+        to identify a given blade in the conformal model in terms of what it represents with respect
+        to the inner product.  To find out what a blade represents with respect to the outer product,
+        pass in the dual.
+    </p>
+    <p>
+        The inner, outer and geometric products are invoked using <code>.</code>, <code>^</code>
+        and <code>*</code>, respectively.  Addition, as you'd expect, is given by <code>+</code>.
+        The outer product takes precedence over the inner product, and the geometric product
+        takes precedence over the inner and outer products.
+    </p>
+    <p>
+        The parser will also recognize some unary operators such as <code>-</code> on the left, and
+        <code>~</code> on the right.
+    </p>
+    <p>
+        Note that juxtaposition will never be used to denote the geometric product, because it
+        ambiguates the use of symbols having more than one letter in the name.  Alternatively,
+        a cross is used, which should not be confused with the traditional cross product.
+    </p>
+    <p>
+        Lastly, note that the calculator is still a work in progress.  For example, consider the following
+        expressions: <code>(a^b)*@@i</code> and <code>a.(b*@@i)</code>.  These are algebraically identical,
+        but evaluate to different expressions.  It takes a sharp eye to discover that the extraneous terms
+        do indeed cancel.  Until then, you can enter <code>grade((a^b)*@@i,1)</code> to get the desired result.
+    </p>
+    <p>
+        If you find bugs or have comments or questions, don't hesitate to send me an e-mail
+        at <a href="mailto:spencertparkin@gmail.com">spencertparkin@gmail.com</a>.
+    </p>
+</div>
