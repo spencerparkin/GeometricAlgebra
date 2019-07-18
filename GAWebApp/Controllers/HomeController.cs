@@ -46,6 +46,7 @@ namespace GAWebApp.Controllers
         private State GetState()
         {
             // TODO: This is a problem that must be solved before the web-app is ever launched.
+            //       Maybe solve this problem with blobs?  See https://docs.microsoft.com/en-us/azure/visual-studio/vs-storage-aspnet-getting-started-blobs.
             // TODO: For correctness, we need to retrieve the correct state for the client based on
             //       an identification of the client.  For now, just return whatever state we have.
             //       This could have lots of weird consequences depending on how the web-server application
