@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using System.IO;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace GeometricAlgebra
 {
@@ -29,6 +32,36 @@ namespace GeometricAlgebra
             funcList.Add(new Power());
             funcList.Add(new Exponent());
             funcList.Add(new Logarithm());
+        }
+
+        public virtual void GenerateDefaultStorage()
+        {
+            SetStorage("pi", Operand.Evaluate("3.1415926535", this).output);
+            SetStorage("e", Operand.Evaluate("2.7182818284590452353602874", this).output);
+        }
+
+        public virtual void SerializeToXml(XElement rootElement)
+        {
+            XElement storageElement = new XElement("Storage");
+
+            foreach(var pair in this.operandStorage)
+            {
+                XElement entryElement = new XElement("Entry");
+                
+                XAttribute keyAttribute = new XAttribute("key", pair.Key);
+                XAttribute valueAttribute = new XAttribute("value", pair.Value.Print(Operand.Format.PARSEABLE, this));
+
+                entryElement.Add(keyAttribute);
+                entryElement.Add(valueAttribute);
+
+                storageElement.Add(entryElement);
+            }
+
+            rootElement.Add(storageElement);
+        }
+
+        public virtual void DeserializeFromXml(XElement rootElement)
+        {
         }
 
         public void Log(string message)

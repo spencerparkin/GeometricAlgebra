@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace GeometricAlgebra.ConformalModel
 {
@@ -9,6 +10,13 @@ namespace GeometricAlgebra.ConformalModel
     {
         public Conformal3D_Context() : base()
         {
+            funcList.Add(new Identify());
+        }
+
+        public override void GenerateDefaultStorage()
+        {
+            base.GenerateDefaultStorage();
+
             SetStorage("i", Operand.Evaluate("e1^e2^e3", this).output);
             SetStorage("I", Operand.Evaluate("e1^e2^e3^no^ni", this).output);
 
@@ -24,8 +32,6 @@ namespace GeometricAlgebra.ConformalModel
             SetStorage("line", Operand.Evaluate("@weight * (@normal + (@center ^ @normal) * ni) * @i", this).output);
             SetStorage("flatpoint", Operand.Evaluate("@weight * (1 - @center ^ ni) * @i", this).output);
             SetStorage("tangentpoint", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni) ^ (@normal + (@center . @normal) * ni)", this).output);
-
-            funcList.Add(new Identify());
         }
 
         public override string TranslateVectorNameForLatex(string vectorName)
