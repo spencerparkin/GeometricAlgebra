@@ -1,6 +1,8 @@
 ﻿// script.js
 
-function refreshHistoryView(renderedHtml) {
+var calculatorID = '';
+
+function refreshHistoryViewCallback(renderedHtml) {
     $('#historyView').html(renderedHtml);
 
     // TODO: This doesn't work.  Why?  Maybe do it after page has refreshed?
@@ -9,15 +11,27 @@ function refreshHistoryView(renderedHtml) {
     document.getElementById('expressionBox').value = '';
 }
 
+function refreshHistoryView() {
+    $.ajax({
+        url: 'Home/History',
+        type: 'GET',
+        data: {
+            'calculatorID': calculatorID
+        },
+        success: refreshHistoryViewCallback
+    });
+}
+
 function showLatexCheckboxClicked(event) {
     var checkbox = document.getElementById('showLatexCheckbox');
     $.ajax({
         url: 'Home/ShowLatex',
         type: 'GET',
         data: {
+            'calculatorID': calculatorID,
             'showLatex': checkbox.checked
         },
-        success: refreshHistoryView
+        success: refreshHistoryViewCallback
     });
 }
 
@@ -25,8 +39,10 @@ function clearHistoryButtonClicked(event) {
     $.ajax({
         url: 'Home/ClearHistory',
         type: 'GET',
-        data: {},
-        success: refreshHistoryView
+        data: {
+            'calculatorID': calculatorID
+        },
+        success: refreshHistoryViewCallback
     });
 }
 
@@ -37,9 +53,10 @@ function textboxKeydown(textbox) {
             url: 'Home/Calculate',
             type: 'GET',
             data: {
+                'calculatorID': calculatorID,
                 'expression': expression
             },
-            success: refreshHistoryView
+            success: refreshHistoryViewCallback
         });
     }
 }
@@ -54,3 +71,16 @@ function toggleGuideButtonClicked() {
         button.value = 'Show Quick Guide';
     }
 }
+
+$(document).ready(function () {
+    calculatorID = localStorage.getItem('calculatorID');
+    if (!calculatorID) {
+        $.getJSON('https://ipapi.co/json', function (data) {
+            calculatorID = data.country_name + '-' + data.city + '-' + data.ip + '-' + Math.floor(Math.random() * 1000).toString();
+            localStorage.setItem('calculatorID', calculatorID);
+            refreshHistoryView();
+        });
+    } else {
+        refreshHistoryView();
+    }
+});

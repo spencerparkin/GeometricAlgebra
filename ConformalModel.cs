@@ -18,7 +18,7 @@ namespace GeometricAlgebra.ConformalModel
             base.GenerateDefaultStorage();
 
             SetStorage("i", Operand.Evaluate("e1^e2^e3", this).output);
-            SetStorage("I", Operand.Evaluate("e1^e2^e3^no^ni", this).output);
+            SetStorage("I", Operand.Evaluate("e1^e2^e3^ni^no", this).output);
 
             // Add formulas for the geometric primitives of the conformal model in 3D space.
             SetStorage("point", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni)", this).output);
@@ -94,9 +94,8 @@ namespace GeometricAlgebra.ConformalModel
                 }
             }
 
-            // For now, I'm going to treat all symbolic vectors as being
-            // taken from the euclidean sub-space of the conformal space.
-            // That is, until I see the limitation of doing so.
+            // All symbolic vectors are assumed to be an unknown
+            // linear combination of e1, e2 and e3.
             if (vectorNameA == "no" || vectorNameA == "ni")
                 if (vectorNameB != "no" && vectorNameB != "ni")
                     return new NumericScalar(0.0);
@@ -115,13 +114,20 @@ namespace GeometricAlgebra.ConformalModel
             // Since we're treating all symbolic vectors as being taken from
             // the euclidean sub-space of our geometric algebra, we can identify
             // the following case.
-            List<string> basisList = new List<string>() { "e1", "e2", "e3", "no", "ni" };
-            bool has_e1 = vectorNameList.Any(vectorName => vectorName == "e1");
-            bool has_e2 = vectorNameList.Any(vectorName => vectorName == "e2");
-            bool has_e3 = vectorNameList.Any(vectorName => vectorName == "e3");
-            bool has_symb = vectorNameList.Any(vectorName => !basisList.Any(basisName => basisName == vectorName));
-            if (has_e1 && has_e2 && has_e3 && has_symb)
-                return true;
+            if(vectorNameList.Any(vectorName => vectorName == "e1"))
+            {
+                if(vectorNameList.Any(vectorName => vectorName == "e2"))
+                {
+                    if(vectorNameList.Any(vectorName => vectorName == "e3"))
+                    {
+                        List<string> basisList = new List<string>() { "e1", "e2", "e3", "ni", "no" };
+                        if (vectorNameList.Any(vectorName => !basisList.Any(basisName => basisName == vectorName)))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
 
             return false;
         }

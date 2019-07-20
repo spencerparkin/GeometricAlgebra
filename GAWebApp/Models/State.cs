@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 using GeometricAlgebra;
 
 namespace GAWebApp.Models
@@ -58,6 +60,60 @@ namespace GAWebApp.Models
             item.outputLatex = item.outputLatex.Replace(" ", "");
 
             history.Add(item);
+        }
+
+        public bool SerializeToXml(XElement rootElement)
+        {
+            if(!context.SerializeToXml(rootElement))
+                return false;
+
+            XElement historyElement = new XElement("History");
+
+            foreach(HistoryItem item in history)
+            {
+                XElement entryElement = new XElement("Entry");
+
+                entryElement.Add(new XElement("expression", item.expression));
+                entryElement.Add(new XElement("inputLatex", item.inputLatex));
+                entryElement.Add(new XElement("outputLatex", item.outputLatex));
+                entryElement.Add(new XElement("inputPlain", item.inputPlain));
+                entryElement.Add(new XElement("outputPlain", item.outputPlain));
+                entryElement.Add(new XElement("error", item.error));
+
+                historyElement.Add(entryElement);
+            }
+
+            rootElement.Add(historyElement);
+
+            return false;
+        }
+
+        public bool DeserializeFromXml(XElement rootElement)
+        {
+            if(!context.DeserializeFromXml(rootElement))
+                return false;
+
+            XElement historyElement = rootElement.Element("History");
+            if(historyElement != null)
+            {
+                history.Clear();
+
+                foreach(XElement entryElement in historyElement.Elements())
+                {
+                    HistoryItem item = new HistoryItem();
+
+                    item.expression = entryElement.Element("expression").Value;
+                    item.inputLatex = entryElement.Element("inputLatex").Value;
+                    item.outputLatex = entryElement.Element("outputLatex").Value;
+                    item.inputPlain = entryElement.Element("inputPlain").Value;
+                    item.outputPlain = entryElement.Element("outputPlain").Value;
+                    item.error = entryElement.Element("error").Value;
+
+                    history.Add(item);
+                }
+            }
+
+            return false;
         }
     }
 }
