@@ -76,7 +76,7 @@ $(document).ready(function () {
     calculatorID = localStorage.getItem('calculatorID');
     if (!calculatorID) {
         $.getJSON('https://ipapi.co/json', function (data) {
-            calculatorID = data.country_name + '-' + data.city + '-' + data.ip + '-' + Math.floor(Math.random() * 1000).toString();
+            calculatorID = data.country_name + '-' + data.city + '-' + data.ip;
             localStorage.setItem('calculatorID', calculatorID);
             refreshHistoryView();
         });
