@@ -5,8 +5,9 @@ var calculatorID = '';
 function refreshHistoryViewCallback(renderedHtml) {
     $('#historyView').html(renderedHtml);
 
-    // TODO: This doesn't work.  Why?  Maybe do it after page has refreshed?
-    $("#historyView").scrollTop($("#historyView")[0].scrollHeight);
+    setTimeout(function () {
+        $("#historyView").scrollTop($("#historyView")[0].scrollHeight);
+    }, 1000);
 
     document.getElementById('expressionBox').value = '';
 }
