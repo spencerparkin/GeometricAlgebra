@@ -5,9 +5,10 @@ var calculatorID = '';
 function refreshHistoryViewCallback(renderedHtml) {
     $('#historyView').html(renderedHtml);
 
+    // This is a bit of a hack.  We're waiting for the html to finish so that our scrol is correct.
     setTimeout(function () {
         $("#historyView").scrollTop($("#historyView")[0].scrollHeight);
-    }, 1000);
+    }, 500);
 
     document.getElementById('expressionBox').value = '';
 }

@@ -5,7 +5,7 @@
 @if (Model.history.Count > 0)
 {
     <div id="historyView">
-        @Html.Partial("HistoryView", Model);
+        @await Html.PartialAsync("HistoryView", Model);
     </div>
 }
 else
@@ -54,7 +54,7 @@ else
         For example, <code>@@a = @@b</code> takes the value stored in <code>@@b</code> and stores it
         in <code>@@a</code>.  No change to <code>@@b</code> changes the result of evaluating <code>@@a</code>.
         On the other hand, <code>@@a := @@b</code> stores the expression <code>@@b</code> in <code>@@a</code>,
-        meaning that any change to <code>@@b</code> effects a change in the evaluations of <code>@@a</code>.
+        meaning that any change to <code>@@b</code> effects a change in the evaluation of <code>@@a</code>.
         In short, use <code>:=</code> to create dependency chains; use <code>=</code> to store constants.
     </p>
     <p>

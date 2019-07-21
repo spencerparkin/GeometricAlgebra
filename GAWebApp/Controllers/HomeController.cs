@@ -133,6 +133,7 @@ namespace GAWebApp.Controllers
 
         private async void SetState(string calculatorID, State state)
         {
+            // The caller should be free to continue while the task waits on the upload operation.
             await SetStateAsync(calculatorID, state);
         }
 
