@@ -77,8 +77,9 @@ function toggleGuideButtonClicked() {
 $(document).ready(function () {
     calculatorID = localStorage.getItem('calculatorID');
     if (!calculatorID) {
+        // This is far from a fool-proof way of uniquely identifying the visitor.
         $.getJSON('https://ipapi.co/json', function (data) {
-            calculatorID = data.country_name + '-' + data.city + '-' + data.ip;
+            calculatorID = data.country_name + '-' + data.city + '-' + data.ip + '-' + Math.floor(Math.random() * 1000).toString();
             localStorage.setItem('calculatorID', calculatorID);
             refreshHistoryView();
         });
