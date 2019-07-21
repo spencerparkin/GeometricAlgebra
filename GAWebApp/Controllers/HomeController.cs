@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Threading.Tasks;
+using System.Runtime.Caching;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -16,10 +17,6 @@ namespace GAWebApp.Controllers
     public class HomeController : Controller
     {
         private static State defaultState = new State();
-
-        // TODO: We can't store the cache here, because the controller is instantiated for each request.
-        //       I'm trying to use System.Runtime.Caching.MemoryCache.Default, but running into wall after wall after wall.
-        private Dictionary<string, State > stateCache = new Dictionary<string, State>();
 
         public IActionResult Index()
         {
@@ -94,8 +91,9 @@ namespace GAWebApp.Controllers
             if(calculatorID.Length == 0)
                 return defaultState;
 
-            if(stateCache.ContainsKey(calculatorID))
-                return stateCache[calculatorID];
+            State state = MemoryCache.Default.Get(calculatorID) as State;
+            if(state != null)
+                return state;
 
             try
             {
@@ -104,7 +102,7 @@ namespace GAWebApp.Controllers
 
                 CloudBlockBlob blob = container.GetBlockBlobReference(calculatorID);
 
-                State state = new State();
+                state = new State();
 
                 try
                 {
@@ -121,7 +119,7 @@ namespace GAWebApp.Controllers
                     await blob.UploadTextAsync(blobXml);
                 }
                 
-                stateCache.Add(calculatorID, state);
+                MemoryCache.Default.Set(calculatorID, state, null);
 
                 return state;
             }
@@ -133,14 +131,12 @@ namespace GAWebApp.Controllers
             }
         }
 
-        private void SetState(string calculatorID, State state)
+        private async void SetState(string calculatorID, State state)
         {
-            // Just start the task and return immediately; don't wait for it.
-            Task<bool> task = SetStateAsync(calculatorID, state);
-            task.Start();
+            await SetStateAsync(calculatorID, state);
         }
 
-        private async Task<bool> SetStateAsync(string calculatorID, State state)
+        private async Task SetStateAsync(string calculatorID, State state)
         {
             try
             {
@@ -159,8 +155,6 @@ namespace GAWebApp.Controllers
                 string error = exc.Message;
                 //...
             }
-
-            return true;
         }
     }
 }
