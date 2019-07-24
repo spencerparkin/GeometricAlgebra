@@ -233,8 +233,6 @@ namespace GeometricAlgebra
                 geometricProduct.operandList.Add(this.Copy());
                 geometricProduct.operandList.Add(multivectorInverse.Copy());
 
-                // TODO: This is the slow part.  To speed this up, we should cache knowledge of how to convert
-                //       any multivector into matrix form, then invert that matrix.
                 Operand result = ExhaustEvaluation(geometricProduct, context);
 
                 double[,] matrixArray = new double[count, count];

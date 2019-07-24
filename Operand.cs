@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace GeometricAlgebra
 {
@@ -46,14 +47,20 @@ namespace GeometricAlgebra
 
         public static Operand ExhaustEvaluation(Operand operand, Context context)
         {
+            int count = 0;
+
             while (true)
             {
+                count++;
+
                 Operand newOperand = operand.EvaluationStep(context);
                 if (newOperand != null)
                     operand = newOperand;
                 else
                     break;
             }
+
+            Trace.WriteLine($"Took {count} iterations to exhaust evaluation.");
 
             return operand;
         }

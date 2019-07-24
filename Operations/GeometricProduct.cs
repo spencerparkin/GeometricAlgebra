@@ -72,6 +72,12 @@ namespace GeometricAlgebra
 
                 if (bladeA != null && bladeB != null && bladeA.Grade > 1 && bladeB.Grade > 1)
                 {
+                    // TODO: This would be a great place to provide a cache-based optimization.  I don't have
+                    //       a proof (I should look for one), but I believe the geometric product of any two
+                    //       blades will be a blade.  What we can do here is look in a cache for the answer
+                    //       to the product.  On cache miss, do the work as usual, then cache the answer for
+                    //       future use.  This could speed up the inverse calculation considerably.
+
                     // Here our choice of which blade to reduce is arbitrary from a stand-point of correctness.
                     // However, we might converge faster by choosing the blade with smaller grade.
                     // Note there is also something arbitrary about how we're reducing the blades.
