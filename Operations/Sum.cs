@@ -233,6 +233,8 @@ namespace GeometricAlgebra
                 geometricProduct.operandList.Add(this.Copy());
                 geometricProduct.operandList.Add(multivectorInverse.Copy());
 
+                // TODO: This is the slow part.  To speed this up, we should cache knowledge of how to convert
+                //       any multivector into matrix form, then invert that matrix.
                 Operand result = ExhaustEvaluation(geometricProduct, context);
 
                 double[,] matrixArray = new double[count, count];
@@ -259,7 +261,7 @@ namespace GeometricAlgebra
 
                 Matrix<double> matrix = DenseMatrix.OfArray(matrixArray);
 
-                double epsilon = 1e-7;
+                double epsilon = 1e-12;
                 double det = matrix.Determinant();
                 if (Math.Abs(det) < epsilon)
                     throw new MathException("Cannot invert singular matrix.");
@@ -278,10 +280,17 @@ namespace GeometricAlgebra
                 count = 0;
                 foreach (Blade basisBlade in GenerateBasisBlades(subBasis.ToList()))
                 {
-                    Blade blade = basisBlade.Copy() as Blade;
-                    blade.scalar = new NumericScalar(vectorB[count++]);
-                    if(Math.Abs((blade.scalar as NumericScalar).value) >= epsilon)
+                    double value = vectorB[count++];
+                    if(Math.Abs(value) >= epsilon)
+                    {
+                        double roundedValue = Math.Round(value);
+                        if(Math.Abs(value - roundedValue) < epsilon)
+                            value = roundedValue;
+
+                        Blade blade = basisBlade.Copy() as Blade;
+                        blade.scalar = new NumericScalar(value);
                         multivectorInverse.operandList.Add(blade);
+                    }
                 }
 
                 return multivectorInverse;
