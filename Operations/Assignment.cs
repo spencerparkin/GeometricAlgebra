@@ -52,7 +52,7 @@ namespace GeometricAlgebra
                 throw new MathException("Assignment operation expects an l-value of type variable.");
 
             // This is important so that our l-value doesn't evaluate as something other than a variable before we have a chance to assign it.
-            context.ClearStorage(variable.name);
+            context.operandStorage.ClearStorage(variable.name);
 
             // Sometimes we want a dependency-chain; sometimes we don't.
             if (storeEvaluation)
@@ -63,7 +63,7 @@ namespace GeometricAlgebra
             }
 
             // Perform the assignment.
-            context.SetStorage(variable.name, operandList[1].Copy());
+            context.operandStorage.SetStorage(variable.name, operandList[1].Copy());
 
             return operandList[1];
         }

@@ -12,14 +12,14 @@ namespace GeometricAlgebra
 {
     public class Context
     {
-        private Dictionary<string, Operand> operandStorage;
+        public OperandStorage operandStorage;
         public List<Function> funcList;
         public List<string> logMessageList;
 
         public Context()
         {
             funcList = new List<Function>();
-            operandStorage = new Dictionary<string, Operand>();
+            operandStorage = new OperandStorage();
             logMessageList = new List<string>();
 
             funcList.Add(new Inverse());
@@ -36,45 +36,22 @@ namespace GeometricAlgebra
 
         public virtual void GenerateDefaultStorage()
         {
-            SetStorage("pi", Operand.Evaluate("3.1415926535", this).output);
-            SetStorage("e", Operand.Evaluate("2.7182818284590452353602874", this).output);
+            operandStorage.SetStorage("pi", Operand.Evaluate("3.1415926535", this).output);
+            operandStorage.SetStorage("e", Operand.Evaluate("2.7182818284590452353602874", this).output);
         }
 
         public virtual bool SerializeToXml(XElement rootElement)
         {
-            XElement storageElement = new XElement("Storage");
-
-            foreach(var pair in this.operandStorage)
-            {
-                XElement entryElement = new XElement("Entry");
-
-                entryElement.Add(new XElement("key", pair.Key));
-                entryElement.Add(new XElement("value", pair.Value.Print(Operand.Format.PARSEABLE, this)));
-
-                storageElement.Add(entryElement);
-            }
-
-            rootElement.Add(storageElement);
+            if(!operandStorage.SerializeToXml(rootElement, this))
+                return false;
 
             return true;
         }
 
         public virtual bool DeserializeFromXml(XElement rootElement)
         {
-            XElement storageElement = rootElement.Element("Storage");
-            if(storageElement != null)
-            {
-                foreach(XElement entryElement in storageElement.Elements())
-                {
-                    if(entryElement.Name == "Entry")
-                    {
-                        string key = entryElement.Element("key").Value;
-                        string value = entryElement.Element("value").Value;
-
-                        SetStorage(key, Operand.Evaluate(value, this).output);
-                    }
-                }
-            }
+            if(!operandStorage.DeserializeFromXml(rootElement, this))
+                return false;
 
             return true;
         }
@@ -82,29 +59,6 @@ namespace GeometricAlgebra
         public void Log(string message)
         {
             logMessageList.Add(message);
-        }
-
-        public void ClearStorage(string variableName)
-        {
-            if (operandStorage.ContainsKey(variableName))
-                operandStorage.Remove(variableName);
-        }
-
-        public void SetStorage(string variableName, Operand operand)
-        {
-            ClearStorage(variableName);
-
-            if(operand != null)
-                operandStorage.Add(variableName, operand.Copy());
-        }
-
-        public bool GetStorage(string variableName, ref Operand operand)
-        {
-            if (!operandStorage.ContainsKey(variableName))
-                return false;
-
-            operand = operandStorage[variableName].Copy();
-            return true;
         }
 
         // The operand returned here should have grade zero.

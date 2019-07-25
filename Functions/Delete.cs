@@ -33,7 +33,7 @@ namespace GeometricAlgebra
             if(!(operand is Variable variable))
                 throw new MathException("Delete expected operand to be a variable.");
 
-            context.ClearStorage(variable.name);
+            context.operandStorage.ClearStorage(variable.name);
             return operand;
         }
     }
