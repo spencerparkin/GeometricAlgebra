@@ -55,26 +55,26 @@ namespace GeometricAlgebra
             return true;
         }
 
-        public void ClearStorage(string variableName)
+        public void ClearStorage(string key)
         {
-            if (operandMap.ContainsKey(variableName))
-                operandMap.Remove(variableName);
+            if (operandMap.ContainsKey(key))
+                operandMap.Remove(key);
         }
 
-        public void SetStorage(string variableName, Operand operand)
+        public void SetStorage(string key, Operand operand)
         {
-            ClearStorage(variableName);
+            ClearStorage(key);
 
             if (operand != null)
-                operandMap.Add(variableName, operand.Copy());
+                operandMap.Add(key, operand.Copy());
         }
 
-        public bool GetStorage(string variableName, ref Operand operand)
+        public bool GetStorage(string key, ref Operand operand)
         {
-            if (!operandMap.ContainsKey(variableName))
+            if (!operandMap.ContainsKey(key))
                 return false;
 
-            operand = operandMap[variableName].Copy();
+            operand = operandMap[key].Copy();
             return true;
         }
     }

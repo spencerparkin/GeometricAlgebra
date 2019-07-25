@@ -20,6 +20,7 @@ namespace GACalculator
         public CalculatorForm()
         {
             context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
+            context.GenerateDefaultStorage();
 
             InitializeComponent();
 

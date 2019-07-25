@@ -13,6 +13,8 @@ namespace GeometricAlgebra
     public class Context
     {
         public OperandStorage operandStorage;
+        public OperandStorage operandCache;
+        public bool useOperandCache;
         public List<Function> funcList;
         public List<string> logMessageList;
 
@@ -20,6 +22,8 @@ namespace GeometricAlgebra
         {
             funcList = new List<Function>();
             operandStorage = new OperandStorage();
+            operandCache = new OperandStorage();
+            useOperandCache = true;
             logMessageList = new List<string>();
 
             funcList.Add(new Inverse());

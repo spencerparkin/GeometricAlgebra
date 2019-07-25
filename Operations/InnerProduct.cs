@@ -94,6 +94,22 @@ namespace GeometricAlgebra
                     }
                     else if (bladeA.Grade > 1 && bladeB.Grade > 1)
                     {
+                        if (context.useOperandCache)
+                        {
+                            InnerProduct innerProduct = new InnerProduct(new List<Operand>() { new Blade(new NumericScalar(1.0), bladeA.vectorList.ToList()), new Blade(new NumericScalar(1.0), bladeB.vectorList.ToList()) });
+                            string key = innerProduct.Print(Format.PARSEABLE, context);
+                            Operand cachedResult = null;
+                            if (!context.operandCache.GetStorage(key, ref cachedResult))
+                            {
+                                context.useOperandCache = false;
+                                cachedResult = Operand.ExhaustEvaluation(innerProduct, context);
+                                context.useOperandCache = true;
+                                context.operandCache.SetStorage(key, cachedResult);
+                            }
+
+                            return new GeometricProduct(new List<Operand>() { bladeA.scalar, bladeB.scalar, cachedResult });
+                        }
+
                         if (bladeA.Grade <= bladeB.Grade)
                         {
                             return new InnerProduct(new List<Operand>() { bladeA.MakeSubBlade(bladeA.Grade - 1), new InnerProduct(new List<Operand>() { new Blade(bladeA.vectorList[bladeA.Grade - 1]), bladeB }) });
