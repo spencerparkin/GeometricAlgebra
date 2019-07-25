@@ -72,6 +72,24 @@ namespace GeometricAlgebra
 
                 if (bladeA != null && bladeB != null && bladeA.Grade > 1 && bladeB.Grade > 1)
                 {
+                    GeometricProduct geometricProduct;
+
+                    if(context.useOperandCache)
+                    {
+                        geometricProduct = new GeometricProduct(new List<Operand>() { new Blade(new NumericScalar(1.0), bladeA.vectorList.ToList()), new Blade(new NumericScalar(1.0), bladeB.vectorList.ToList()) });
+                        string key = geometricProduct.Print(Format.PARSEABLE, context);
+                        Operand cachedResult = null;
+                        if(!context.operandCache.GetStorage(key, ref cachedResult))
+                        {
+                            context.useOperandCache = false;
+                            cachedResult = Operand.ExhaustEvaluation(geometricProduct, context);
+                            context.useOperandCache = true;
+                            context.operandCache.SetStorage(key, cachedResult);
+                        }
+
+                        return new GeometricProduct(new List<Operand>() { bladeA.scalar, bladeB.scalar, cachedResult });
+                    }
+
                     // Here our choice of which blade to reduce is arbitrary from a stand-point of correctness.
                     // However, we might converge faster by choosing the blade with smaller grade.
                     // Note there is also something arbitrary about how we're reducing the blades.
@@ -79,7 +97,7 @@ namespace GeometricAlgebra
                     Blade blade = operandList[j] as Blade;
                     Blade subBlade = blade.MakeSubBlade(0);
                     Blade vector = new Blade(blade.vectorList[0]);
-                    GeometricProduct geometricProduct = new GeometricProduct(new List<Operand>() { vector, subBlade });
+                    geometricProduct = new GeometricProduct(new List<Operand>() { vector, subBlade });
                     InnerProduct innerProduct = new InnerProduct(new List<Operand>() { vector.Copy(), subBlade.Copy() });
                     operandList[j] = new Sum(new List<Operand>() { geometricProduct, new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), innerProduct }) });
                     return this;

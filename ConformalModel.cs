@@ -17,21 +17,21 @@ namespace GeometricAlgebra.ConformalModel
         {
             base.GenerateDefaultStorage();
 
-            SetStorage("i", Operand.Evaluate("e1^e2^e3", this).output);
-            SetStorage("I", Operand.Evaluate("e1^e2^e3^ni^no", this).output);
+            operandStorage.SetStorage("i", Operand.Evaluate("e1^e2^e3", this).output);
+            operandStorage.SetStorage("I", Operand.Evaluate("e1^e2^e3^ni^no", this).output);
 
             // Add formulas for the geometric primitives of the conformal model in 3D space.
-            SetStorage("point", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni)", this).output);
-            SetStorage("sphere", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni)", this).output);
-            SetStorage("isphere", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni)", this).output);
-            SetStorage("circle", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this).output);
-            SetStorage("icircle", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this).output);
-            SetStorage("pointpair", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this).output);
-            SetStorage("ipointpair", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this).output);
-            SetStorage("plane", Operand.Evaluate("@weight * (@normal + (@center . @normal) * ni)", this).output);
-            SetStorage("line", Operand.Evaluate("@weight * (@normal + (@center ^ @normal) * ni) * @i", this).output);
-            SetStorage("flatpoint", Operand.Evaluate("@weight * (1 - @center ^ ni) * @i", this).output);
-            SetStorage("tangentpoint", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni) ^ (@normal + (@center . @normal) * ni)", this).output);
+            operandStorage.SetStorage("point", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni)", this).output);
+            operandStorage.SetStorage("sphere", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni)", this).output);
+            operandStorage.SetStorage("isphere", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni)", this).output);
+            operandStorage.SetStorage("circle", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this).output);
+            operandStorage.SetStorage("icircle", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this).output);
+            operandStorage.SetStorage("pointpair", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this).output);
+            operandStorage.SetStorage("ipointpair", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this).output);
+            operandStorage.SetStorage("plane", Operand.Evaluate("@weight * (@normal + (@center . @normal) * ni)", this).output);
+            operandStorage.SetStorage("line", Operand.Evaluate("@weight * (@normal + (@center ^ @normal) * ni) * @i", this).output);
+            operandStorage.SetStorage("flatpoint", Operand.Evaluate("@weight * (1 - @center ^ ni) * @i", this).output);
+            operandStorage.SetStorage("tangentpoint", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni) ^ (@normal + (@center . @normal) * ni)", this).output);
         }
 
         public override string TranslateVectorNameForLatex(string vectorName)
@@ -170,7 +170,7 @@ namespace GeometricAlgebra.ConformalModel
             if (grade == -1)
                 throw new MathException("Cannot identify an element non-homogenous in terms of grade; specifically, only blades are identified.");
 
-            context.SetStorage("__blade__", operand);
+            context.operandStorage.SetStorage("__blade__", operand);
 
             Operand center = null;
             Operand normal = null;
@@ -191,7 +191,7 @@ namespace GeometricAlgebra.ConformalModel
                     break;
                 case 1:
                     Operand.Evaluate("@weight = -@__blade__ . ni", context);
-                    context.GetStorage("weight", ref weight);
+                    context.operandStorage.GetStorage("weight", ref weight);
                     if (weight.IsAdditiveIdentity)
                     {
                         Operand.Evaluate("@normal = no . @__blade__ ^ ni", context);
