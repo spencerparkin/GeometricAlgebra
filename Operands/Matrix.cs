@@ -133,8 +133,32 @@ namespace GeometricAlgebra
 
         public override Operand Inverse(Context context)
         {
+            if(rows != cols)
+                throw new MathException("Cannot yet invert non-square matrices.");
+
             // TODO: Return adjoint over determinant.
             return null;
+        }
+
+        public override Operand Reverse()
+        {
+            // You should always be able to multiply a matrix by its reverse, so I think we need the transpose.
+            Matrix matrix = this.Transpose() as Matrix;
+            for(int i = 0; i < matrix.rows; i++)
+                for(int j = 0; j < matrix.cols; j++)
+                    matrix.operandArray[i, j] = new Reverse(new List<Operand>() { matrix.operandArray[i, j] });
+
+            return matrix;
+        }
+
+        public Operand Transpose()
+        {
+            Matrix matrix = new Matrix(this.cols, this.rows);
+            for (int i = 0; i < rows; i++)
+                for (int j = 0; j < cols; j++)
+                    matrix.operandArray[j, i] = operandArray[i, j].Copy();
+
+            return matrix;
         }
     }
 }

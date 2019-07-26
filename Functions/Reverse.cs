@@ -65,7 +65,7 @@ namespace GeometricAlgebra
             switch (format)
             {
                 case Format.LATEX:
-                    return @"\left(" + operandList[0].Print(format, context) + @"\right)^{\tilde}";
+                    return @"\left(" + operandList[0].Print(format, context) + @"\right)^{\sim}";
                 case Format.PARSEABLE:
                     return base.Print(format, context);
             }
