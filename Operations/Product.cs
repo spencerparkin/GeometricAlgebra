@@ -40,41 +40,44 @@ namespace GeometricAlgebra
                 }
             }
 
-            for (int i = 0; i < operandList.Count; i++)
+            for(int i = 0; i < operandList.Count; i++)
             {
-                NumericScalar scalarA = operandList[i] as NumericScalar;
-                if (scalarA == null)
-                    continue;
+                Operand operandA = operandList[i];
 
-                for (int j = i + 1; j < operandList.Count; j++)
+                for(int j = i + 1; j < operandList.Count; j++)
                 {
-                    NumericScalar scalarB = operandList[j] as NumericScalar;
-                    if (scalarB == null)
-                        continue;
+                    Operand operandB = operandList[j];
+                    Operand product = null;
 
-                    operandList.RemoveAt(j);
-                    operandList.RemoveAt(i);
-                    operandList.Add(new NumericScalar(scalarA.value * scalarB.value));
-                    return this;
-                }
-            }
+                    if(operandA is NumericScalar scalarA && operandB is NumericScalar scalarB)
+                    {
+                        product = new NumericScalar(scalarA.value * scalarB.value);
+                    }
+                    else if(operandA is SymbolicScalarTerm termA && operandB is SymbolicScalarTerm termB)
+                    {
+                        product = new SymbolicScalarTerm(new GeometricProduct(new List<Operand>() { termA.scalar, termB.scalar }));
+                        (product as SymbolicScalarTerm).factorList = (from factor in termA.factorList.Concat(termB.factorList) select factor.Copy()).ToList();
+                    }
+                    else if(operandA is Matrix matrixA && operandB is Matrix matrixB)
+                    {
+                        product = Matrix.Multiply(matrixA, matrixB, GetType());
+                    }
+                    else if(operandA.Grade == 0 && operandB is Matrix matrixC)
+                    {
+                        product = matrixC.Scale(operandA);
+                    }
+                    else if(operandA is Matrix matrixD && operandB.Grade == 0)
+                    {
+                        product = matrixD.Scale(operandB);
+                    }
 
-            for (int i = 0; i < operandList.Count; i++)
-            {
-                if (!(operandList[i] is SymbolicScalarTerm scalarA))
-                    continue;
-
-                for (int j = i + 1; j < operandList.Count; j++)
-                {
-                    if (!(operandList[j] is SymbolicScalarTerm scalarB))
-                        continue;
-
-                    operandList.RemoveAt(j);
-                    operandList.RemoveAt(i);
-                    SymbolicScalarTerm scalar = new SymbolicScalarTerm(new GeometricProduct(new List<Operand>() { scalarA.scalar, scalarB.scalar }));
-                    scalar.factorList = (from factor in scalarA.factorList.Concat(scalarB.factorList) select factor.Copy()).ToList();
-                    operandList.Add(scalar);
-                    return this;
+                    if(product != null)
+                    {
+                        operandList.RemoveAt(j);    // Remove j before i so as not to invalidate i.
+                        operandList.RemoveAt(i);
+                        operandList.Add(product);
+                        return this;
+                    }
                 }
             }
 

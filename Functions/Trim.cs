@@ -50,6 +50,9 @@ namespace GeometricAlgebra
                 return collectable;
             }
 
+            if(operand is Matrix matrix)
+                return new Matrix(matrix, typeof(Trim));
+
             if(operand is NumericScalar scalar)
             {
                 double epsilon = 1e-7;

@@ -198,7 +198,8 @@ namespace GeometricAlgebra
 
         public override Operand Inverse(Context context)
         {
-            // This is a super hard problem, but maybe we can handle the following case.
+            // TODO: The numerical case is solved here, but we could also handle the symbolic
+            //       case if we utilize the matrix operand.  It's worth a try.
 
             if (!operandList.All(operand => operand is Blade || operand is NumericScalar))
                 return null;

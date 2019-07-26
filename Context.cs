@@ -36,6 +36,8 @@ namespace GeometricAlgebra
             funcList.Add(new Power());
             funcList.Add(new Exponent());
             funcList.Add(new Logarithm());
+            funcList.Add(new Adjugate());
+            funcList.Add(new Determinant());
         }
 
         public virtual void GenerateDefaultStorage()

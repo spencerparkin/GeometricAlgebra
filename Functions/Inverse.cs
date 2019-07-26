@@ -40,6 +40,18 @@ namespace GeometricAlgebra
             return "inv";
         }
 
+        public override int Grade
+        {
+            get
+            {
+                // If a multivector has a grade, and an inverse, will its inverse be of that grade?
+                if(operandList.Count == 1 && operandList[0].Grade == 0)
+                    return 0;
+
+                return -1;
+            }
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if (operandList.Count != 1)

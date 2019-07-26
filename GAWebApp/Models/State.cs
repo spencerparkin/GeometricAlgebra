@@ -54,10 +54,8 @@ namespace GAWebApp.Models
             item.outputPlain = result.output == null ? "" : result.output.Print(Operand.Format.PARSEABLE, context);
             item.error = result.error;
 
-            // Ugh...this fixes an encoding issue in the URIs, but sometimes a space is needed for valid latex.
-            // Can we replace spaces with something else?
-            item.inputLatex = item.inputLatex.Replace(" ", "");
-            item.outputLatex = item.outputLatex.Replace(" ", "");
+            item.inputLatex = item.inputLatex.Replace(" ", "&space;");
+            item.outputLatex = item.outputLatex.Replace(" ", "&space;");
 
             history.Add(item);
         }

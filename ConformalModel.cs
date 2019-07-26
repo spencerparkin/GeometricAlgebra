@@ -39,7 +39,7 @@ namespace GeometricAlgebra.ConformalModel
             if(vectorName == "no")
                 return @"\vec{o}";
             else if(vectorName == "ni")
-                return @"\rev{\infty}";
+                return @"\vec{\infty}";
 
             return base.TranslateVectorNameForLatex(vectorName);
         }
