@@ -112,14 +112,14 @@ namespace GeometricAlgebra
                 case Format.LATEX:
                 {
                     string printedMatrix = @"\left[\begin{array}{" + new string('c', this.cols) + "}";
-                    for(int j = 0; j < cols; j++)
+                    for(int i = 0; i < rows; i++)
                     {
                         List<string> printedRowList = new List<string>();
-                        for(int i = 0; i < rows; i++)
+                        for(int j = 0; j < cols; j++)
                             printedRowList.Add(operandArray[i, j].Print(format, context));
 
                         printedMatrix += string.Join("&", printedRowList);
-                        if(j + 1 < cols)
+                        if(i + 1 < rows)
                             printedMatrix += @"\\";
                     }
 
