@@ -25,7 +25,21 @@ namespace GeometricAlgebra
             operandArray = new Operand[rows, cols];
             for(int i = 0; i < rows; i++)
                 for(int j = 0; j < cols; j++)
-                    operandArray[i, j] = new NumericScalar(0.0);
+                    operandArray[i, j] = null;
+        }
+
+        public Matrix(Matrix matrix, int row, int col) : base()
+        {
+            if(matrix.rows <= 1 || matrix.cols <= 1)
+                throw new MathException($"Cannot take proper sub-matrix of {matrix.rows}x{matrix.cols} matrix in both dimensions.");
+
+            this.rows = matrix.rows - 1;
+            this.cols = matrix.cols - 1;
+            
+            operandArray = new Operand[rows, cols];
+            for (int i = 0; i < rows; i++)
+                for(int j = 0; j < cols; j++)
+                    operandArray[i, j] = matrix.operandArray[i < row ? i : i + 1, j < col ? j : j + 1].Copy();
         }
 
         public Matrix(List<List<Operand>> listOfOperandLists)
@@ -45,7 +59,7 @@ namespace GeometricAlgebra
                     {
                         operandArray[i, j] = listOfOperandLists[i][j];
                     }
-                    catch(Exception exc)    // TODO: Catch specific exception here.
+                    catch(Exception)    // TODO: Catch specific out-of-bounds exception here.
                     {
                         operandArray[i, j] = new NumericScalar(0.0);
                     }
@@ -134,10 +148,9 @@ namespace GeometricAlgebra
         public override Operand Inverse(Context context)
         {
             if(rows != cols)
-                throw new MathException("Cannot yet invert non-square matrices.");
+                throw new MathException("Cannot invert non-square matrices.");  // TODO: Psuedo-inverse?
 
-            // TODO: Return adjoint over determinant.
-            return null;
+            return new GeometricProduct(new List<Operand>() { Adjugate(), new Inverse(new List<Operand>() { Determinant() }) });
         }
 
         public override Operand Reverse()
@@ -159,6 +172,86 @@ namespace GeometricAlgebra
                     matrix.operandArray[j, i] = operandArray[i, j].Copy();
 
             return matrix;
+        }
+
+        public Operand Adjugate()
+        {
+            Matrix matrix = new Matrix(this.cols, this.rows);
+            for(int i = 0; i < rows; i++)
+                for(int j = 0; j < cols; j++)
+                    matrix.operandArray[j, j] = Cofactor(i, j);
+
+            return matrix;
+        }
+
+        public Operand Cofactor(int row, int col)
+        {
+            Matrix matrix = new Matrix(this, row, col);
+            if((row + col) % 2 == 1)
+                return new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), matrix.Determinant() });
+
+            return matrix.Determinant();
+        }
+
+        public Operand Determinant()
+        {
+            if(rows != cols)
+                throw new MathException("Cannot take determinant of non-square matrix.");
+
+            int bestRow = -1;
+            int largestRowCount = -1;
+
+            for(int i = 0; i < rows; i++)
+            {
+                int count = 0;
+                for(int j = 0; j < cols; j++)
+                    if(operandArray[i, j].IsAdditiveIdentity)
+                        count++;
+
+                if(count == cols)
+                    return new NumericScalar(0.0);
+
+                if(count > largestRowCount)
+                {
+                    largestRowCount = count;
+                    bestRow = i;
+                }
+            }
+
+            int bestCol = -1;
+            int largestColCount = -1;
+
+            for(int j = 0; j < cols; j++)
+            {
+                int count = 0;
+                for(int i = 0; i < rows; i++)
+                    if(operandArray[i, j].IsAdditiveIdentity)
+                        count++;
+
+                if(count == rows)
+                    return new NumericScalar(0.0);
+
+                if(count > largestColCount)
+                {
+                    largestColCount = j;
+                    bestCol = j;
+                }
+            }
+
+            Sum determinant = new Sum();
+
+            if(largestRowCount >= largestColCount)
+            {
+                for (int j = 0; j < cols; j++)
+                    determinant.operandList.Add(new GeometricProduct(new List<Operand>() { operandArray[bestRow, j].Copy(), Cofactor(bestRow, j) }));
+            }
+            else
+            {
+                for (int i = 0; i < rows; i++)
+                    determinant.operandList.Add(new GeometricProduct(new List<Operand>() { operandArray[i, bestCol].Copy(), Cofactor(i, bestCol) }));
+            }
+
+            return determinant;
         }
     }
 }
