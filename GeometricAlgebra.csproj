@@ -52,6 +52,7 @@
     <Compile Include="Functions\Power.cs" />
     <Compile Include="Functions\Trig.cs" />
     <Compile Include="OperandStorage.cs" />
+    <Compile Include="Operands\Matrix.cs" />
     <Compile Include="Operations\Assignment.cs" />
     <Compile Include="Collectables\Blade.cs" />
     <Compile Include="Functions\BladeFactor.cs" />

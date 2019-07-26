@@ -17,13 +17,31 @@ namespace GeometricAlgebra
             DELIMITER
         }
 
+        public enum ParanType
+        {
+            NON_APPLICABLE,
+            ROUND,
+            SQUARE,
+            CURLY
+        }
+
         public Kind kind;
         public string data;
+        public ParanType paranType;
 
         public Token(Kind kind, string data = "")
         {
             this.kind = kind;
             this.data = data;
+            
+            if(data == "(" || data == ")")
+                paranType = ParanType.ROUND;
+            else if(data == "[" || data == "]")
+                paranType = ParanType.SQUARE;
+            else if(data == "{" || data == "}")
+                paranType = ParanType.CURLY;
+            else
+                paranType = ParanType.NON_APPLICABLE;
         }
     }
 
@@ -86,11 +104,11 @@ namespace GeometricAlgebra
 
             if(token == null)
             {
-                if (expression[0] == '(')
+                if (expression[0] == '(' || expression[0] == '[' || expression[0] == '{')
                 {
                     token = new Token(Token.Kind.LEFT_PARAN, expression[0].ToString());
                 }
-                else if (expression[0] == ')')
+                else if (expression[0] == ')' || expression[0] == ']' || expression[0] == '}')
                 {
                     token = new Token(Token.Kind.RIGHT_PARAN, expression[0].ToString());
                 }
@@ -169,7 +187,7 @@ namespace GeometricAlgebra
             {
                 int count = tokenList.Count;
 
-                if (tokenList[0].kind == Token.Kind.LEFT_PARAN)
+                if (tokenList[0].kind == Token.Kind.LEFT_PARAN && tokenList[0].paranType == Token.ParanType.ROUND)
                 {
                     int i = FindMatchingParan(tokenList, 0);
                     if(i == tokenList.Count - 1)
@@ -222,11 +240,11 @@ namespace GeometricAlgebra
                     }
                     case Token.Kind.NUMBER:
                     {
-                        double number;
-                        if (!double.TryParse(token.data, out number))
+                        double value;
+                        if (!double.TryParse(token.data, out value))
                             throw new ParseException(string.Format("Encountered non-parsable number ({0}).", token.data));
 
-                        return new Blade(number);
+                        return new NumericScalar(value);
                     }
                     default:
                     {
@@ -252,7 +270,7 @@ namespace GeometricAlgebra
 
                 throw new ParseException(string.Format("Encountered unary operator ({0}) that isn't recognized on the right.", token.data));
             }
-            else if (tokenList[0].kind == Token.Kind.SYMBOL && ParansMatch(tokenList, 1, tokenList.Count - 1))
+            else if (tokenList[0].kind == Token.Kind.SYMBOL && tokenList[1].paranType == Token.ParanType.ROUND && ParansMatch(tokenList, 1, tokenList.Count - 1))
             {
                 Token token = tokenList[0];
 
@@ -260,27 +278,32 @@ namespace GeometricAlgebra
                 if(operation == null)
                     throw new ParseException(string.Format("Encountered unknown function \"{0}\".", token.data));
 
-                List<int> argBoundaryList = new List<int>() { 1 };
-                
-                foreach(Token delimeterToken in WalkTokensSkipSubexpressions(tokenList.Skip(2).Take(tokenList.Count - 3).ToList()))
-                {
-                    if(delimeterToken.kind == Token.Kind.DELIMITER)
-                    {
-                        int i = tokenList.IndexOf(delimeterToken);
-                        argBoundaryList.Add(i);
-                    }
-                }
-
-                argBoundaryList.Add(tokenList.Count - 1);
-
-                for(int i = 0; i < argBoundaryList.Count - 1; i++)
-                {
-                    List<Token> argTokenList = tokenList.Skip(argBoundaryList[i] + 1).Take(argBoundaryList[i + 1] - argBoundaryList[i] - 1).ToList();
-                    if(argTokenList.Count > 0)
-                        operation.operandList.Add(BuildOperandTree(argTokenList));
-                }
+                List<List<Token>> argumentList = ParseListOfTokenLists(tokenList.Skip(2).Take(tokenList.Count - 3).ToList());
+                foreach(List<Token> subTokenList in argumentList)
+                    operation.operandList.Add(BuildOperandTree(subTokenList));
 
                 return operation;
+            }
+            else if(tokenList[0].paranType == Token.ParanType.SQUARE && ParansMatch(tokenList, 0, tokenList.Count - 1))
+            {
+                List<List<Operand>> listOfOperandLists = new List<List<Operand>>();
+
+                List<List<Token>> rowList = ParseListOfTokenLists(tokenList.Skip(1).Take(tokenList.Count - 2).ToList());
+                foreach(List<Token> rowTokenList in rowList)
+                {
+                    listOfOperandLists.Add(new List<Operand>());
+
+                    List<List<Token>> colList;
+                    if (rowTokenList[0].paranType == Token.ParanType.SQUARE && ParansMatch(rowTokenList, 0, rowTokenList.Count - 1))
+                        colList = ParseListOfTokenLists(rowTokenList.Skip(1).Take(rowTokenList.Count - 2).ToList());
+                    else
+                        colList = new List<List<Token>>() { rowTokenList };
+
+                    foreach(List<Token> subTokenList in colList)
+                        listOfOperandLists[listOfOperandLists.Count - 1].Add(BuildOperandTree(subTokenList));
+                }
+
+                return new Matrix(listOfOperandLists);
             }
             else
             {
@@ -380,6 +403,9 @@ namespace GeometricAlgebra
             if(tokenList[j].kind != Token.Kind.RIGHT_PARAN)
                 return false;
 
+            if(tokenList[i].paranType != tokenList[j].paranType)
+                return false;
+
             if(j != FindMatchingParan(tokenList, i))
                 return false;
 
@@ -388,20 +414,24 @@ namespace GeometricAlgebra
 
         public int FindMatchingParan(List<Token> tokenList, int i)
         {
-            int j = 0;
+            List<Token.ParanType> paranTypeStack = new List<Token.ParanType>();
 
             while(true)
             {
                 Token token = tokenList[i];
 
                 if(token.kind == Token.Kind.LEFT_PARAN)
-                    j++;
+                    paranTypeStack.Add(token.paranType);
                 else if(token.kind == Token.Kind.RIGHT_PARAN)
                 {
-                    j--;
-
-                    if(j <= 0)
-                        break;
+                    if(token.paranType == paranTypeStack[paranTypeStack.Count - 1])
+                    {
+                        paranTypeStack.RemoveAt(paranTypeStack.Count - 1);
+                        if(paranTypeStack.Count == 0)
+                            break;
+                    }
+                    else
+                        throw new ParseException("Encountered parenthesis of mismatched type.");
                 }
 
                 if(i < tokenList.Count - 1)
@@ -410,10 +440,36 @@ namespace GeometricAlgebra
                     break;
             }
 
-            if (j != 0)
+            if(paranTypeStack.Count != 0)
                 throw new ParseException("Encountered unbalanced parenthesis.");
 
             return i;
+        }
+
+        private List<List<Token>> ParseListOfTokenLists(List<Token> tokenList)
+        {
+            List<int> boundaryList = new List<int>() { -1 };
+
+            foreach(Token delimeterToken in WalkTokensSkipSubexpressions(tokenList))
+            {
+                if(delimeterToken.kind == Token.Kind.DELIMITER)
+                {
+                    int i = tokenList.IndexOf(delimeterToken);
+                    boundaryList.Add(i);
+                }
+            }
+
+            boundaryList.Add(tokenList.Count);
+
+            List<List<Token>> listOfTokenLists = new List<List<Token>>();
+
+            for(int i = 0; i < boundaryList.Count - 1; i++)
+            {
+                List<Token> subTokenList = tokenList.Skip(boundaryList[i] + 1).Take(boundaryList[i + 1] - boundaryList[i] - 1).ToList();
+                listOfTokenLists.Add(subTokenList);
+            }
+
+            return listOfTokenLists;
         }
     }
 }
