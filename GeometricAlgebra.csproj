@@ -48,7 +48,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Functions\Adjugate.cs" />
     <Compile Include="Functions\Delete.cs" />
+    <Compile Include="Functions\Determinant.cs" />
     <Compile Include="Functions\Power.cs" />
     <Compile Include="Functions\Trig.cs" />
     <Compile Include="OperandStorage.cs" />

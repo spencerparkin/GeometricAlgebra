@@ -42,6 +42,23 @@ namespace GeometricAlgebra
                     operandArray[i, j] = matrix.operandArray[i < row ? i : i + 1, j < col ? j : j + 1].Copy();
         }
 
+        public Matrix(Matrix matrix, Type type) : base()
+        {
+            this.rows = matrix.rows;
+            this.cols = matrix.cols;
+
+            operandArray = new Operand[rows, cols];
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    Operation operation = Activator.CreateInstance(type) as Operation;
+                    operation.operandList.Add(matrix.operandArray[i, j].Copy());
+                    operandArray[i, j] = operation;
+                }
+            }
+        }
+
         public Matrix(List<List<Operand>> listOfOperandLists)
         {
             this.rows = listOfOperandLists.Count;
@@ -125,24 +142,29 @@ namespace GeometricAlgebra
                 }
                 case Format.LATEX:
                 {
-                    string printedMatrix = @"\left[\begin{array}{" + new string('c', this.cols) + "}";
-                    for(int i = 0; i < rows; i++)
-                    {
-                        List<string> printedRowList = new List<string>();
-                        for(int j = 0; j < cols; j++)
-                            printedRowList.Add(operandArray[i, j].Print(format, context));
-
-                        printedMatrix += string.Join("&", printedRowList);
-                        if(i + 1 < rows)
-                            printedMatrix += @"\\";
-                    }
-
-                    printedMatrix += @"\end{array}\right]";
-                    return printedMatrix;
+                    return PrintLatex(@"\left[", @"\right]", context);
                 }
             }
 
             return "?";
+        }
+
+        public string PrintLatex(string leftBracket, string rightBracket, Context context)
+        {
+            string printedMatrix = leftBracket + @"\begin{array}{" + new string('c', this.cols) + "}";
+            for (int i = 0; i < rows; i++)
+            {
+                List<string> printedRowList = new List<string>();
+                for (int j = 0; j < cols; j++)
+                    printedRowList.Add(operandArray[i, j].Print(Format.LATEX, context));
+
+                printedMatrix += string.Join("&", printedRowList);
+                if (i + 1 < rows)
+                    printedMatrix += @"\\";
+            }
+
+            printedMatrix += @"\end{array}" + rightBracket;
+            return printedMatrix;
         }
 
         public override Operand Inverse(Context context)
@@ -179,7 +201,7 @@ namespace GeometricAlgebra
             Matrix matrix = new Matrix(this.cols, this.rows);
             for(int i = 0; i < rows; i++)
                 for(int j = 0; j < cols; j++)
-                    matrix.operandArray[j, j] = Cofactor(i, j);
+                    matrix.operandArray[i, j] = Cofactor(i, j);
 
             return matrix;
         }
@@ -197,6 +219,9 @@ namespace GeometricAlgebra
         {
             if(rows != cols)
                 throw new MathException("Cannot take determinant of non-square matrix.");
+
+            if(rows == 1)
+                return operandArray[0, 0].Copy();
 
             int bestRow = -1;
             int largestRowCount = -1;
