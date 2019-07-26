@@ -199,9 +199,9 @@ namespace GeometricAlgebra
         public Operand Adjugate()
         {
             Matrix matrix = new Matrix(this.cols, this.rows);
-            for(int i = 0; i < rows; i++)
-                for(int j = 0; j < cols; j++)
-                    matrix.operandArray[i, j] = Cofactor(i, j);
+            for(int i = 0; i < matrix.rows; i++)
+                for(int j = 0; j < matrix.cols; j++)
+                    matrix.operandArray[i, j] = Cofactor(j, i);
 
             return matrix;
         }
