@@ -278,5 +278,44 @@ namespace GeometricAlgebra
 
             return determinant;
         }
+
+        public Matrix Scale(Operand scalar)
+        {
+            Matrix matrix = new Matrix(rows, cols);
+            for(int i = 0; i < rows; i++)
+                for(int j = 0; j < cols; j++)
+                    matrix.operandArray[i, j] = new GeometricProduct(new List<Operand>() { scalar.Copy(), operandArray[i, j].Copy() });
+
+            return matrix;
+        }
+
+        public static Matrix Multiply(Matrix matrixA, Matrix matrixB, Type productType)
+        {
+            if(matrixA.cols != matrixB.rows)
+                throw new MathException($"Cannot multiply {matrixA.rows}x{matrixA.cols} matrix with a {matrixB.rows}x{matrixB.cols} matrix.");
+
+            int count = matrixA.cols;
+            Matrix matrix = new Matrix(matrixA.rows, matrixB.cols);
+
+            for(int i = 0; i < matrix.rows; i++)
+            {
+                for(int j = 0; j < matrix.cols; j++)
+                {
+                    Sum sum = new Sum();
+
+                    for(int k = 0; k < count; k++)
+                    {
+                        Product product = Activator.CreateInstance(productType) as Product;
+                        product.operandList.Add(matrixA.operandArray[i, k].Copy());
+                        product.operandList.Add(matrixB.operandArray[k, j].Copy());
+                        sum.operandList.Add(product);
+                    }
+
+                    matrix.operandArray[i, j] = sum;
+                }
+            }
+
+            return matrix;
+        }
     }
 }
