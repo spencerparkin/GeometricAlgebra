@@ -32,7 +32,7 @@ namespace GeometricAlgebra
             switch (format)
             {
                 case Format.LATEX:
-                    return @"\times";
+                    return @"\times ";
                 case Format.PARSEABLE:
                     return "*";
             }

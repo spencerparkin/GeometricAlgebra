@@ -54,11 +54,8 @@ namespace GAWebApp.Models
             item.outputPlain = result.output == null ? "" : result.output.Print(Operand.Format.PARSEABLE, context);
             item.error = result.error;
 
-            // TODO: Spaces are needed in some places for valid Latex, and this code is breaking that latex.
-            //       This is needed, however, to overcome the URI encoding problem.  Is there a latex service
-            //       we can call in a way where we pass the latex string in POST form rather than GET?
-            item.inputLatex = item.inputLatex.Replace(" ", "");
-            item.outputLatex = item.outputLatex.Replace(" ", "");
+            item.inputLatex = item.inputLatex.Replace(" ", "&space;");
+            item.outputLatex = item.outputLatex.Replace(" ", "&space;");
 
             history.Add(item);
         }
