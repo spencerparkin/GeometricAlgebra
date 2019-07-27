@@ -59,7 +59,6 @@ namespace GeometricAlgebra
             switch (format)
             {
                 case Format.LATEX:
-                    return string.Format("{0:F2}", this.value);
                 case Format.PARSEABLE:
                     return string.Format("{0}", this.value);
             }

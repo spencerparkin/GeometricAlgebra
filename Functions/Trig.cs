@@ -30,6 +30,17 @@ namespace GeometricAlgebra
 
         public override Operand EvaluationStep(Context context)
         {
+            if(operandList.Count != 1)
+                throw new MathException($"Sine function expected exactly one argument, got {operandList.Count}.");
+
+            Operand operand = base.EvaluationStep(context);
+            if(operand != null)
+                return operand;
+
+            operand = operandList[0];
+            if(operand is NumericScalar numericScalar)
+                return new NumericScalar(Math.Sin(numericScalar.value));
+
             // TODO: What's the sine of a multivector?!  Taylor series expansion?
             return null;
         }
@@ -60,6 +71,17 @@ namespace GeometricAlgebra
 
         public override Operand EvaluationStep(Context context)
         {
+            if (operandList.Count != 1)
+                throw new MathException($"Cosine function expected exactly one argument, got {operandList.Count}.");
+
+            Operand operand = base.EvaluationStep(context);
+            if (operand != null)
+                return operand;
+
+            operand = operandList[0];
+            if (operand is NumericScalar numericScalar)
+                return new NumericScalar(Math.Cos(numericScalar.value));
+
             // TODO: What's the cosine of a multivector?!  Taylor series expansion?
             return null;
         }

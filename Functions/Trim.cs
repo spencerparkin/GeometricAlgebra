@@ -22,6 +22,9 @@ namespace GeometricAlgebra
 
         public override string Name(Format format)
         {
+            if(format == Format.LATEX)
+                return @"\mbox{trim}";
+
             return "trim";
         }
 

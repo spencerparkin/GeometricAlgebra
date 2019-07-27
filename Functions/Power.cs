@@ -123,7 +123,11 @@ namespace GeometricAlgebra
                 return geometricProduct;
             }
 
-            if(exponentOperand is Blade blade)
+            if(exponentOperand is NumericScalar numericScalar)
+            {
+                return new NumericScalar(Math.Exp(numericScalar.value));
+            }
+            else if(exponentOperand is Blade blade)
             {
                 Blade basisBlade = new Blade(new NumericScalar(1.0), blade.vectorList.ToList());
                 InnerProduct innerProduct = new InnerProduct();
@@ -177,6 +181,48 @@ namespace GeometricAlgebra
 
         public override Operand EvaluationStep(Context context)
         {
+            if (operandList.Count != 1)
+                throw new MathException(string.Format("Logarithm function expected exactly 1 argument, got {0}.", operandList.Count));
+
+            Operand operand = operandList[0];
+            if (operand is GeometricProduct geometricProduct)
+            {
+                Sum sum = new Sum();
+                foreach (Operand factor in geometricProduct.operandList)
+                    sum.operandList.Add(new Logarithm(new List<Operand>() { factor }));
+
+                return sum;
+            }
+
+            operand = base.EvaluationStep(context);
+            if (operand != null)
+                return operand;
+
+            operand = operandList[0];
+
+            if(operand is Collectable collectable)
+            {
+                Operand scalar = collectable.scalar;
+                if(!scalar.IsMultiplicativeIdentity)
+                {
+                    collectable.scalar = new NumericScalar(1.0);
+                    return new Sum(new List<Operand>() { new Logarithm(new List<Operand>() { scalar }), new Logarithm(new List<Operand>() { collectable }) });;
+                }
+            }
+
+            if(operand is NumericScalar numericScalar)
+            {
+                return new NumericScalar(Math.Log(numericScalar.value));
+            }
+
+            if(operand is Inverse inverse && inverse.operandList.Count == 1)
+            {
+                geometricProduct = new GeometricProduct();
+                geometricProduct.operandList.Add(new NumericScalar(-1.0));
+                geometricProduct.operandList.Add(new Logarithm(new List<Operand>() { inverse.operandList[0] }));
+                return geometricProduct;
+            }
+
             // TODO: Solve e^x = y, for x in terms of y and e.
             return null;
         }

@@ -36,6 +36,14 @@ namespace GeometricAlgebra
 
         public abstract string Print(Format format, Context context = null);
 
+        public string debug
+        {
+            get
+            {
+                return Print(Format.PARSEABLE);
+            }
+        }
+
         // Derivatives overriding this virtual method are to return null
         // if no algebraic manipulation of the sub-tree rooted at this object
         // is performed.  On the other hand, if such a manipulation is performed,
