@@ -288,18 +288,18 @@ namespace GeometricAlgebra
             {
                 List<List<Operand>> listOfOperandLists = new List<List<Operand>>();
 
-                List<List<Token>> colList = ParseListOfTokenLists(tokenList.Skip(1).Take(tokenList.Count - 2).ToList());
-                foreach(List<Token> colTokenList in colList)
+                List<List<Token>> rowList = ParseListOfTokenLists(tokenList.Skip(1).Take(tokenList.Count - 2).ToList());
+                foreach(List<Token> rowTokenList in rowList)
                 {
                     listOfOperandLists.Add(new List<Operand>());
 
-                    List<List<Token>> rowList;
-                    if (colTokenList[0].paranType == Token.ParanType.SQUARE && ParansMatch(colTokenList, 0, colTokenList.Count - 1))
-                        rowList = ParseListOfTokenLists(colTokenList.Skip(1).Take(colTokenList.Count - 2).ToList());
+                    List<List<Token>> colList;
+                    if (rowTokenList[0].paranType == Token.ParanType.SQUARE && ParansMatch(rowTokenList, 0, rowTokenList.Count - 1))
+                        colList = ParseListOfTokenLists(rowTokenList.Skip(1).Take(rowTokenList.Count - 2).ToList());
                     else
-                        rowList = new List<List<Token>>() { colTokenList };
+                        colList = new List<List<Token>>() { rowTokenList };
 
-                    foreach(List<Token> subTokenList in rowList)
+                    foreach(List<Token> subTokenList in colList)
                         listOfOperandLists[listOfOperandLists.Count - 1].Add(BuildOperandTree(subTokenList));
                 }
 
