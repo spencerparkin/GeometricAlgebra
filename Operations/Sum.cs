@@ -178,29 +178,14 @@ namespace GeometricAlgebra
             }
         }
 
-        private static void PopulateMatrixArray(double[,] matrixArray, int row, Sum sum)
+        private static void PopulateMatrixRow(Matrix matrix, int row, Sum sum)
         {
-            Regex rx = new Regex("x([0-9]+)");
-
-            foreach(SymbolicScalarTerm term in from operand in sum.operandList where operand is SymbolicScalarTerm select operand as SymbolicScalarTerm)
-            {
-                var symbol = term.factorList[0] as SymbolicScalarTerm.Symbol;
-                MatchCollection collection = rx.Matches(symbol.name);
-                Match match = collection[0];
-                int col = Convert.ToInt32(match.Groups[1].Value);
-                matrixArray[row, col] = (term.scalar as NumericScalar).value;
-            }
+            
         }
 
         public override Operand Inverse(Context context)
         {
-            // TODO: The numerical case is solved here, but we could also handle the symbolic
-            //       case if we utilize the matrix operand.  It's worth a try.
-
-            if (!operandList.All(operand => operand is Blade || operand is NumericScalar))
-                return null;
-
-            if (!(from operand in operandList where operand is Blade select operand as Blade).All(blade => blade.scalar is NumericScalar))
+            if (!operandList.All(operand => operand is Blade || operand.Grade == 0))
                 return null;
 
             List<string> basisVectorList = context.ReturnBasisVectors();
@@ -221,7 +206,7 @@ namespace GeometricAlgebra
                 foreach (Blade basisBlade in GenerateBasisBlades(subBasis.ToList()))
                 {
                     Blade blade = basisBlade.Copy() as Blade;
-                    string scalarName = string.Format("x{0}", count++);
+                    string scalarName = string.Format($"__x{count++}__");
                     blade.scalar = new SymbolicScalarTerm(scalarName);
                     multivectorInverse.operandList.Add(blade);
                 }
@@ -230,62 +215,86 @@ namespace GeometricAlgebra
                 geometricProduct.operandList.Add(this.Copy());
                 geometricProduct.operandList.Add(multivectorInverse.Copy());
 
+                // I'm hoping the operand cache speeds up this calculation.
                 Operand result = ExhaustEvaluation(geometricProduct, context);
 
-                double[,] matrixArray = new double[count, count];
-                for(int i = 0; i < count; i++)
-                    for(int j = 0; j < count; j++)
-                        matrixArray[i,j] = 0.0;
+                Sum resultSum = result as Sum;
+                if(resultSum == null)
+                    resultSum = new Sum(new List<Operand>() { result });
 
-                PopulateMatrixArray(matrixArray, 0, result as Sum);
-
-                foreach(Blade bladeA in from operand in (result as Operation).operandList where operand is Blade select operand as Blade)
+                Sum scalarPart = new Sum();
+                for(int i = resultSum.operandList.Count; i >= 0; i--)
                 {
-                    for(int i = 0; i < multivectorInverse.operandList.Count; i++)
+                    Operand operand = resultSum.operandList[i];
+                    if(operand.Grade == 0)
+                    {
+                        resultSum.operandList.RemoveAt(i);
+                        scalarPart.operandList.Add(operand);
+                    }
+                }
+
+                resultSum.operandList.Insert(0, new Blade(scalarPart));
+
+                foreach (Blade blade in from operand in resultSum.operandList where operand is Blade select operand as Blade)
+                    if(!(blade.scalar is Sum))
+                        blade.scalar = new Sum(new List<Operand>() { blade.scalar });
+
+                Matrix matrix = new Matrix(count, count);
+                Regex rx = new Regex("__x([0-9]+)__");
+
+                for (int i = 0; i < resultSum.operandList.Count; i++)
+                {
+                    Blade bladeA = resultSum.operandList[i] as Blade;
+
+                    for(int row = 0; row < multivectorInverse.operandList.Count; row++)
                     {
                         Blade bladeB = multivectorInverse.operandList[i] as Blade;
-                        if(bladeB != null && bladeB.IsLike(bladeA))
-                        {
-                            if(!(bladeA.scalar is Sum))
-                                bladeA.scalar = new Sum(new List<Operand>() { bladeA.scalar });
 
-                            PopulateMatrixArray(matrixArray, i, bladeA.scalar as Sum);
+                        if(bladeB.IsLike(bladeA))
+                        {
+                            Sum sum = bladeA.scalar as Sum;
+
+                            foreach (SymbolicScalarTerm term in from operand in sum.operandList where operand is SymbolicScalarTerm select operand as SymbolicScalarTerm)
+                            {
+                                bool foundCoeficient = false;
+
+                                foreach(SymbolicScalarTerm.Symbol symbol in from factor in term.factorList where factor is SymbolicScalarTerm.Factor select factor as SymbolicScalarTerm.Factor)
+                                {
+                                    MatchCollection collection = rx.Matches(symbol.name);
+
+                                    if(collection != null && collection.Count > 0)
+                                    {
+                                        Match match = collection[0];
+                                        int col = Convert.ToInt32(match.Groups[1].Value);
+                                        term.factorList.Remove(symbol);
+                                        matrix.SetElement(row, col, term);
+                                        foundCoeficient = true;
+                                        break;
+                                    }
+                                }
+
+                                if(!foundCoeficient)
+                                    throw new MathException("Failed to find coeficient for matrix.");
+                            }
                         }
                     }
                 }
 
-                Matrix<double> matrix = DenseMatrix.OfArray(matrixArray);
+                for(int i = 0; i < matrix.Rows; i++)
+                    for(int j = 0; j < matrix.Cols; j++)
+                        if(matrix.GetElement(i, j) == null)
+                            matrix.SetElement(i, j, new NumericScalar(0.0));
 
-                double epsilon = 1e-12;
-                double det = matrix.Determinant();
-                if (Math.Abs(det) < epsilon)
-                    throw new MathException("Cannot invert singular matrix.");
-
-                double[] vectorArray = new double[count];
-                for (int i = 0; i < count; i++)
-                    vectorArray[i] = i > 0 ? 0.0 : 1.0;
-
-                Vector<double> vectorA = DenseVector.OfArray(vectorArray);
-                Vector<double> vectorB = Vector<double>.Build.Dense(count);
-
-                matrix.Solve(vectorA, vectorB);
+                Matrix inverseMatrix = Operand.ExhaustEvaluation(new Inverse(new List<Operand>() { matrix }), context) as Matrix;
 
                 multivectorInverse = new Sum();
 
                 count = 0;
                 foreach (Blade basisBlade in GenerateBasisBlades(subBasis.ToList()))
                 {
-                    double value = vectorB[count++];
-                    if(Math.Abs(value) >= epsilon)
-                    {
-                        double roundedValue = Math.Round(value);
-                        if(Math.Abs(value - roundedValue) < epsilon)
-                            value = roundedValue;
-
-                        Blade blade = basisBlade.Copy() as Blade;
-                        blade.scalar = new NumericScalar(value);
-                        multivectorInverse.operandList.Add(blade);
-                    }
+                    Blade blade = basisBlade.Copy() as Blade;
+                    blade.scalar = inverseMatrix.GetElement(count++, 0);
+                    multivectorInverse.operandList.Add(blade);
                 }
 
                 return multivectorInverse;

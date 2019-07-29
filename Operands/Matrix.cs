@@ -170,6 +170,16 @@ namespace GeometricAlgebra
             return printedMatrix;
         }
 
+        public void SetElement(int row, int col, Operand operand)
+        {
+            operandArray[row, col] = operand;
+        }
+
+        public Operand GetElement(int row, int col)
+        {
+            return operandArray[row, col];
+        }
+
         public override Operand Inverse(Context context)
         {
             if(rows != cols)
