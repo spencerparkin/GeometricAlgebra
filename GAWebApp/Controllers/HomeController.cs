@@ -74,6 +74,17 @@ namespace GAWebApp.Controllers
             return container;
         }
 
+#if true
+        private State GetState(string calculatorID)
+        {
+            return defaultState;
+        }
+
+        private void SetState(string calculatorID, State state)
+        {
+        }
+#else
+
         private State GetState(string calculatorID)
         {
             Task<State> task = GetStateAsync(calculatorID);
@@ -157,5 +168,6 @@ namespace GAWebApp.Controllers
                 //...
             }
         }
+#endif
     }
 }
