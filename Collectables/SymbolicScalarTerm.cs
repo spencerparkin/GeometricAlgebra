@@ -336,7 +336,7 @@ namespace GeometricAlgebra
             return "?";
         }
 
-        public override bool Like(Collectable collectable)
+        public override bool IsLike(Collectable collectable)
         {
             if (collectable is SymbolicScalarTerm term)
             {
@@ -350,13 +350,6 @@ namespace GeometricAlgebra
             }
 
             return false;
-        }
-
-        public override Operand Collect(Collectable collectable)
-        {
-            SymbolicScalarTerm term = collectable as SymbolicScalarTerm;
-            term.scalar = new Sum(new List<Operand>() { scalar, term.scalar });
-            return term;
         }
 
         public override bool CanAbsorb(Operand operand)

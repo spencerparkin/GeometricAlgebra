@@ -178,7 +178,7 @@ namespace GeometricAlgebra
             return subBlade;
         }
 
-        public override bool Like(Collectable collectable)
+        public override bool IsLike(Collectable collectable)
         {
             Blade blade = collectable as Blade;
             if (blade == null)
@@ -186,12 +186,6 @@ namespace GeometricAlgebra
 
             // This works because blades are sorted as part of their evaluation.
             return Enumerable.SequenceEqual<string>(vectorList, blade.vectorList);
-        }
-
-        public override Operand Collect(Collectable collectable)
-        {
-            Blade blade = collectable as Blade;
-            return new Blade(new Sum(new List<Operand>() { scalar, blade.scalar }), vectorList);
         }
 
         public override bool CanAbsorb(Operand operand)

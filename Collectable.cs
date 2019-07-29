@@ -15,8 +15,7 @@ namespace GeometricAlgebra
     {
         public Operand scalar;
 
-        public abstract bool Like(Collectable collectable);
-        public abstract Operand Collect(Collectable collectable);
+        public abstract bool IsLike(Collectable collectable);
         public abstract bool CanAbsorb(Operand operand);
         public abstract Operand Explode(ITranslator translator, Context context);
 

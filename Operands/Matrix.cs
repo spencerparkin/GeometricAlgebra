@@ -10,6 +10,9 @@ namespace GeometricAlgebra
         private Operand[,] operandArray;
         private int rows, cols;
 
+        public int Rows { get { return rows; } }
+        public int Cols { get { return cols; } }
+
         public Matrix() : base()
         {
             operandArray = null;
@@ -317,6 +320,27 @@ namespace GeometricAlgebra
                         sum.operandList.Add(product);
                     }
 
+                    matrix.operandArray[i, j] = sum;
+                }
+            }
+
+            return matrix;
+        }
+
+        public static Matrix Add(Matrix matrixA, Matrix matrixB)
+        {
+            if(matrixA.rows != matrixB.rows || matrixA.cols != matrixB.cols)
+                throw new MathException($"Cannot add {matrixA.rows}x{matrixA.cols} matrix with a {matrixB.rows}x{matrixB.cols} matrix.");
+
+            Matrix matrix = new Matrix(matrixA.rows, matrixA.cols);
+
+            for(int i = 0; i < matrix.rows; i++)
+            {
+                for(int j = 0; j < matrix.cols; j++)
+                {
+                    Sum sum = new Sum();
+                    sum.operandList.Add(matrixA.operandArray[i, j].Copy());
+                    sum.operandList.Add(matrixB.operandArray[i, j].Copy());
                     matrix.operandArray[i, j] = sum;
                 }
             }

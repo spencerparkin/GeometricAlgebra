@@ -82,40 +82,36 @@ namespace GeometricAlgebra
 
             for (int i = 0; i < operandList.Count; i++)
             {
-                NumericScalar scalarA = operandList[i] as NumericScalar;
-                if (scalarA == null)
-                    continue;
+                Operand operandA = operandList[i];
 
                 for (int j = i + 1; j < operandList.Count; j++)
                 {
-                    NumericScalar scalarB = operandList[j] as NumericScalar;
-                    if (scalarB == null)
-                        continue;
+                    Operand operandB = operandList[j];
+                    Operand sum = null;
 
-                    operandList.RemoveAt(j);
-                    operandList.RemoveAt(i);
-                    operandList.Add(new NumericScalar(scalarA.value + scalarB.value));
-                    return this;
-                }
-            }
-
-            for (int i = 0; i < operandList.Count; i++)
-            {
-                Collectable collectableA = operandList[i] as Collectable;
-                if (collectableA == null)
-                    continue;
-
-                for (int j = i + 1; j < operandList.Count; j++)
-                {
-                    Collectable collectableB = operandList[j] as Collectable;
-                    if (collectableB == null)
-                        continue;
-
-                    if (collectableA.Like(collectableB))
+                    if(operandA is NumericScalar scalarA && operandB is NumericScalar scalarB)
                     {
-                        operandList.RemoveAt(j);
+                        sum = new NumericScalar(scalarA.value + scalarB.value);
+                    }
+                    else if(operandA is Collectable collectableA && operandB is Collectable collectableB)
+                    {
+                        if(collectableA.IsLike(collectableB))
+                        {
+                            collectableA.scalar = new Sum(new List<Operand>() { collectableA.scalar, collectableB.scalar });
+                            sum = collectableA;
+                        }
+                    }
+                    else if(operandA is Matrix matrixA && operandB is Matrix matrixB)
+                    {
+                        if(matrixA.Rows == matrixB.Rows && matrixA.Cols == matrixB.Cols)
+                            sum = Matrix.Add(matrixA, matrixB);
+                    }
+
+                    if(sum != null)
+                    {
+                        operandList.RemoveAt(j);    // Remove j before i so as not to invalidate i.
                         operandList.RemoveAt(i);
-                        operandList.Add(collectableA.Collect(collectableB));
+                        operandList.Add(sum);
                         return this;
                     }
                 }
@@ -248,7 +244,7 @@ namespace GeometricAlgebra
                     for(int i = 0; i < multivectorInverse.operandList.Count; i++)
                     {
                         Blade bladeB = multivectorInverse.operandList[i] as Blade;
-                        if(bladeB != null && bladeB.Like(bladeA))
+                        if(bladeB != null && bladeB.IsLike(bladeA))
                         {
                             if(!(bladeA.scalar is Sum))
                                 bladeA.scalar = new Sum(new List<Operand>() { bladeA.scalar });
