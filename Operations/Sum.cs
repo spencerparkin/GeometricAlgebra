@@ -188,6 +188,11 @@ namespace GeometricAlgebra
             if (!operandList.All(operand => operand is Blade || operand.Grade == 0))
                 return null;
 
+            // Our algorithm here should be correct for multivectors that are just scalars,
+            // but it is overkill in that case, and doesn't really do anything useful.
+            if (!operandList.Any(operand => operand.Grade > 0))
+                return null;
+
             List<string> basisVectorList = context.ReturnBasisVectors();
             if (!(from operand in operandList where operand is Blade select operand as Blade).All(blade => blade.vectorList.All(vectorName => basisVectorList.Contains(vectorName))))
                 return null;
@@ -223,7 +228,7 @@ namespace GeometricAlgebra
                     resultSum = new Sum(new List<Operand>() { result });
 
                 Sum scalarPart = new Sum();
-                for(int i = resultSum.operandList.Count; i >= 0; i--)
+                for(int i = resultSum.operandList.Count - 1; i >= 0; i--)
                 {
                     Operand operand = resultSum.operandList[i];
                     if(operand.Grade == 0)
@@ -245,38 +250,37 @@ namespace GeometricAlgebra
                 for (int i = 0; i < resultSum.operandList.Count; i++)
                 {
                     Blade bladeA = resultSum.operandList[i] as Blade;
-
-                    for(int row = 0; row < multivectorInverse.operandList.Count; row++)
+                    int row;
+                    for(row = 0; row < multivectorInverse.operandList.Count; row++)
                     {
-                        Blade bladeB = multivectorInverse.operandList[i] as Blade;
-
+                        Blade bladeB = multivectorInverse.operandList[row] as Blade;
                         if(bladeB.IsLike(bladeA))
+                            break;
+                    }
+
+                    if(row == multivectorInverse.operandList.Count)
+                        throw new MathException("Failed to find row for matrix element.");
+
+                    Sum sum = bladeA.scalar as Sum;
+                    foreach (SymbolicScalarTerm term in from operand in sum.operandList where operand is SymbolicScalarTerm select operand as SymbolicScalarTerm)
+                    {
+                        int col = -1;
+                        foreach(SymbolicScalarTerm.Symbol symbol in from factor in term.factorList where factor is SymbolicScalarTerm.Factor select factor as SymbolicScalarTerm.Factor)
                         {
-                            Sum sum = bladeA.scalar as Sum;
-
-                            foreach (SymbolicScalarTerm term in from operand in sum.operandList where operand is SymbolicScalarTerm select operand as SymbolicScalarTerm)
+                            MatchCollection collection = rx.Matches(symbol.name);
+                            if(collection != null && collection.Count > 0)
                             {
-                                bool foundCoeficient = false;
-
-                                foreach(SymbolicScalarTerm.Symbol symbol in from factor in term.factorList where factor is SymbolicScalarTerm.Factor select factor as SymbolicScalarTerm.Factor)
-                                {
-                                    MatchCollection collection = rx.Matches(symbol.name);
-
-                                    if(collection != null && collection.Count > 0)
-                                    {
-                                        Match match = collection[0];
-                                        int col = Convert.ToInt32(match.Groups[1].Value);
-                                        term.factorList.Remove(symbol);
-                                        matrix.SetElement(row, col, term);
-                                        foundCoeficient = true;
-                                        break;
-                                    }
-                                }
-
-                                if(!foundCoeficient)
-                                    throw new MathException("Failed to find coeficient for matrix.");
+                                Match match = collection[0];
+                                col = Convert.ToInt32(match.Groups[1].Value);
+                                term.factorList.Remove(symbol);
+                                break;
                             }
                         }
+
+                        if(col == -1)
+                            throw new MathException("Failed to find column for matrix element.");
+
+                        matrix.SetElement(row, col, term);
                     }
                 }
 
@@ -301,7 +305,7 @@ namespace GeometricAlgebra
             }
             catch(Exception exc)
             {
-                throw new MathException(string.Format("Failed to calculate inverse: {0}", exc.Message));
+                throw new MathException(string.Format("Failed to calculate multivector inverse: {0}", exc.Message));
             }
         }
     }

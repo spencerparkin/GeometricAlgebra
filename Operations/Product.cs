@@ -27,9 +27,10 @@ namespace GeometricAlgebra
             if (operandList.Count == 0)
                 return new NumericScalar(1.0);
 
+            Operand operand;
             for (int i = 0; i < operandList.Count; i++)
             {
-                Operand operand = operandList[i];
+                operand = operandList[i];
                 if (operand.IsAdditiveIdentity)
                     return new NumericScalar(0.0);
 
@@ -40,7 +41,11 @@ namespace GeometricAlgebra
                 }
             }
 
-            for(int i = 0; i < operandList.Count; i++)
+            operand = base.EvaluationStep(context);
+            if(operand != null)
+                return operand;
+
+            for (int i = 0; i < operandList.Count; i++)
             {
                 Operand operandA = operandList[i];
 
@@ -147,7 +152,7 @@ namespace GeometricAlgebra
                 }
             }
 
-            return base.EvaluationStep(context);
+            return null;
         }
     }
 }
