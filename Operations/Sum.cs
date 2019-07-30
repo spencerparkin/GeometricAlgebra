@@ -117,6 +117,8 @@ namespace GeometricAlgebra
                 }
             }
 
+            // TODO: If we're a polynomial, we should try to factor ourselves.
+
             for (int i = 0; i < operandList.Count - 1; i++)
             {
                 Operand operandA = operandList[i];

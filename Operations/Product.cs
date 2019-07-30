@@ -152,6 +152,12 @@ namespace GeometricAlgebra
                 }
             }
 
+            // TODO: Look for cancellation of polynomials.  This is a pattern of having a polynomial factor
+            //       along with the inverse of that same polynomial factor.  Of course, we won't find these
+            //       so easily unless we can also figure out how to factor polynomials themselves.  Harder
+            //       still, how do we recognize one polynomial factor as being a scalar multiple of another?
+            //       In any case, the first challenge is to figure out a polynomial factorization algorithm.
+
             return null;
         }
     }
