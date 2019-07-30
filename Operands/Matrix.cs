@@ -191,11 +191,7 @@ namespace GeometricAlgebra
             if(rows != cols)
                 throw new MathException("Cannot invert non-square matrices.");  // TODO: Psuedo-inverse?
 
-            // TODO: Use Numerics.Net if matrix is completely numerical.
-            //       Then inverse of multivectors can be written completely in terms of
-            //       this class without fear of too mucn numerical instability.
-            //       I'm going to re-write the inverse of multivectors so that it can
-            //       handle both numeric and symbolic multivectors.
+            // TODO: Use Numerics.Net if matrix is completely numerical.  This may be more numerically stable.
 
             return new GeometricProduct(new List<Operand>() { Adjugate(), new Inverse(new List<Operand>() { Determinant() }) });
         }
