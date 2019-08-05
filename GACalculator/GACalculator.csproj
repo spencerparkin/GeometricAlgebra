@@ -83,11 +83,5 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\GAMath\GAMath.csproj">
-      <Project>{e392581a-7dea-4e69-88ea-4db09d7307eb}</Project>
-      <Name>GAMath</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
