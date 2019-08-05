@@ -150,7 +150,7 @@ namespace Tests
         public void BladeReverse()
         {
             Context context = new Context();
-            string inputText = "reverse(a^b^c)";
+            string inputText = "rev(a^b^c)";
             Operand operand = Operand.Evaluate(inputText, context).output;
             string outputText = operand.Print(Operand.Format.PARSEABLE, context);
             Assert.AreEqual("(-1)*a^b^c", outputText);
@@ -213,7 +213,7 @@ namespace Tests
         {
             Context context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
             Operand.Evaluate("@multivector = 5 - e1 + 2 * e2 + 7 * e1 ^ e3", context);
-            Operand.Evaluate("@multivectorInv = inverse(@multivector)", context);
+            Operand.Evaluate("@multivectorInv = inv(@multivector)", context);
             Operand result = Operand.Evaluate("trim(@multivector * @multivectorInv - 1)", context).output;
             Assert.IsTrue(result.IsAdditiveIdentity);
         }
