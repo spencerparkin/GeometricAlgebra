@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace GeometricAlgebra
 {
@@ -85,6 +87,17 @@ namespace GeometricAlgebra
                     }
                 }
             }
+        }
+
+        public Matrix(Matrix<double> matrix) : base()
+        {
+            this.rows = matrix.RowCount;
+            this.cols = matrix.ColumnCount;
+
+            operandArray = new Operand[rows, cols];
+            for (int i = 0; i < rows; i++)
+                for (int j = 0; j < cols; j++)
+                    operandArray[i, j] = new NumericScalar(matrix.At(i, j));
         }
 
         public override Operand Copy()
@@ -186,13 +199,64 @@ namespace GeometricAlgebra
             return operandArray[row, col];
         }
 
+        public IEnumerable<Operand> YieldAllElements()
+        {
+            for(int i = 0; i < rows; i++)
+                for(int j = 0; j < cols; j++)
+                    yield return operandArray[i, j];
+        }
+
+        public Matrix<double> GenerateNumericMatrix()
+        {
+            try
+            {
+                Matrix<double> numericMatrix = DenseMatrix.Create(rows, cols, 0.0);
+                for (int i = 0; i < rows; i++)
+                    for (int j = 0; j < cols; j++)
+                        numericMatrix.At(i, j, (operandArray[i, j] as NumericScalar).value);
+
+                return numericMatrix;
+            }
+            catch(Exception)    // TODO: What's the type-cast exception?
+            {
+                return null;
+            }
+        }
+
         public override Operand Inverse(Context context)
         {
-            if(rows != cols)
+            if(YieldAllElements().All(operand => operand is NumericScalar))
+            {
+                Matrix<double> numericMatrix = GenerateNumericMatrix();
+
+                double det = numericMatrix.Determinant();
+                if(Math.Abs(det) < context.epsilon)
+                    throw new MathException("Cannot invert singular matrix or very-near singular matrices.");
+
+                try
+                {
+                    double detReciprical = 1.0 / det;
+                }
+                catch(DivideByZeroException)
+                {
+                    throw new MathException("Cannot take recriprical of determinant.");
+                }
+
+                Matrix<double> numericMatrixInverse;
+                if (rows == cols)
+                    numericMatrixInverse = numericMatrix.Inverse();
+                else
+                    numericMatrixInverse = numericMatrix.PseudoInverse();
+                
+                return new Matrix(numericMatrixInverse);
+            }
+
+            if (rows != cols)
                 throw new MathException("Cannot invert non-square matrices.");  // TODO: Psuedo-inverse?
 
-            // TODO: Use Numerics.Net if matrix is completely numerical.  This may be more numerically stable.
+            // TODO: Use QR factorization for symbolic matrices of large size.
 
+            // Note that this, while algebraically correct, is completely impractical for large matrices.  It's probably also numerically unstable.
             return new GeometricProduct(new List<Operand>() { Adjugate(), new Inverse(new List<Operand>() { Determinant() }) });
         }
 

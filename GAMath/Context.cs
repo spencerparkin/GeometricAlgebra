@@ -17,6 +17,7 @@ namespace GeometricAlgebra
         public bool useOperandCache;
         public List<Function> funcList;
         public List<string> logMessageList;
+        public double epsilon;
 
         public Context()
         {
@@ -25,6 +26,7 @@ namespace GeometricAlgebra
             operandCache = new OperandStorage();
             useOperandCache = true;
             logMessageList = new List<string>();
+            epsilon = 1e-7;
 
             funcList.Add(new Inverse());
             funcList.Add(new Reverse());

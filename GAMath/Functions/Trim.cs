@@ -58,8 +58,7 @@ namespace GeometricAlgebra
 
             if(operand is NumericScalar scalar)
             {
-                double epsilon = 1e-7;
-                if(Math.Abs(scalar.value) < epsilon)
+                if(Math.Abs(scalar.value) < context.epsilon)
                 {
                     scalar.value = 0.0;
                     return scalar;
