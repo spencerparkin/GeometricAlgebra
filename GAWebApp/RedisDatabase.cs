@@ -23,7 +23,7 @@ namespace GAWebApp
 
                 connection = ConnectionMultiplexer.Connect(redisURI);
             }
-            catch(RedisException exc)
+            catch(RedisException)
             {
                 // Just run without a database.
                 connection = null;

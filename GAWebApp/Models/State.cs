@@ -43,19 +43,26 @@ namespace GAWebApp.Models
         public void Calculate(string expression)
         {
             HistoryItem item = new HistoryItem();
-
-            // TODO: We should probably do this in a task and then wait with time-out.
-            var result = Operand.Evaluate(expression, context);
-
             item.expression = expression;
-            item.inputLatex = result.input == null ? "" : result.input.Print(Operand.Format.LATEX, context);
-            item.outputLatex = result.output == null ? "" : result.output.Print(Operand.Format.LATEX, context);
-            item.inputPlain = result.input == null ? "" : result.input.Print(Operand.Format.PARSEABLE, context);
-            item.outputPlain = result.output == null ? "" : result.output.Print(Operand.Format.PARSEABLE, context);
-            item.error = result.error;
 
-            item.inputLatex = item.inputLatex.Replace(" ", "&space;");
-            item.outputLatex = item.outputLatex.Replace(" ", "&space;");
+            Task task = Task.Factory.StartNew(() => {
+                var result = Operand.Evaluate(expression, context);
+
+                item.inputLatex = result.input == null ? "" : result.input.Print(Operand.Format.LATEX, context);
+                item.outputLatex = result.output == null ? "" : result.output.Print(Operand.Format.LATEX, context);
+                item.inputPlain = result.input == null ? "" : result.input.Print(Operand.Format.PARSEABLE, context);
+                item.outputPlain = result.output == null ? "" : result.output.Print(Operand.Format.PARSEABLE, context);
+                item.error = result.error;
+
+                item.inputLatex = item.inputLatex.Replace(" ", "&space;");
+                item.outputLatex = item.outputLatex.Replace(" ", "&space;");
+            });
+
+            TimeSpan timeout = TimeSpan.FromSeconds(4.0);
+            if (!task.Wait(timeout))
+            {
+                item.error = "Timed-out waiting for evaluation to complete.";
+            }
 
             history.Add(item);
         }
