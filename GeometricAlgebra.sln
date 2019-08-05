@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GAWebApp", "GAWebApp\GAWebA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{5258D259-AE56-4F3D-A3C3-F06C4ED9E733}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GAMath", "GAMath\GAMath.csproj", "{129951B0-E31C-4A7A-A879-763BAF27B3F3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{5258D259-AE56-4F3D-A3C3-F06C4ED9E733}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5258D259-AE56-4F3D-A3C3-F06C4ED9E733}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5258D259-AE56-4F3D-A3C3-F06C4ED9E733}.Release|Any CPU.Build.0 = Release|Any CPU
+		{129951B0-E31C-4A7A-A879-763BAF27B3F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{129951B0-E31C-4A7A-A879-763BAF27B3F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{129951B0-E31C-4A7A-A879-763BAF27B3F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{129951B0-E31C-4A7A-A879-763BAF27B3F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
