@@ -14,8 +14,12 @@ namespace GAWebApp
 {
     public class Startup
     {
+        private RedisDatabase redisDatabase;
+
         public Startup(IConfiguration configuration)
         {
+            redisDatabase = new RedisDatabase();
+
             Configuration = configuration;
         }
 
@@ -32,6 +36,8 @@ namespace GAWebApp
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+            services.AddSingleton<RedisDatabase>(this.redisDatabase);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -86,6 +86,13 @@ namespace GAWebApp.Models
             return false;
         }
 
+        public string SerializeToString()
+        {
+            XElement rootElement = new XElement("State");
+            SerializeToXml(rootElement);
+            return rootElement.ToString();
+        }
+
         public bool DeserializeFromXml(XElement rootElement)
         {
             if(!context.DeserializeFromXml(rootElement))
@@ -112,6 +119,12 @@ namespace GAWebApp.Models
             }
 
             return false;
+        }
+
+        public bool DeserializeFromString(string rootXml)
+        {
+            XElement rootElement = XElement.Parse(rootXml);
+            return DeserializeFromXml(rootElement);
         }
     }
 }

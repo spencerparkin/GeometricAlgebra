@@ -13,12 +13,24 @@ namespace GAWebApp.Controllers
 {
     public class HomeController : Controller
     {
-        private static State defaultState = new State();
+        private RedisDatabase redisDatabase;
+
+        public HomeController(RedisDatabase redisDatabase)
+        {
+            this.redisDatabase = redisDatabase;
+        }
+
+        private static State defaultState = null;
 
         public IActionResult Index()
         {
-            State state = this.GetState("");
-            return View(state);
+            if(defaultState == null)
+            {
+                defaultState = new State();
+                defaultState.context.GenerateDefaultStorage();
+            }
+
+            return View(defaultState);
         }
 
         [HttpGet]
@@ -57,11 +69,15 @@ namespace GAWebApp.Controllers
 
         private State GetState(string calculatorID)
         {
-            return defaultState;
+            State state = new State();
+            if(!this.redisDatabase.GetState(calculatorID, state))
+                return defaultState;
+            return state;
         }
 
         private void SetState(string calculatorID, State state)
         {
+            this.redisDatabase.SetState(calculatorID, state);
         }
     }
 }
