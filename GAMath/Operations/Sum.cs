@@ -180,11 +180,6 @@ namespace GeometricAlgebra
             }
         }
 
-        private static void PopulateMatrixRow(Matrix matrix, int row, Sum sum)
-        {
-            
-        }
-
         public override Operand Inverse(Context context)
         {
             if (!operandList.All(operand => operand is Blade || operand.Grade == 0))
