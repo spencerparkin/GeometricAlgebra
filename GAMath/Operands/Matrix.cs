@@ -136,7 +136,13 @@ namespace GeometricAlgebra
                     {
                         List<string> colList = new List<string>();
                         for(int j = 0; j < cols; j++)
-                            colList.Add(operandArray[i, j].Print(format, context));
+                        {
+                            Operand element = operandArray[i, j];
+                            if(element != null)
+                                colList.Add(operandArray[i, j].Print(format, context));
+                            else
+                                colList.Add("?");
+                        }
 
                         rowList.Add("[" + string.Join(", ", colList) + "]");
                     }
@@ -170,16 +176,22 @@ namespace GeometricAlgebra
             return printedMatrix;
         }
 
+        public void SetElement(int row, int col, Operand operand)
+        {
+            operandArray[row, col] = operand;
+        }
+
+        public Operand GetElement(int row, int col)
+        {
+            return operandArray[row, col];
+        }
+
         public override Operand Inverse(Context context)
         {
             if(rows != cols)
                 throw new MathException("Cannot invert non-square matrices.");  // TODO: Psuedo-inverse?
 
-            // TODO: Use Numerics.Net if matrix is completely numerical.
-            //       Then inverse of multivectors can be written completely in terms of
-            //       this class without fear of too mucn numerical instability.
-            //       I'm going to re-write the inverse of multivectors so that it can
-            //       handle both numeric and symbolic multivectors.
+            // TODO: Use Numerics.Net if matrix is completely numerical.  This may be more numerically stable.
 
             return new GeometricProduct(new List<Operand>() { Adjugate(), new Inverse(new List<Operand>() { Determinant() }) });
         }
@@ -207,10 +219,19 @@ namespace GeometricAlgebra
 
         public Operand Adjugate()
         {
-            Matrix matrix = new Matrix(this.cols, this.rows);
-            for(int i = 0; i < matrix.rows; i++)
-                for(int j = 0; j < matrix.cols; j++)
-                    matrix.operandArray[i, j] = Cofactor(j, i);
+            Matrix matrix = null;
+
+            if(this.rows > 1 && this.cols > 1)
+            {
+                matrix = new Matrix(this.cols, this.rows);
+                for (int i = 0; i < matrix.rows; i++)
+                    for(int j = 0; j < matrix.cols; j++)
+                        matrix.operandArray[i, j] = Cofactor(j, i);
+            }
+            else
+            {
+                matrix = this.Copy() as Matrix;
+            }
 
             return matrix;
         }
@@ -277,12 +298,14 @@ namespace GeometricAlgebra
             if(largestRowCount >= largestColCount)
             {
                 for (int j = 0; j < cols; j++)
-                    determinant.operandList.Add(new GeometricProduct(new List<Operand>() { operandArray[bestRow, j].Copy(), Cofactor(bestRow, j) }));
+                    if(!operandArray[bestRow, j].IsAdditiveIdentity)
+                        determinant.operandList.Add(new GeometricProduct(new List<Operand>() { operandArray[bestRow, j].Copy(), Cofactor(bestRow, j) }));
             }
             else
             {
                 for (int i = 0; i < rows; i++)
-                    determinant.operandList.Add(new GeometricProduct(new List<Operand>() { operandArray[i, bestCol].Copy(), Cofactor(i, bestCol) }));
+                    if(!operandArray[i, bestCol].IsAdditiveIdentity)
+                        determinant.operandList.Add(new GeometricProduct(new List<Operand>() { operandArray[i, bestCol].Copy(), Cofactor(i, bestCol) }));
             }
 
             return determinant;

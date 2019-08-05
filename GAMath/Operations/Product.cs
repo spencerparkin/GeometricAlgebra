@@ -27,9 +27,10 @@ namespace GeometricAlgebra
             if (operandList.Count == 0)
                 return new NumericScalar(1.0);
 
+            Operand operand;
             for (int i = 0; i < operandList.Count; i++)
             {
-                Operand operand = operandList[i];
+                operand = operandList[i];
                 if (operand.IsAdditiveIdentity)
                     return new NumericScalar(0.0);
 
@@ -40,7 +41,11 @@ namespace GeometricAlgebra
                 }
             }
 
-            for(int i = 0; i < operandList.Count; i++)
+            operand = base.EvaluationStep(context);
+            if(operand != null)
+                return operand;
+
+            for (int i = 0; i < operandList.Count; i++)
             {
                 Operand operandA = operandList[i];
 
@@ -147,7 +152,13 @@ namespace GeometricAlgebra
                 }
             }
 
-            return base.EvaluationStep(context);
+            // TODO: Look for cancellation of polynomials.  This is a pattern of having a polynomial factor
+            //       along with the inverse of that same polynomial factor.  Of course, we won't find these
+            //       so easily unless we can also figure out how to factor polynomials themselves.  Harder
+            //       still, how do we recognize one polynomial factor as being a scalar multiple of another?
+            //       In any case, the first challenge is to figure out a polynomial factorization algorithm.
+
+            return null;
         }
     }
 }
