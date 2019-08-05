@@ -5,7 +5,6 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Threading.Tasks;
-using System.Runtime.Caching;
 using Microsoft.AspNetCore.Mvc;
 using GAWebApp.Models;
 using GeometricAlgebra;
