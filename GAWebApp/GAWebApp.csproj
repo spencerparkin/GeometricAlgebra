@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GeometricAlgebra.csproj" />
+    <ProjectReference Include="..\GAMath\GAMath.csproj" />
   </ItemGroup>
 
   <ItemGroup>

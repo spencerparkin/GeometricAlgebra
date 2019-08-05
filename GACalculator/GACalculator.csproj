@@ -84,9 +84,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GeometricAlgebra.csproj">
+    <ProjectReference Include="..\GAMath\GAMath.csproj">
       <Project>{e392581a-7dea-4e69-88ea-4db09d7307eb}</Project>
-      <Name>GeometricAlgebra</Name>
+      <Name>GAMath</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
