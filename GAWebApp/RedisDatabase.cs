@@ -25,12 +25,16 @@ namespace GAWebApp
             }
             catch(RedisException exc)
             {
-                throw new Exception("Failed to connect to Redis database!", exc);
+                // Just run without a database.
+                connection = null;
             }
         }
 
         public bool GetState(string calculatorID, State state)
         {
+            if(connection == null)
+                return false;
+
             IDatabase database = connection.GetDatabase();
             if(database.KeyExists(calculatorID))
                 state.DeserializeFromString(database.StringGet(calculatorID));
@@ -45,6 +49,9 @@ namespace GAWebApp
 
         public async void SetState(string calculatorID, State state)
         {
+            if(connection == null)
+                return;
+
             // Being asynchronous, the caller can move on without waiting for the store operation to complete.
             // Put another way, the store operation is a fire-and-forget kind of operation.
             IDatabase database = connection.GetDatabase();

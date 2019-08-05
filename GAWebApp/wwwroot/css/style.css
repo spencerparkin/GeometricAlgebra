@@ -1,9 +1,9 @@
 #historyView {
     width: 100%;
-    height: 200px;
+    height: 600px;
     resize: vertical;
     overflow-y: auto;
-    background-color: #00000054;
+    background-color: #ffffff54;
 }
 
 table {
@@ -13,6 +13,8 @@ table {
 td {
     height: 30px;
     width: 100%;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 tr {
@@ -80,4 +82,6 @@ code {
     background: #ffffffee;
     display: none;
     padding: 5px;
+    margin-top: 10px;
+    border-radius: 25px;
 }
