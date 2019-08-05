@@ -14,6 +14,13 @@ namespace GeometricAlgebra
         }
     }
 
+    public struct Result
+    {
+        public Operand input;
+        public Operand output;
+        public string error;
+    }
+
     // This is the base class for all expression tree nodes.
     public abstract class Operand
     {
@@ -83,17 +90,18 @@ namespace GeometricAlgebra
             return gradeSet;
         }
 
-        public static (Operand input, Operand output, string error) Evaluate(string expression, Context context)
+        public static Result Evaluate(string expression, Context context)
         {
-            Operand inputResult = null;
-            Operand outputResult = null;
-            string error = "";
+            Result result = new Result();
+            result.input = null;
+            result.output = null;
+            result.error = "";
 
             try
             {
                 Parser parser = new Parser(context, false);
-                inputResult = parser.Parse(expression);
-                outputResult = ExhaustEvaluation(inputResult.Copy(), context);
+                result.input = parser.Parse(expression);
+                result.output = ExhaustEvaluation(result.input.Copy(), context);
 
                 // Sadly, I've come across cases where it just takes way too long
                 // to perform the following calculation, so I'm just going to have
@@ -109,7 +117,7 @@ namespace GeometricAlgebra
                 // fully reduce in terms of grade cancellation.
                 if(parser.generatedSymbolicVector)
                 {
-                    HashSet<int> gradeSetA = DiscoverGrades(outputResult, context);
+                    HashSet<int> gradeSetA = DiscoverGrades(result.output, context);
 
                     parser = new Parser(context, true);
                     Operand basisResult = parser.Parse(expression);
@@ -119,18 +127,18 @@ namespace GeometricAlgebra
 
                     if(gradeSetB.IsProperSubsetOf(gradeSetA))
                     {
-                        outputResult = new GradePart(new List<Operand>() { outputResult }.Concat(from i in gradeSetB select new NumericScalar(i)).ToList());
-                        outputResult = ExhaustEvaluation(outputResult, context);
+                        result.output = new GradePart(new List<Operand>() { result.output }.Concat(from i in gradeSetB select new NumericScalar(i)).ToList());
+                        result.output = ExhaustEvaluation(result.output, context);
                     }
                 }
 #endif
             }
             catch (Exception exc)
             {
-                error = exc.Message;
+                result.error = exc.Message;
             }
 
-            return (inputResult, outputResult, error);
+            return result;
         }
 
         public virtual string LexicographicSortKey()
