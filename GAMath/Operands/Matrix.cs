@@ -229,24 +229,26 @@ namespace GeometricAlgebra
             {
                 Matrix<double> numericMatrix = GenerateNumericMatrix();
 
-                double det = numericMatrix.Determinant();
-                if(Math.Abs(det) < context.epsilon)
-                    throw new MathException("Cannot invert singular matrix or very-near singular matrices.");
-
-                try
-                {
-                    double detReciprical = 1.0 / det;
-                }
-                catch(DivideByZeroException)
-                {
-                    throw new MathException("Cannot take recriprical of determinant.");
-                }
-
                 Matrix<double> numericMatrixInverse;
-                if (rows == cols)
-                    numericMatrixInverse = numericMatrix.Inverse();
-                else
+                if (rows != cols)
                     numericMatrixInverse = numericMatrix.PseudoInverse();
+                else
+                {
+                    double det = numericMatrix.Determinant();
+                    if (Math.Abs(det) < context.epsilon)
+                        throw new MathException("Cannot invert singular matrix or very-near singular matrices.");
+
+                    try
+                    {
+                        double detReciprical = 1.0 / det;
+                    }
+                    catch (DivideByZeroException)
+                    {
+                        throw new MathException("Cannot take recriprical of determinant.");
+                    }
+
+                    numericMatrixInverse = numericMatrix.Inverse();
+                }
                 
                 return new Matrix(numericMatrixInverse);
             }
