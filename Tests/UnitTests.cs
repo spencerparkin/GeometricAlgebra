@@ -221,10 +221,14 @@ namespace Tests
         [TestMethod]
         public void Case2()
         {
-            // inverse(e2 + ni) -> This causes a strange error.
-            // Also, note that I've failed to calculate the inverse of a circle due to singular matrix.
-            // That seems fishy to me.  Try calculating the inverse in other ways to show it really does have an inverse.
-            // Then try to figure out why we can't compute the inverse directly.
+        }
+
+        [TestMethod]
+        public void MatrixInverse()
+        {
+            Context context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
+            Result result = Operand.Evaluate("inv([[$a, $b, $c],[$d, $e, $f],[$g, $h, $i]])", context);
+            Assert.IsTrue(result.error == "");
         }
     }
 }

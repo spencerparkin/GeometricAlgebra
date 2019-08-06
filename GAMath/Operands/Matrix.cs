@@ -293,8 +293,8 @@ namespace GeometricAlgebra
             if (rows != cols)
                 throw new MathException("Cannot invert non-square symbolic matrices.");
 
-            //if(this.rows <= 4)
-            //    return new GeometricProduct(new List<Operand>() { Adjugate(), new Inverse(new List<Operand>() { Determinant() }) });
+            if(this.rows <= 4)
+                return new GeometricProduct(new List<Operand>() { Adjugate(), new Inverse(new List<Operand>() { Determinant() }) });
 
             List<RowOperation> rowOperationList = this.GaussJordanEliminate(context);
             if(!this.IsMultiplicativeIdentityMatrix)
@@ -594,6 +594,10 @@ namespace GeometricAlgebra
                     var rowOp = new ScaleRow(pivotRow, new Inverse(new List<Operand>() { operandArray[pivotRow, pivotCol].Copy() }));
                     rowOperationList.Add(rowOp);
                     rowOp.Apply(this, context);
+
+                    // TODO: This is a hack until the algebra system can recognize the ratio of two identical polynomials as being one.
+                    if(!operandArray[pivotRow, pivotCol].IsMultiplicativeIdentity)
+                        operandArray[pivotRow, pivotCol] = new NumericScalar(1.0);
                 }
 
                 //
@@ -604,9 +608,13 @@ namespace GeometricAlgebra
                 {
                     if(i != pivotRow && !operandArray[i, pivotCol].IsAdditiveIdentity)
                     {
-                        var rowOp = new AddRowMultiple(i, pivotRow, new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), operandArray[pivotRow, pivotCol].Copy() }));
+                        var rowOp = new AddRowMultiple(i, pivotRow, new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), operandArray[i, pivotCol].Copy() }));
                         rowOperationList.Add(rowOp);
                         rowOp.Apply(this, context);
+
+                        // TODO: Again, this is a hack, because the algebra system does not yet handle ratios of polynomials very well at all.
+                        if(!operandArray[i, pivotCol].IsAdditiveIdentity)
+                            operandArray[i, pivotCol] = new NumericScalar(0.0);
                     }
                 }
 
