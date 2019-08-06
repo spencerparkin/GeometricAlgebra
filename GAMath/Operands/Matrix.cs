@@ -566,13 +566,13 @@ namespace GeometricAlgebra
                 if(operandArray[pivotRow, pivotCol].IsAdditiveIdentity)
                 {
                     int i;
-                    for(i = 0; i < this.rows; i++)
+                    for(i = pivotRow + 1; i < this.rows; i++)
                         if(!operandArray[i, pivotCol].IsAdditiveIdentity)
                             break;
                     
                     if(i == this.rows)
                     {
-                        // The pivot column is all zeros.  Go to the next column.
+                        // Go to the next column.
                         pivotCol++;
                         continue;
                     }
