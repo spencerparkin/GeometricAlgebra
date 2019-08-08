@@ -66,6 +66,8 @@ namespace Tests
             string outputText = operand.Print(Operand.Format.PARSEABLE);
             Assert.AreEqual(inputText, outputText);
         }
+
+        // TODO: The following do not parse: "$r*$r*@q*-inv(c.c)" and "$r*$r*@q*(-inv(c.c))"
     }
 
     [TestClass]
