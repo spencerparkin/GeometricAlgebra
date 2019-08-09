@@ -181,6 +181,11 @@ namespace GeometricAlgebra
             throw new ParseException(string.Format("Cannot determine associativity of \"{0}\".", operation));
         }
 
+        // Note that here that we do not consider unary operator precedence.
+        // So for example, if we have -1~, we don't try to choose between (-1)~ and -(1~),
+        // though both are the same in this particular case.  Also, we don't recognize unary
+        // operator stacking.  E.g., -~1 will not parse as -(~1) would.  In short, working with
+        // unary operators will sometimes requires parenthesis.
         public Operand BuildOperandTree(List<Token> tokenList)
         {
             while (tokenList.Count > 0)
@@ -252,7 +257,7 @@ namespace GeometricAlgebra
                     }
                 }
             }
-            else if (tokenList[0].kind == Token.Kind.OPERATOR && (ParansMatch(tokenList, 1, tokenList.Count - 1) || tokenList.Count == 2))
+            else if (tokenList[0].kind == Token.Kind.OPERATOR && (ParansMatch(tokenList, 1, tokenList.Count - 1) || tokenList.Count == 2 || IsFunctionPattern(tokenList.Skip(1).ToList())))
             {
                 Token token = tokenList[0];
 
@@ -261,7 +266,7 @@ namespace GeometricAlgebra
 
                 throw new ParseException(string.Format("Encounterd unary operator ({0}) that isn't recognized on the left.", token.data));
             }
-            else if (tokenList[tokenList.Count - 1].kind == Token.Kind.OPERATOR && (ParansMatch(tokenList, 0, tokenList.Count - 2) || tokenList.Count == 2))
+            else if (tokenList[tokenList.Count - 1].kind == Token.Kind.OPERATOR && (ParansMatch(tokenList, 0, tokenList.Count - 2) || tokenList.Count == 2 || IsFunctionPattern(tokenList.Take(tokenList.Count - 1).ToList())))
             {
                 Token token = tokenList[tokenList.Count - 1];
 
@@ -270,7 +275,7 @@ namespace GeometricAlgebra
 
                 throw new ParseException(string.Format("Encountered unary operator ({0}) that isn't recognized on the right.", token.data));
             }
-            else if (tokenList[0].kind == Token.Kind.SYMBOL && tokenList[1].paranType == Token.ParanType.ROUND && ParansMatch(tokenList, 1, tokenList.Count - 1))
+            else if (IsFunctionPattern(tokenList))
             {
                 Token token = tokenList[0];
 
@@ -312,13 +317,26 @@ namespace GeometricAlgebra
                 List<Token> opTokenList = null;
                 foreach(Token token in WalkTokensSkipSubexpressions(tokenList))
                 {
-                    if (token.kind == Token.Kind.OPERATOR && tokenList.IndexOf(token) != 0 && tokenList.IndexOf(token) != tokenList.Count - 1)
-                    {
-                        if (opTokenList == null || PrecedenceLevel(opTokenList[0].data) > PrecedenceLevel(token.data))
-                            opTokenList = new List<Token>() { token };
-                        else if(opTokenList != null && PrecedenceLevel(opTokenList[0].data) == PrecedenceLevel(token.data))
-                            opTokenList.Add(token);
-                    }
+                    if (token.kind != Token.Kind.OPERATOR)
+                        continue;
+
+                    // Only unary operators can be at the start or end of the token list.
+                    if(tokenList.IndexOf(token) == 0 || tokenList.IndexOf(token) == tokenList.Count - 1)
+                        continue;
+
+                    // Ignore unary operators on left.
+                    if(token.data == "-" && tokenList[tokenList.IndexOf(token) - 1].kind == Token.Kind.OPERATOR)
+                        continue;
+
+                    // Ignore unary operators on right.
+                    if(token.data == "~" && tokenList[tokenList.IndexOf(token) + 1].kind == Token.Kind.OPERATOR)
+                        continue;
+
+                    // At this point we should be reasonably sure it's a binary operator we're looking at.
+                    if (opTokenList == null || PrecedenceLevel(opTokenList[0].data) > PrecedenceLevel(token.data))
+                        opTokenList = new List<Token>() { token };
+                    else if(opTokenList != null && PrecedenceLevel(opTokenList[0].data) == PrecedenceLevel(token.data))
+                        opTokenList.Add(token);
                 }
 
                 if (opTokenList == null)
@@ -377,6 +395,11 @@ namespace GeometricAlgebra
 
                 return operation;
             }
+        }
+
+        private bool IsFunctionPattern(List<Token> tokenList)
+        {
+            return tokenList[0].kind == Token.Kind.SYMBOL && tokenList[1].paranType == Token.ParanType.ROUND && ParansMatch(tokenList, 1, tokenList.Count - 1);
         }
 
         public IEnumerable<Token> WalkTokensSkipSubexpressions(List<Token> tokenList)

@@ -58,9 +58,10 @@ namespace GeometricAlgebra
 
             if(operand is NumericScalar scalar)
             {
-                if(Math.Abs(scalar.value) < context.epsilon)
+                double roundedValue = Math.Round(scalar.value);
+                if(Math.Abs(scalar.value - roundedValue) < context.epsilon)
                 {
-                    scalar.value = 0.0;
+                    scalar.value = roundedValue;
                     return scalar;
                 }
             }

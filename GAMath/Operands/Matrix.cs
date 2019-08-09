@@ -15,6 +15,36 @@ namespace GeometricAlgebra
         public int Rows { get { return rows; } }
         public int Cols { get { return cols; } }
 
+        public bool IsAdditiveIdentityMatrix
+        {
+            get
+            {
+                return this.YieldAllElements().All(operand => operand.IsAdditiveIdentity);
+            }
+        }
+
+        public bool IsMultiplicativeIdentityMatrix
+        {
+            get
+            {
+                if (rows != cols)
+                    return false;
+
+                for (int i = 0; i < rows; i++)
+                {
+                    for (int j = 0; j < cols; j++)
+                    {
+                        if (i == j && !operandArray[i, j].IsMultiplicativeIdentity)
+                            return false;
+                        else if (i != j && !operandArray[i, j].IsAdditiveIdentity)
+                            return false;
+                    }
+                }
+
+                return true;
+            }
+        }
+
         public Matrix() : base()
         {
             operandArray = null;
@@ -199,6 +229,13 @@ namespace GeometricAlgebra
             return operandArray[row, col];
         }
 
+        public void ResetAsIdentity()
+        {
+            for(int i = 0; i < rows; i++)
+                for(int j = 0; j < cols; j++)
+                    operandArray[i, j] = new NumericScalar(i == j ? 1.0 : 0.0);
+        }
+
         public IEnumerable<Operand> YieldAllElements()
         {
             for(int i = 0; i < rows; i++)
@@ -229,35 +266,44 @@ namespace GeometricAlgebra
             {
                 Matrix<double> numericMatrix = GenerateNumericMatrix();
 
-                double det = numericMatrix.Determinant();
-                if(Math.Abs(det) < context.epsilon)
-                    throw new MathException("Cannot invert singular matrix or very-near singular matrices.");
-
-                try
-                {
-                    double detReciprical = 1.0 / det;
-                }
-                catch(DivideByZeroException)
-                {
-                    throw new MathException("Cannot take recriprical of determinant.");
-                }
-
                 Matrix<double> numericMatrixInverse;
-                if (rows == cols)
-                    numericMatrixInverse = numericMatrix.Inverse();
-                else
+                if (rows != cols)
                     numericMatrixInverse = numericMatrix.PseudoInverse();
+                else
+                {
+                    double det = numericMatrix.Determinant();
+                    if (Math.Abs(det) < context.epsilon)
+                        throw new MathException("Cannot invert singular matrix or very-near singular matrices.");
+
+                    try
+                    {
+                        double detReciprical = 1.0 / det;
+                    }
+                    catch (DivideByZeroException)
+                    {
+                        throw new MathException("Cannot take recriprical of determinant.");
+                    }
+
+                    numericMatrixInverse = numericMatrix.Inverse();
+                }
                 
                 return new Matrix(numericMatrixInverse);
             }
 
             if (rows != cols)
-                throw new MathException("Cannot invert non-square matrices.");  // TODO: Psuedo-inverse?
+                throw new MathException("Cannot invert non-square symbolic matrices.");
 
-            // TODO: Use QR factorization for symbolic matrices of large size.
+            if(this.rows <= 4)
+                return new GeometricProduct(new List<Operand>() { Adjugate(), new Inverse(new List<Operand>() { Determinant() }) });
 
-            // Note that this, while algebraically correct, is completely impractical for large matrices.  It's probably also numerically unstable.
-            return new GeometricProduct(new List<Operand>() { Adjugate(), new Inverse(new List<Operand>() { Determinant() }) });
+            List<RowOperation> rowOperationList = this.GaussJordanEliminate(context);
+            if(!this.IsMultiplicativeIdentityMatrix)
+                throw new MathException("Gauss-Jordan elimination of symbolic matrix failed.");
+
+            foreach(RowOperation rowOp in rowOperationList)
+                rowOp.Apply(this, context);
+
+            return this;
         }
 
         public override Operand Reverse()
@@ -433,6 +479,156 @@ namespace GeometricAlgebra
             }
 
             return matrix;
+        }
+
+        public abstract class RowOperation
+        {
+            public RowOperation()
+            {
+            }
+
+            public abstract void Apply(Matrix matrix, Context context);
+        }
+
+        public class SwapRows : RowOperation
+        {
+            public int rowA, rowB;
+
+            public SwapRows(int rowA, int rowB) : base()
+            {
+                this.rowA = rowA;
+                this.rowB = rowB;
+            }
+
+            public override void Apply(Matrix matrix, Context context)
+            {
+                for (int j = 0; j < matrix.Cols; j++)
+                {
+                    Operand operand = matrix.GetElement(this.rowA, j);
+                    matrix.SetElement(this.rowA, j, matrix.GetElement(this.rowB, j));
+                    matrix.SetElement(this.rowB, j, operand);
+                }
+            }
+        }
+
+        public class ScaleRow : RowOperation
+        {
+            public Operand scalar;
+            public int row;
+
+            public ScaleRow(int row, Operand scalar) : base()
+            {
+                this.row = row;
+                this.scalar = scalar;
+            }
+
+            public override void Apply(Matrix matrix, Context context)
+            {
+                for(int j = 0; j < matrix.Cols; j++)
+                    if(!matrix.GetElement(this.row, j).IsAdditiveIdentity)
+                        matrix.SetElement(this.row, j, Operand.ExhaustEvaluation(new GeometricProduct(new List<Operand>() { scalar.Copy(), matrix.GetElement(this.row, j) }), context));
+            }
+        }
+
+        public class AddRowMultiple : RowOperation
+        {
+            public Operand scalar;
+            public int rowA, rowB;
+
+            public AddRowMultiple(int rowA, int rowB, Operand scalar) : base()
+            {
+                this.rowA = rowA;
+                this.rowB = rowB;
+                this.scalar = scalar;
+            }
+
+            public override void Apply(Matrix matrix, Context context)
+            {
+                for(int j = 0; j < matrix.Cols; j++)
+                    if(!matrix.GetElement(this.rowB, j).IsAdditiveIdentity)
+                        matrix.SetElement(this.rowA, j, Operand.ExhaustEvaluation(new Sum(new List<Operand>() { matrix.GetElement(this.rowA, j), new GeometricProduct(new List<Operand>() { scalar.Copy(), matrix.GetElement(this.rowB, j).Copy() }) }), context));
+            }
+        }
+
+        public List<RowOperation> GaussJordanEliminate(Context context)
+        {
+            List<RowOperation> rowOperationList = new List<RowOperation>();
+
+            int pivotRow = 0;
+            int pivotCol = 0;
+
+            while(pivotRow < this.rows && pivotCol < this.cols)
+            {
+                //
+                // Step 1: If we have a zero in our pivot location, we need to find a non-zero entry in our pivot column.
+                //
+
+                if(operandArray[pivotRow, pivotCol].IsAdditiveIdentity)
+                {
+                    int i;
+                    for(i = pivotRow + 1; i < this.rows; i++)
+                        if(!operandArray[i, pivotCol].IsAdditiveIdentity)
+                            break;
+                    
+                    if(i == this.rows)
+                    {
+                        // Go to the next column.
+                        pivotCol++;
+                        continue;
+                    }
+                    else
+                    {
+                        // Get a non-zero entry into our pivot location.
+                        var rowOp = new SwapRows(i, pivotRow);
+                        rowOperationList.Add(rowOp);
+                        rowOp.Apply(this, context);
+                    }
+                }
+
+                //
+                // Step 2: If we don't have a one in our pivot location, we need to scale our pivot row.
+                //
+
+                if(!operandArray[pivotRow, pivotCol].IsMultiplicativeIdentity)
+                {
+                    var rowOp = new ScaleRow(pivotRow, new Inverse(new List<Operand>() { operandArray[pivotRow, pivotCol].Copy() }));
+                    rowOperationList.Add(rowOp);
+                    rowOp.Apply(this, context);
+
+                    // TODO: This is a hack until the algebra system can recognize the ratio of two identical polynomials as being one.
+                    if(!operandArray[pivotRow, pivotCol].IsMultiplicativeIdentity)
+                        operandArray[pivotRow, pivotCol] = new NumericScalar(1.0);
+                }
+
+                //
+                // Step 3: All other entries in our pivot column must be reduced to zero.
+                //
+
+                for(int i = 0; i < this.rows; i++)
+                {
+                    if(i != pivotRow && !operandArray[i, pivotCol].IsAdditiveIdentity)
+                    {
+                        var rowOp = new AddRowMultiple(i, pivotRow, new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), operandArray[i, pivotCol].Copy() }));
+                        rowOperationList.Add(rowOp);
+                        rowOp.Apply(this, context);
+
+                        // TODO: Again, this is a hack, because the algebra system does not yet handle ratios of polynomials very well at all.
+                        if(!operandArray[i, pivotCol].IsAdditiveIdentity)
+                            operandArray[i, pivotCol] = new NumericScalar(0.0);
+                    }
+                }
+
+                //
+                // Step 4: The pivot row always increments, but the next pivot column needs to be determined.
+                //
+
+                if(++pivotRow < this.rows)
+                    while(++pivotCol < this.cols)
+                        if(!Enumerable.Range(pivotRow, this.rows - pivotRow).Select(i => operandArray[i, pivotCol]).All(operand => operand.IsAdditiveIdentity))
+                            break;
+            }
+
+            return rowOperationList;
         }
     }
 }
