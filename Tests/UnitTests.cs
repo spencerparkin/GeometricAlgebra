@@ -67,7 +67,18 @@ namespace Tests
             Assert.AreEqual(inputText, outputText);
         }
 
-        // TODO: The following do not parse: "$r*$r*@q*-inv(c.c)" and "$r*$r*@q*(-inv(c.c))"
+        [TestMethod]
+        public void ParseUnary()
+        {
+            Parser parser = new Parser();
+            string inputTextA = "$r*$r*@q*-inv(c.c)";
+            Operand operandA = parser.Parse(inputTextA);
+            string outputTextA = operandA.Print(Operand.Format.PARSEABLE);
+            string inputTextB = "$r*$r*@q*(-inv(c.c))";
+            Operand operandB = parser.Parse(inputTextB);
+            string outputTextB = operandB.Print(Operand.Format.PARSEABLE);
+            Assert.AreEqual(outputTextA, outputTextB);
+        }
     }
 
     [TestClass]
