@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -16,6 +17,8 @@ namespace GAWebApp.Models
         public string outputPlain;
         public string expression;
         public string error;
+        public Operand input;
+        public Operand output;
 
         public HistoryItem()
         {
@@ -24,20 +27,45 @@ namespace GAWebApp.Models
             inputPlain = "?";
             outputPlain = "?";
             error = "";
+            input = null;
+            output = null;
         }
     }
 
-    public class State
+    public class State : GeometricAlgebra.ConformalModel.Conformal3D_Context
     {
-        public Context context;
+        private Regex varRx;
         public List<HistoryItem> history;
         public bool showLatex;
 
         public State()
         {
-            context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
-            history = new List<HistoryItem>();
-            showLatex = true;
+            this.varRx = new Regex("^h([0-9]+)$", RegexOptions.Compiled);
+            this.history = new List<HistoryItem>();
+            this.showLatex = true;
+        }
+
+        public override bool LookupVariableByName(string name, ref Operand operand)
+        {
+            MatchCollection collection = varRx.Matches(name);
+            if (collection != null && collection.Count > 0)
+            {
+                Match match = collection[0];
+                int i = history.Count - 1 - Convert.ToInt32(match.Groups[1].Value);
+                if (i < 0 || i >= history.Count)
+                    throw new MathException($"History variable {name} is out of range.");
+
+                if(history[i].error.Length > 0)
+                    throw new MathException($"History variable {name} references error result.");
+
+                if(history[i].output == null)
+                    history[i].output = Operand.Evaluate(history[i].outputPlain, this).output;
+
+                operand = history[i].output.Copy();
+                return true;
+            }
+
+            return base.LookupVariableByName(name, ref operand);
         }
 
         public void Calculate(string expression)
@@ -46,12 +74,14 @@ namespace GAWebApp.Models
             item.expression = expression;
 
             Task task = Task.Factory.StartNew(() => {
-                var result = Operand.Evaluate(expression, context);
+                var result = Operand.Evaluate(expression, this);
 
-                item.inputLatex = result.input == null ? "" : result.input.Print(Operand.Format.LATEX, context);
-                item.outputLatex = result.output == null ? "" : result.output.Print(Operand.Format.LATEX, context);
-                item.inputPlain = result.input == null ? "" : result.input.Print(Operand.Format.PARSEABLE, context);
-                item.outputPlain = result.output == null ? "" : result.output.Print(Operand.Format.PARSEABLE, context);
+                item.inputLatex = result.input == null ? "" : result.input.Print(Operand.Format.LATEX, this);
+                item.outputLatex = result.output == null ? "" : result.output.Print(Operand.Format.LATEX, this);
+                item.inputPlain = result.input == null ? "" : result.input.Print(Operand.Format.PARSEABLE, this);
+                item.outputPlain = result.output == null ? "" : result.output.Print(Operand.Format.PARSEABLE, this);
+                item.input = result.input;
+                item.output = result.output;
                 item.error = result.error;
 
                 item.inputLatex = item.inputLatex.Replace(" ", "&space;");
@@ -67,9 +97,9 @@ namespace GAWebApp.Models
             history.Add(item);
         }
 
-        public bool SerializeToXml(XElement rootElement)
+        public override bool SerializeToXml(XElement rootElement)
         {
-            if(!context.SerializeToXml(rootElement))
+            if(!base.SerializeToXml(rootElement))
                 return false;
 
             XElement historyElement = new XElement("History");
@@ -100,9 +130,9 @@ namespace GAWebApp.Models
             return rootElement.ToString();
         }
 
-        public bool DeserializeFromXml(XElement rootElement)
+        public override bool DeserializeFromXml(XElement rootElement)
         {
-            if(!context.DeserializeFromXml(rootElement))
+            if(!base.DeserializeFromXml(rootElement))
                 return false;
 
             XElement historyElement = rootElement.Element("History");

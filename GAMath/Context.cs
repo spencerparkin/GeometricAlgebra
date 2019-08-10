@@ -126,5 +126,10 @@ namespace GeometricAlgebra
             Match match = collection[0];
             return match.Groups[1].Value + "_{" + match.Groups[2].Value + "}";
         }
+
+        public virtual bool LookupVariableByName(string name, ref Operand operand)
+        {
+            return operandStorage.GetStorage(name, ref operand);
+        }
     }
 }

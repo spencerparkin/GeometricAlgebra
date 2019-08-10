@@ -27,7 +27,7 @@ namespace GAWebApp.Controllers
             if(defaultState == null)
             {
                 defaultState = new State();
-                defaultState.context.GenerateDefaultStorage();
+                defaultState.GenerateDefaultStorage();
             }
 
             return View(defaultState);

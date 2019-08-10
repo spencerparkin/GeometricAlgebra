@@ -40,7 +40,7 @@ namespace GAWebApp
                 state.DeserializeFromString(database.StringGet(calculatorID));
             else
             {
-                state.context.GenerateDefaultStorage();
+                state.GenerateDefaultStorage();
                 SetState(calculatorID, state);
             }
 
