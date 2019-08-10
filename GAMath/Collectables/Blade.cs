@@ -190,7 +190,7 @@ namespace GeometricAlgebra
 
         public override bool CanAbsorb(Operand operand)
         {
-            return operand is NumericScalar || operand is SymbolicScalarTerm;
+            return operand.Grade == 0;
         }
 
         public override string LexicographicSortKey()
