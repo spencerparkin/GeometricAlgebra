@@ -120,7 +120,9 @@ namespace GAWebApp.Models
 
             rootElement.Add(historyElement);
 
-            return false;
+            rootElement.Add(new XAttribute("showLatex", this.showLatex));
+
+            return true;
         }
 
         public string SerializeToString()
@@ -155,7 +157,10 @@ namespace GAWebApp.Models
                 }
             }
 
-            return false;
+            XAttribute attr = rootElement.Attribute("showLatex");
+            this.showLatex = (attr == null) ? true : (attr.Value == "1");
+
+            return true;
         }
 
         public bool DeserializeFromString(string rootXml)

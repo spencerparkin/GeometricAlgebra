@@ -36,12 +36,13 @@ else
         scalars, and those prefixed with <code>@@</code> are considered variables.
     </p>
     <p>
-        Symbolic vectors may or may not be recognized as basis vectors.  The currently recognized basis
-        vectors are <code>no</code>, <code>ni</code>, <code>e1</code>, <code>e2</code> and <code>e3</code>.
+        Symbolic vectors are recognized as such unless the bare word is found to be one of the currently recognized basis
+        vectors.  Currently, these are <code>no</code>, <code>ni</code>, <code>e1</code>, <code>e2</code> and <code>e3</code>.
         All symbolic vectors are considered to be an unknown linear combination of the latter 3 basis vectors.
     </p>
     <p>
-        Symbolic scalars represent an unknown real scalar value.
+        Symbolic scalars represent an unknown real scalar value.  Such is the case too with the inner product
+        square of symbolic vectors.
     </p>
     <p>
         Variables represent an unknown multivector value, unless an expression is assigned at the storage
