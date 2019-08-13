@@ -44,7 +44,7 @@ namespace GeometricAlgebra
 
         public virtual void GenerateDefaultStorage()
         {
-            operandStorage.SetStorage("pi", Operand.Evaluate("3.1415926535", this).output);
+            operandStorage.SetStorage("pi", Operand.Evaluate("3.141592653589793238462643383279502884197169399375105820974944592307816406286", this).output);
             operandStorage.SetStorage("e", Operand.Evaluate("2.7182818284590452353602874", this).output);
         }
 
@@ -125,6 +125,11 @@ namespace GeometricAlgebra
 
             Match match = collection[0];
             return match.Groups[1].Value + "_{" + match.Groups[2].Value + "}";
+        }
+
+        public virtual bool LookupVariableByName(string name, ref Operand operand)
+        {
+            return operandStorage.GetStorage(name, ref operand);
         }
     }
 }

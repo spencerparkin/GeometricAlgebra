@@ -28,7 +28,7 @@ namespace GeometricAlgebra
         public override Operand EvaluationStep(Context context)
         {
             Operand operand = null;
-            if (context.operandStorage.GetStorage(this.name, ref operand))
+            if (context.LookupVariableByName(this.name, ref operand))
                 return operand;
 
             return null;

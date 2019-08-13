@@ -21,17 +21,17 @@ namespace GeometricAlgebra.ConformalModel
             operandStorage.SetStorage("I", Operand.Evaluate("e1^e2^e3^ni^no", this).output);
 
             // Add formulas for the geometric primitives of the conformal model in 3D space.
-            operandStorage.SetStorage("point", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni)", this).output);
-            operandStorage.SetStorage("sphere", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni)", this).output);
-            operandStorage.SetStorage("isphere", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni)", this).output);
-            operandStorage.SetStorage("circle", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this).output);
-            operandStorage.SetStorage("icircle", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this).output);
-            operandStorage.SetStorage("pointpair", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this).output);
-            operandStorage.SetStorage("ipointpair", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this).output);
-            operandStorage.SetStorage("plane", Operand.Evaluate("@weight * (@normal + (@center . @normal) * ni)", this).output);
-            operandStorage.SetStorage("line", Operand.Evaluate("@weight * (@normal + (@center ^ @normal) * ni) * @i", this).output);
-            operandStorage.SetStorage("flatpoint", Operand.Evaluate("@weight * (1 - @center ^ ni) * @i", this).output);
-            operandStorage.SetStorage("tangentpoint", Operand.Evaluate("@weight * (no + @center + 0.5 * (@center . @center) * ni) ^ (@normal + (@center . @normal) * ni)", this).output);
+            Operand.Evaluate("@point := weight * (no + @center + 0.5 * (@center . @center) * ni)", this);
+            Operand.Evaluate("@sphere := @weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni)", this);
+            Operand.Evaluate("@isphere := @weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni)", this);
+            Operand.Evaluate("@circle := @weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this);
+            Operand.Evaluate("@icircle := @weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this);
+            Operand.Evaluate("@pointpair := @weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this);
+            Operand.Evaluate("@ipointpair := @weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni) ^ (@normal + (@center ^ @normal) * ni) * @i", this);
+            Operand.Evaluate("@plane := @weight * (@normal + (@center . @normal) * ni)", this);
+            Operand.Evaluate("@line := @weight * (@normal + (@center ^ @normal) * ni) * @i", this);
+            Operand.Evaluate("@flatpoint := @weight * (1 - @center ^ ni) * @i", this);
+            Operand.Evaluate("@tangentpoint := @weight * (no + @center + 0.5 * (@center . @center) * ni) ^ (@normal + (@center . @normal) * ni)", this);
         }
 
         public override string TranslateVectorNameForLatex(string vectorName)
