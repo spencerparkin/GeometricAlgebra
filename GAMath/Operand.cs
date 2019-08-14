@@ -62,7 +62,14 @@ namespace GeometricAlgebra
 
         public static Operand ExhaustEvaluation(Operand operand, Context context)
         {
-            while (true)
+            context.terminateEvaluation = false;
+
+            // Under most circumstances, evaluation terminates when an evaluation
+            // step is not taken on the current operand tree.  In some cases, however,
+            // an evaluator knows that it needs to be the last step taken.  For example,
+            // the factorer must terminate evaluation or else the factorization wlll
+            // be undone by subsequent evaluators.
+            while (!context.terminateEvaluation)
             {
                 Operand newOperand = operand.EvaluationStep(context);
                 if (newOperand != null)

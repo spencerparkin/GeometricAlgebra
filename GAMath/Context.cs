@@ -18,6 +18,7 @@ namespace GeometricAlgebra
         public List<Function> funcList;
         public List<string> logMessageList;
         public double epsilon;
+        public bool terminateEvaluation;
 
         public Context()
         {
@@ -27,6 +28,7 @@ namespace GeometricAlgebra
             useOperandCache = true;
             logMessageList = new List<string>();
             epsilon = 1e-7;
+            terminateEvaluation = false;
 
             funcList.Add(new Inverse());
             funcList.Add(new Reverse());
@@ -40,11 +42,12 @@ namespace GeometricAlgebra
             funcList.Add(new Logarithm());
             funcList.Add(new Adjugate());
             funcList.Add(new Determinant());
+            funcList.Add(new Factor());
         }
 
         public virtual void GenerateDefaultStorage()
         {
-            operandStorage.SetStorage("pi", Operand.Evaluate("3.141592653589793238462643383279502884197169399375105820974944592307816406286", this).output);
+            operandStorage.SetStorage("pi", Operand.Evaluate("3.1415926535897932384626434", this).output);
             operandStorage.SetStorage("e", Operand.Evaluate("2.7182818284590452353602874", this).output);
         }
 
