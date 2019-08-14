@@ -127,9 +127,7 @@ namespace GeometricAlgebra
                 if(result == null)
                     throw new MathException("Failed to find a vector with non-zero projection down onto the blade.  This does not necessarily mean that the multivector doesn't factor as a blade.");
 
-                Sum reducedMultivector = result as Sum;
-                if(reducedMultivector == null)
-                    reducedMultivector = new Sum(new List<Operand>() { result });
+                Sum reducedMultivector = CanonicalizeMultivector(result);
 
                 OuterProduct subFactorization = FactorMultivectorAsBlade(reducedMultivector, context);
                 if(subFactorization.Grade != grade - 1)
