@@ -24,12 +24,26 @@ namespace GeometricAlgebra
     // This is the base class for all expression tree nodes.
     public abstract class Operand
     {
+        public bool frozen;
+
         public Operand()
         {
+            frozen = false;
         }
 
-        public abstract Operand Copy();
         public abstract Operand New();
+
+        public virtual Operand Copy()
+        {
+            Operand operand = New();
+            operand.frozen = this.frozen;
+            return operand;
+        }
+
+        public virtual void CollectAllOperands(List<Operand> operandList)
+        {
+            operandList.Add(this);
+        }
 
         public virtual int Grade { get { return -1; } }
         public virtual bool IsAdditiveIdentity { get { return false; } }
@@ -62,14 +76,9 @@ namespace GeometricAlgebra
 
         public static Operand ExhaustEvaluation(Operand operand, Context context)
         {
-            context.terminateEvaluation = false;
+            ThawTree(operand);
 
-            // Under most circumstances, evaluation terminates when an evaluation
-            // step is not taken on the current operand tree.  In some cases, however,
-            // an evaluator knows that it needs to be the last step taken.  For example,
-            // the factorer must terminate evaluation or else the factorization wlll
-            // be undone by subsequent evaluators.
-            while (!context.terminateEvaluation)
+            while (true)
             {
                 Operand newOperand = operand.EvaluationStep(context);
                 if (newOperand != null)
@@ -79,6 +88,14 @@ namespace GeometricAlgebra
             }
 
             return operand;
+        }
+
+        public static void ThawTree(Operand root)
+        {
+            List<Operand> operandList = new List<Operand>();
+            root.CollectAllOperands(operandList);
+            foreach (Operand operand in operandList)
+                operand.frozen = false;
         }
 
         public static HashSet<int> DiscoverGrades(Operand operand, Context context)

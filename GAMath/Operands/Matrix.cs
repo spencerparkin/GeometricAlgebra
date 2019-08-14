@@ -145,6 +145,14 @@ namespace GeometricAlgebra
             return new Matrix();
         }
 
+        public override void CollectAllOperands(List<Operand> operandList)
+        {
+            base.CollectAllOperands(operandList);
+            for(int i = 0; i < rows; i++)
+                for(int j = 0; j < cols; j++)
+                    operandArray[i, j].CollectAllOperands(operandList);
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             int count = 0;

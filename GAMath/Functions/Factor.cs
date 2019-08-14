@@ -81,8 +81,7 @@ namespace GeometricAlgebra
                 }
 
                 factorization.operandList.Insert(0, new NumericScalar(commonRatio));
-
-                context.terminateEvaluation = true;
+                factorization.frozen = true;
                 return factorization;
             }
         }

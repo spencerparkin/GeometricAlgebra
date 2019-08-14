@@ -22,9 +22,16 @@ namespace GeometricAlgebra
 
         public override Operand Copy()
         {
-            Operation clone = (Operation)New();
+            Operation clone = (Operation)base.Copy();
             clone.operandList = (from operand in this.operandList select operand.Copy()).ToList();
             return clone;
+        }
+
+        public override void CollectAllOperands(List<Operand> operandList)
+        {
+            base.CollectAllOperands(operandList);
+            foreach(Operand operand in this.operandList)
+                operand.CollectAllOperands(operandList);
         }
 
         public abstract bool IsAssociative();
@@ -60,6 +67,9 @@ namespace GeometricAlgebra
 
         public override Operand EvaluationStep(Context context)
         {
+            if(frozen)
+                return null;
+
             if (operandList.Count == 1 && (this is Sum || this is Product))
                 return operandList[0];
 

@@ -18,7 +18,6 @@ namespace GeometricAlgebra
         public List<Function> funcList;
         public List<string> logMessageList;
         public double epsilon;
-        public bool terminateEvaluation;
 
         public Context()
         {
@@ -28,7 +27,6 @@ namespace GeometricAlgebra
             useOperandCache = true;
             logMessageList = new List<string>();
             epsilon = 1e-7;
-            terminateEvaluation = false;
 
             funcList.Add(new Inverse());
             funcList.Add(new Reverse());
