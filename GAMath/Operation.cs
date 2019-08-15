@@ -22,9 +22,16 @@ namespace GeometricAlgebra
 
         public override Operand Copy()
         {
-            Operation clone = (Operation)New();
+            Operation clone = (Operation)base.Copy();
             clone.operandList = (from operand in this.operandList select operand.Copy()).ToList();
             return clone;
+        }
+
+        public override void CollectAllOperands(List<Operand> operandList)
+        {
+            base.CollectAllOperands(operandList);
+            foreach(Operand operand in this.operandList)
+                operand.CollectAllOperands(operandList);
         }
 
         public abstract bool IsAssociative();
@@ -70,14 +77,14 @@ namespace GeometricAlgebra
                     continue;
 
                 // Apply the associative property.
-                if (operation.GetType() == this.GetType() && operation.IsAssociative())
+                if ((this.freezeFlags & FreezeFlag.ASSOCIATION) == 0 && operation.GetType() == this.GetType() && operation.IsAssociative())
                 {
                     operandList = operandList.Take(i).Concat(operation.operandList).Concat(operandList.Skip(i + 1).Take(operandList.Count - i - 1)).ToList();
                     return this;
                 }
 
                 // Apply the distributive property.
-                if (this.IsDistributiveOver(operation))
+                if ((this.freezeFlags & FreezeFlag.DISTRIBUTION) == 0 && this.IsDistributiveOver(operation))
                 {
                     Operation newOperationA = (Operation)Activator.CreateInstance(operation.GetType());
 

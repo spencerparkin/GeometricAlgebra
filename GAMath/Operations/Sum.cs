@@ -146,38 +146,6 @@ namespace GeometricAlgebra
             return null;
         }
 
-        private static IEnumerable<Blade> GenerateBasisBladesOfGrade(List<string> basisVectorList, Blade blade, int depth, int maxDepth, int j)
-        {
-            if (depth < maxDepth)
-            {
-                for (int i = j; i < basisVectorList.Count; i++)
-                {
-                    blade.vectorList.Add(basisVectorList[i]);
-
-                    foreach (Blade basisBlade in GenerateBasisBladesOfGrade(basisVectorList, blade, depth + 1, maxDepth, i + 1))
-                        yield return basisBlade;
-
-                    blade.vectorList.RemoveAt(blade.vectorList.Count - 1);
-                }
-            }
-            else
-            {
-                Blade basisBlade = blade.Copy() as Blade;
-                basisBlade.vectorList.Sort();
-                yield return basisBlade;
-            }
-        }
-
-        private static IEnumerable<Blade> GenerateBasisBlades(List<string> basisVectorList)
-        {
-            Blade blade = new Blade();
-            for (int i = 0; i <= basisVectorList.Count; i++)
-            {
-                foreach (Blade basisBlade in GenerateBasisBladesOfGrade(basisVectorList, blade, 0, i, 0))
-                    yield return basisBlade;
-            }
-        }
-
         public override Operand Inverse(Context context)
         {
             if (!operandList.All(operand => operand is Blade || operand.Grade == 0))
@@ -218,22 +186,7 @@ namespace GeometricAlgebra
                 // I'm hoping the operand cache speeds up this calculation.
                 Operand result = ExhaustEvaluation(geometricProduct, context);
 
-                Sum resultSum = result as Sum;
-                if(resultSum == null)
-                    resultSum = new Sum(new List<Operand>() { result });
-
-                Sum scalarPart = new Sum();
-                for(int i = resultSum.operandList.Count - 1; i >= 0; i--)
-                {
-                    Operand operand = resultSum.operandList[i];
-                    if(operand.Grade == 0)
-                    {
-                        resultSum.operandList.RemoveAt(i);
-                        scalarPart.operandList.Add(operand);
-                    }
-                }
-
-                resultSum.operandList.Insert(0, new Blade(scalarPart));
+                Sum resultSum = CanonicalizeMultivector(result);
 
                 foreach (Blade blade in from operand in resultSum.operandList where operand is Blade select operand as Blade)
                     if(!(blade.scalar is Sum))
