@@ -31,6 +31,12 @@ namespace GeometricAlgebra
             return collectable;
         }
 
+        public override void CollectAllOperands(List<Operand> operandList)
+        {
+            base.CollectAllOperands(operandList);
+            scalar.CollectAllOperands(operandList);
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if (scalar != null)

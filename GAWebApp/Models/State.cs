@@ -158,7 +158,10 @@ namespace GAWebApp.Models
             }
 
             XAttribute attr = rootElement.Attribute("showLatex");
-            this.showLatex = (attr == null) ? true : (attr.Value == "1");
+            if(attr.Value == "false")
+                this.showLatex = false;
+            else
+                this.showLatex = true;
 
             return true;
         }

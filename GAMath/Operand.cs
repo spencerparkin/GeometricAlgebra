@@ -24,12 +24,33 @@ namespace GeometricAlgebra
     // This is the base class for all expression tree nodes.
     public abstract class Operand
     {
-        public Operand()
+        [FlagsAttribute]
+        public enum FreezeFlag
         {
+            DISTRIBUTION    = 0x0000001,
+            ASSOCIATION     = 0x0000002,
         }
 
-        public abstract Operand Copy();
+        public FreezeFlag freezeFlags;
+
+        public Operand()
+        {
+            freezeFlags = 0;
+        }
+
         public abstract Operand New();
+
+        public virtual Operand Copy()
+        {
+            Operand operand = New();
+            operand.freezeFlags = this.freezeFlags;
+            return operand;
+        }
+
+        public virtual void CollectAllOperands(List<Operand> operandList)
+        {
+            operandList.Add(this);
+        }
 
         public virtual int Grade { get { return -1; } }
         public virtual bool IsAdditiveIdentity { get { return false; } }
@@ -72,6 +93,14 @@ namespace GeometricAlgebra
             }
 
             return operand;
+        }
+
+        public static void ThawTree(Operand root)
+        {
+            List<Operand> operandList = new List<Operand>();
+            root.CollectAllOperands(operandList);
+            foreach (Operand operand in operandList)
+                operand.freezeFlags = 0;
         }
 
         public static HashSet<int> DiscoverGrades(Operand operand, Context context)
@@ -155,6 +184,61 @@ namespace GeometricAlgebra
         public virtual Operand Reverse()
         {
             return null;
+        }
+
+        public static IEnumerable<List<string>> GenerateVectorCombinations(List<string> vectorSampleList, List<string> vectorList, int depth, int maxDepth, int j)
+        {
+            if (depth < maxDepth)
+            {
+                for (int i = j; i < vectorSampleList.Count; i++)
+                {
+                    vectorList.Add(vectorSampleList[i]);
+
+                    foreach (List<string> vectorComboList in GenerateVectorCombinations(vectorSampleList, vectorList, depth + 1, maxDepth, i + 1))
+                        yield return vectorComboList;
+
+                    vectorList.RemoveAt(vectorList.Count - 1);
+                }
+            }
+            else
+            {
+                List<string> vectorComboList = vectorList.ToList();
+                yield return vectorComboList;
+            }
+        }
+
+        public static IEnumerable<Blade> GenerateBasisBlades(List<string> basisVectorList)
+        {
+            for (int i = 0; i <= basisVectorList.Count; i++)
+            {
+                List<string> vectorList = new List<string>();
+                foreach (List<string> vectorComboList in GenerateVectorCombinations(basisVectorList, vectorList, 0, i, 0))
+                {
+                    vectorComboList.Sort();
+                    Blade basisBlade = new Blade(new NumericScalar(1.0), vectorComboList);
+                    yield return basisBlade;
+                }
+            }
+        }
+
+        public static Sum CanonicalizeMultivector(Operand operand)
+        {
+            Sum sum = operand as Sum;
+            if(sum == null)
+                sum = new Sum(new List<Operand>() { operand });
+
+            for(int i = 0; i < sum.operandList.Count; i++)
+            {
+                Operand term = sum.operandList[i];
+                if(term is Blade)
+                    continue;
+                else if(term.Grade == 0)
+                    sum.operandList[i] = new Blade(term);
+                else
+                    throw new MathException("Element in given form cannot be put in canonical form.");
+            }
+
+            return sum;
         }
     }
 }
