@@ -122,39 +122,35 @@ namespace GeometricAlgebra
                 // our method here is based on the identity L*A = (v.A) ^ ((v.A).A),
                 // where L is a non-zero scalar.  Here, v.A is of grade n-1, and
                 // (v.A).A is of grade 1.  This suggests a recursive algorithm.
+                // This all, however, assumes a purely euclidean geometric algebra.
+                // For those involving null-vectors, the search for a useful probing
+                // vector requires not only a non-zero reduction, but also the successful
+                // calculation of a vector factor of the blade.
 
-                // TODO: I've just discovered that my algorithm here doesn't always
-                //       work when null vectors are involved.  The identity above is
-                //       easy to prove in a purely euclidean GA, but I did not bother
-                //       to try and verify it more generally.  Interestingly, I've
-                //       found that the algorithm can still work in some cases involving
-                //       null vectors, provided the right probing vector is used, but it
-                //       isn't clear to me how to differentiate between probing vectors
-                //       that will work and those that wont.  I need to revisit all this.
+                // TODO: Not all blades involving null-vectors factor here.  For example, factor(no^ni) fails.
 
-                Operand result = null;
+                Operand vectorFactor = null;
+                Sum reducedMultivector = null;
                 List<string> basisVectorList = context.ReturnBasisVectors();
-                foreach(Sum vector in GenerateProbingVectors(basisVectorList))
+
+                foreach(Sum probingVector in GenerateProbingVectors(basisVectorList))
                 {
-                    result = Operand.ExhaustEvaluation(new InnerProduct(new List<Operand>() { vector, multivector.Copy() }), context);
-                    if(!result.IsAdditiveIdentity)
-                        break;
-                    else
-                        result = null;
+                    Operand reduction = Operand.ExhaustEvaluation(new InnerProduct(new List<Operand>() { probingVector, multivector.Copy() }), context);
+                    if(!reduction.IsAdditiveIdentity)
+                    {
+                        reducedMultivector = CanonicalizeMultivector(reduction);
+                        vectorFactor = Operand.ExhaustEvaluation(new InnerProduct(new List<Operand>() { reducedMultivector, multivector }), context);
+                        if (vectorFactor.Grade == 1)
+                            break;
+                    }
                 }
 
-                if(result == null)
-                    throw new MathException("Failed to find a vector with non-zero projection down onto the blade.  This does not necessarily mean that the multivector doesn't factor as a blade.");
-
-                Sum reducedMultivector = CanonicalizeMultivector(result);
+                if(vectorFactor == null || vectorFactor.Grade != 1)
+                    throw new MathException("Failed to find a vector factor of the given multivector.  This does not necessarily mean that the multivector doesn't factor as a blade.");        
 
                 OuterProduct subFactorization = FactorMultivectorAsBlade(reducedMultivector, context);
                 if(subFactorization.Grade != grade - 1)
                     throw new MathException($"Expected sub-factorization to be of grade {grade - 1}.");
-
-                Operand vectorFactor = Operand.ExhaustEvaluation(new InnerProduct(new List<Operand>() { reducedMultivector, multivector }), context);
-                if(vectorFactor.Grade != 1)
-                    throw new MathException("Expected vector factor to be of grade one.");
 
                 factorization.operandList = subFactorization.operandList;
                 factorization.operandList.Add(vectorFactor);
