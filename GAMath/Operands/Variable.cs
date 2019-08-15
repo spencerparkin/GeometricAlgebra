@@ -29,7 +29,10 @@ namespace GeometricAlgebra
         {
             Operand operand = null;
             if (context.LookupVariableByName(this.name, ref operand))
+            {
+                ThawTree(operand);
                 return operand;
+            }
 
             return null;
         }
