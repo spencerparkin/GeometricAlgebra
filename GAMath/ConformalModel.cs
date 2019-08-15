@@ -158,126 +158,23 @@ namespace GeometricAlgebra.ConformalModel
 
         public override Operand EvaluationStep(Context context)
         {
+            if (operandList.Count != 1)
+                throw new MathException(string.Format($"Expected exactly 1 argument, got {operandList.Count}."));
+
             Operand operand = base.EvaluationStep(context);
             if (operand != null)
                 return operand;
 
-            if (operandList.Count != 1)
-                throw new MathException(string.Format($"Expected exactly 1 argument, got {operandList.Count}."));
-
             operand = operandList[0];
             int grade = operand.Grade;
             if (grade == -1)
-                throw new MathException("Cannot identify an element non-homogenous in terms of grade; specifically, only blades are identified.");
+                throw new MathException("Could not identify grade of given element.");
 
-            context.operandStorage.SetStorage("__blade__", operand);
+            // TODO: Write this function.
 
-            Operand center = null;
-            Operand normal = null;
-            Operand radius = null;
-            Operand weight = null;
-
-            switch (grade)
-            {
-                case 0:
-                    if (operand.IsAdditiveIdentity)
-                    {
-                        context.Log("The zero set of the blade consumes all of space.");
-                    }
-                    else
-                    {
-                        context.Log("The zero set of the blade is empty.");
-                    }
-                    break;
-                case 1:
-                    Operand.Evaluate("@weight = -@__blade__ . ni", context);
-                    context.operandStorage.GetStorage("weight", ref weight);
-                    if (weight.IsAdditiveIdentity)
-                    {
-                        Operand.Evaluate("@normal = no . @__blade__ ^ ni", context);
-                        weight = Operand.Evaluate("@weight = pow(@normal . @normal, 0.5)", context).output;
-                        normal = Operand.Evaluate("@normal = @normal / @weight", context).output;
-                        center = Operand.Evaluate("@center = -(no . @__blade__ / @weight) * @normal", context).output;
-                        context.Log("The blade represents a plane.");
-                    }
-                    else
-                    {
-                        center = Operand.Evaluate("@center = (no ^ ni . @__blade__ ^ no ^ ni) / @weight", context).output;
-                        Operand radiusSquared = Operand.Evaluate("@__square_radius__ = grade(@center . @center + 2 * no . @__blade__ / @weight, 0)", context).output;
-                        if(radiusSquared is NumericScalar scalar)
-                        {
-                            if(scalar.value >= 0.0)
-                            {
-                                radius = Operand.Evaluate("@radius = pow(@__square_radius__, 0.5)", context).output;
-                                if (scalar.value == 0.0)
-                                    context.Log("The blade represents a point.");
-                                else
-                                    context.Log("The blade represents a sphere.");
-                            }
-                            else
-                            {
-                                context.Log("The blade represents an imaginary sphere.");
-                                radius = Operand.Evaluate("@radius = pow(-@__square_radius__, 0.5)", context).output;
-                            }
-                        }
-                        else
-                        {
-                            context.Log("The blade represents a sphere.");
-                            radius = Operand.Evaluate("@radius = pow(@__square_radius__, 0.5)", context).output;
-                        }
-                    }
-                    break;
-                case 2:
-                    normal = Operand.Evaluate("no ^ ni . @__blade__ ^ ni", context).output;
-                    if(normal.IsAdditiveIdentity)
-                    {
-
-                    }
-                    else
-                    {
-                        weight = Operand.Evaluate("@weight = pow(@normal . @normal, 0.5)", context).output;
-                        normal = Operand.Evaluate("@normal = @normal / @weight", context).output;
-                        center = Operand.Evaluate("@center = -@normal * (no ^ ni . @__blade__ ^ no * ni) / @weight", context).output;
-                        Operand radiusSquared = Operand.Evaluate("@__square_radius__ = grade(@center . @center + 2 * ((no ^ ni . no ^ @__blade__) / @weight + (@center . @normal) * @normal, 0)", context).output;
-                        if(radiusSquared is NumericScalar scalar)
-                        {
-                            if (scalar.value >= 0.0)
-                            {
-                                radius = Operand.Evaluate("@radius = pow(@__square_radius__, 0.5", context).output;
-                                if (scalar.value == 0.0)
-                                    context.Log("The blade represents a tangent point.");
-                                else
-                                    context.Log("The blade represents a circle.");
-                            }
-                            else
-                            {
-                                context.Log("The blade represents an imaginary circle.");
-                                radius = Operand.Evaluate("@radius = pow(-@__square_radius__, 0.5", context).output;
-                            }
-                        }
-                        else
-                        {
-                            context.Log("The blade represents a circle.");
-                            radius = Operand.Evaluate("@radius = pow(@__square_radius__, 0.5", context).output;
-                        }
-                    }
-                    break;
-                case 3:
-                    break;
-                case 4:
-                    break;
-                case 5:
-                    break;
-            }
-
-            if (weight != null)
-                context.Log("Weight: " + weight.Print(Format.PARSEABLE));
-            if (center != null)
-                context.Log("Center: " + center.Print(Format.PARSEABLE));
-            if (normal != null)
-                context.Log("Normal: " + normal.Print(Format.PARSEABLE));
-            if (radius != null)
-                context.Log("Radius: " + radius.Print(Format.PARSEABLE));
+            context.Log("Hello!");
+            context.Log("Hello?");
+            context.Log("Yes, hello there!");
 
             return null;
         }

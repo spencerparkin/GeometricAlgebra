@@ -18,6 +18,7 @@ namespace GeometricAlgebra
         public List<Function> funcList;
         public List<string> logMessageList;
         public double epsilon;
+        public double evaluationTimeoutMilliseconds;
 
         public Context()
         {
@@ -27,6 +28,7 @@ namespace GeometricAlgebra
             useOperandCache = true;
             logMessageList = new List<string>();
             epsilon = 1e-7;
+            evaluationTimeoutMilliseconds = 4000.0;
 
             funcList.Add(new Inverse());
             funcList.Add(new Reverse());
@@ -68,6 +70,11 @@ namespace GeometricAlgebra
         public void Log(string message)
         {
             logMessageList.Add(message);
+        }
+
+        public void ClearLog()
+        {
+            logMessageList.Clear();
         }
 
         // The operand returned here should have grade zero.

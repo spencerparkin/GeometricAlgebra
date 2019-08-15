@@ -83,6 +83,7 @@ namespace GeometricAlgebra
 
         public static Operand ExhaustEvaluation(Operand operand, Context context)
         {
+            double startTimeMilliseconds = (DateTime.Now - DateTime.MinValue).TotalMilliseconds;
             while (true)
             {
                 Operand newOperand = operand.EvaluationStep(context);
@@ -90,6 +91,11 @@ namespace GeometricAlgebra
                     operand = newOperand;
                 else
                     break;
+
+                double currentTimeMilliseconds = (DateTime.Now - DateTime.MinValue).TotalMilliseconds;
+                double elapsedTimeMilliseconds = currentTimeMilliseconds - startTimeMilliseconds;
+                if(elapsedTimeMilliseconds >= context.evaluationTimeoutMilliseconds)
+                    throw new MathException($"Evaluation loop timed-out (time-out was {context.evaluationTimeoutMilliseconds} milliseconds.)");
             }
 
             return operand;
