@@ -82,7 +82,11 @@ namespace GeometricAlgebra
 
                 factorization.operandList.Insert(0, new NumericScalar(commonRatio));
                 factorization.freezeFlags |= FreezeFlag.DISTRIBUTION;
-                factorization = Operand.ExhaustEvaluation(factorization, context) as OuterProduct;
+                
+                operand = Operand.ExhaustEvaluation(factorization, context);
+                factorization = operand as OuterProduct;
+                if(factorization == null)
+                    factorization = new OuterProduct(new List<Operand>() { operand });
 
                 // Provide a way to get at the individual factors.
                 for(int i = 0; i < factorization.operandList.Count; i++)
@@ -118,33 +122,43 @@ namespace GeometricAlgebra
                 // our method here is based on the identity L*A = (v.A) ^ ((v.A).A),
                 // where L is a non-zero scalar.  Here, v.A is of grade n-1, and
                 // (v.A).A is of grade 1.  This suggests a recursive algorithm.
+                // This all, however, assumes a purely euclidean geometric algebra.
+                // For those involving null-vectors, the search for a useful probing
+                // vector requires that we take the algorithm to its conclusion before
+                // we know if a given probing vector worked.
 
-                Operand result = null;
+                bool foundFactorization = false;
+
                 List<string> basisVectorList = context.ReturnBasisVectors();
-                foreach(Sum vector in GenerateProbingVectors(basisVectorList))
+                foreach(Sum probingVector in GenerateProbingVectors(basisVectorList))
                 {
-                    result = Operand.ExhaustEvaluation(new InnerProduct(new List<Operand>() { vector, multivector.Copy() }), context);
-                    if(!result.IsAdditiveIdentity)
-                        break;
-                    else
-                        result = null;
+                    Operand reduction = Operand.ExhaustEvaluation(new InnerProduct(new List<Operand>() { probingVector, multivector.Copy() }), context);
+                    if(!reduction.IsAdditiveIdentity)
+                    {
+                        Sum reducedMultivector = CanonicalizeMultivector(reduction);
+                        Operand vectorFactor = Operand.ExhaustEvaluation(new InnerProduct(new List<Operand>() { reducedMultivector, multivector }), context);
+                        if (vectorFactor.Grade == 1)        // I'm pretty sure that this check is not necessary in a purely euclidean GA.
+                        {
+                            OuterProduct subFactorization = FactorMultivectorAsBlade(reducedMultivector, context);
+                            if (subFactorization.Grade != grade - 1)
+                                throw new MathException($"Expected sub-factorization to be of grade {grade - 1}.");
+
+                            factorization.operandList = subFactorization.operandList;
+                            factorization.operandList.Add(vectorFactor);
+
+                            // In a purely euclidean geometric algebra, this check is also not necessary.
+                            Operand expansion = Operand.ExhaustEvaluation(factorization.Copy(), context);
+                            if(!expansion.IsAdditiveIdentity)
+                            {
+                                foundFactorization = true;
+                                break;
+                            }
+                        }
+                    }
                 }
 
-                if(result == null)
-                    throw new MathException("Failed to find a vector with non-zero projection down onto the blade.  This does not necessarily mean that the multivector doesn't factor as a blade.");
-
-                Sum reducedMultivector = CanonicalizeMultivector(result);
-
-                OuterProduct subFactorization = FactorMultivectorAsBlade(reducedMultivector, context);
-                if(subFactorization.Grade != grade - 1)
-                    throw new MathException($"Expected sub-factorization to be of grade {grade - 1}.");
-
-                Operand vectorFactor = Operand.ExhaustEvaluation(new InnerProduct(new List<Operand>() { reducedMultivector, multivector }), context);
-                if(vectorFactor.Grade != 1)
-                    throw new MathException("Expected vector factor to be of grade one.");
-
-                factorization.operandList = subFactorization.operandList;
-                factorization.operandList.Add(vectorFactor);
+                if(!foundFactorization)
+                    throw new MathException("Failed to find a vector factor of the given multivector.  This does not necessarily mean that the multivector doesn't factor as a blade.");
             }   
 
             return factorization;
