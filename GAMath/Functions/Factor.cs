@@ -82,6 +82,12 @@ namespace GeometricAlgebra
 
                 factorization.operandList.Insert(0, new NumericScalar(commonRatio));
                 factorization.freezeFlags |= FreezeFlag.DISTRIBUTION;
+                factorization = Operand.ExhaustEvaluation(factorization, context) as OuterProduct;
+
+                // Provide a way to get at the individual factors.
+                for(int i = 0; i < factorization.operandList.Count; i++)
+                    context.operandStorage.SetStorage($"factor{i}", factorization.operandList[i].Copy());
+
                 return factorization;
             }
         }

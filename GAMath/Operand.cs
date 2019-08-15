@@ -83,8 +83,6 @@ namespace GeometricAlgebra
 
         public static Operand ExhaustEvaluation(Operand operand, Context context)
         {
-            ThawTree(operand);
-
             while (true)
             {
                 Operand newOperand = operand.EvaluationStep(context);
