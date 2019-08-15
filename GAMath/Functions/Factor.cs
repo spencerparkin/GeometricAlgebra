@@ -123,6 +123,15 @@ namespace GeometricAlgebra
                 // where L is a non-zero scalar.  Here, v.A is of grade n-1, and
                 // (v.A).A is of grade 1.  This suggests a recursive algorithm.
 
+                // TODO: I've just discovered that my algorithm here doesn't always
+                //       work when null vectors are involved.  The identity above is
+                //       easy to prove in a purely euclidean GA, but I did not bother
+                //       to try and verify it more generally.  Interestingly, I've
+                //       found that the algorithm can still work in some cases involving
+                //       null vectors, provided the right probing vector is used, but it
+                //       isn't clear to me how to differentiate between probing vectors
+                //       that will work and those that wont.  I need to revisit all this.
+
                 Operand result = null;
                 List<string> basisVectorList = context.ReturnBasisVectors();
                 foreach(Sum vector in GenerateProbingVectors(basisVectorList))
