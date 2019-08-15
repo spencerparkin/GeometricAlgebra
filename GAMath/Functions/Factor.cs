@@ -55,6 +55,9 @@ namespace GeometricAlgebra
                 throw new MathException("Polynomial factorization not yet implemented.");
             else
             {
+                // TODO: Support symbolic factorization?  For example, it would be quite useful
+                //       to be able to evaluate factor(n*(a^b)*n).
+
                 Sum multivector = CanonicalizeMultivector(operand);
                 OuterProduct factorization = FactorMultivectorAsBlade(multivector, context);
                 operand = Operand.ExhaustEvaluation(factorization.Copy(), context);
