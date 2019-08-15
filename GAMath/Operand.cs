@@ -24,11 +24,18 @@ namespace GeometricAlgebra
     // This is the base class for all expression tree nodes.
     public abstract class Operand
     {
-        public bool frozen;
+        [FlagsAttribute]
+        public enum FreezeFlag
+        {
+            DISTRIBUTION    = 0x0000001,
+            ASSOCIATION     = 0x0000002,
+        }
+
+        public FreezeFlag freezeFlags;
 
         public Operand()
         {
-            frozen = false;
+            freezeFlags = 0;
         }
 
         public abstract Operand New();
@@ -36,7 +43,7 @@ namespace GeometricAlgebra
         public virtual Operand Copy()
         {
             Operand operand = New();
-            operand.frozen = this.frozen;
+            operand.freezeFlags = this.freezeFlags;
             return operand;
         }
 
@@ -95,7 +102,7 @@ namespace GeometricAlgebra
             List<Operand> operandList = new List<Operand>();
             root.CollectAllOperands(operandList);
             foreach (Operand operand in operandList)
-                operand.frozen = false;
+                operand.freezeFlags = 0;
         }
 
         public static HashSet<int> DiscoverGrades(Operand operand, Context context)

@@ -61,7 +61,7 @@ namespace GeometricAlgebra
                 Sum expansion = CanonicalizeMultivector(operand);
 
                 if(expansion.operandList.Count != multivector.operandList.Count)
-                    throw new MathException("Calculated factorization does not expand to given multivector.  The multivector is not a blade.");
+                    throw new MathException("The multivector is not a blade.");
 
                 // Note that this should work by the sorting performed by the sum operation.
                 double commonRatio = 0.0;
@@ -71,17 +71,17 @@ namespace GeometricAlgebra
                     Blade bladeB = expansion.operandList[i] as Blade;
 
                     if(!bladeA.IsLike(bladeB))
-                        throw new MathException("Calculated factorization does not expand to given multivector.  The multivector is not a blade.");
+                        throw new MathException("The multivector is not a blade.");
                 
                     double ratio = (bladeA.scalar as NumericScalar).value / (bladeB.scalar as NumericScalar).value;
                     if(commonRatio == 0.0)
                         commonRatio = ratio;
                     else if(Math.Abs(ratio - commonRatio) >= context.epsilon)
-                        throw new MathException("Calculated factorization does not expand to given multivector.  The multivector is not a blade.");
+                        throw new MathException("The multivector is not a blade.");
                 }
 
                 factorization.operandList.Insert(0, new NumericScalar(commonRatio));
-                factorization.frozen = true;
+                factorization.freezeFlags |= FreezeFlag.DISTRIBUTION;
                 return factorization;
             }
         }
