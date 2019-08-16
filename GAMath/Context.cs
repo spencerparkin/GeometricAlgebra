@@ -43,6 +43,9 @@ namespace GeometricAlgebra
             funcList.Add(new Adjugate());
             funcList.Add(new Determinant());
             funcList.Add(new Factor());
+            funcList.Add(new SquareRoot());
+
+            // TODO: Add function to reset the context (i.e., clear all variables and then reset default storage.)
         }
 
         public virtual void GenerateDefaultStorage()
