@@ -170,7 +170,7 @@ namespace GeometricAlgebra.ConformalModel
             if (grade == -1)
                 throw new MathException("Could not identify grade of given element.");
 
-            // TODO: Write this function.
+            // TODO: Write this function.  Bonus: can we also identify the conformal transformations?
 
             context.Log("Hello!");
             context.Log("Hello?");
