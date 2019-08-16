@@ -69,11 +69,8 @@ namespace GAWebApp.Controllers
 
         private State GetState(string calculatorID)
         {
-            // TODO: We really should be using a local in-memory cache here so that we don't always have to hit the database.
-            //       Yes, Redis is fast, but it's silly for us to be re-evaluating the operand storage and other things for every calculation.
-
-            State state = new State();
-            if(!this.redisDatabase.GetState(calculatorID, state))
+            State state = null;
+            if(!this.redisDatabase.GetState(calculatorID, out state))
                 return defaultState;
             return state;
         }
