@@ -61,6 +61,8 @@ namespace GAWebApp
                 }
             }
 
+            state = new State();
+
             if(database.KeyExists(calculatorID))
                 state.DeserializeFromString(database.StringGet(calculatorID));
             else
