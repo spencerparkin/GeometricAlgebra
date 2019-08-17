@@ -11,6 +11,8 @@ namespace GeometricAlgebra.ConformalModel
         public Conformal3D_Context() : base()
         {
             funcList.Add(new Identify());
+
+            // TODO: I think we need convenience functions for making points, lines, spheres, etc.
         }
 
         public override void GenerateDefaultStorage()
@@ -170,7 +172,8 @@ namespace GeometricAlgebra.ConformalModel
             if (grade == -1)
                 throw new MathException("Could not identify grade of given element.");
 
-            // TODO: Write this function.  Bonus: can we also identify the conformal transformations?
+            // TODO: If our argument is a blade, determine what geometry it dually and directly represents.
+            //       If our argument is a versor, determine what transformation it performs.
 
             context.Log("Hello!");
             context.Log("Hello?");

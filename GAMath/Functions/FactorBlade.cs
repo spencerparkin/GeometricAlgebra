@@ -5,98 +5,93 @@ using System.Text;
 
 namespace GeometricAlgebra
 {
-    public class Factor : Function
+    public class FactorBlade : Function
     {
-        public Factor() : base()
+        public FactorBlade() : base()
         {
         }
 
-        public Factor(List<Operand> operandList) : base(operandList)
+        public FactorBlade(List<Operand> operandList) : base(operandList)
         {
-        }
-
-        public override bool IsAssociative()
-        {
-            return false;
-        }
-
-        public override bool IsDistributiveOver(Operation operation)
-        {
-            return false;
         }
 
         public override Operand New()
         {
-            return new Factor();
+            return new FactorBlade();
         }
 
         public override string Name(Format format)
         {
             if (format == Format.LATEX)
-                return @"\mbox{factor}";
+                return @"\mbox{factor\_blade}";
 
-            return "factor";
+            return "factor_blade";
         }
 
         public override Operand EvaluationStep(Context context)
         {
+            if (operandList.Count != 1)
+                throw new MathException(string.Format("Factor operation expects exactly one operand, got {0}.", operandList.Count));
+
             Operand operand = base.EvaluationStep(context);
             if (operand != null)
                 return operand;
-
-            if (operandList.Count != 1)
-                throw new MathException(string.Format("Factor operation expects exactly one operand, got {0}.", operandList.Count));
 
             operand = operandList[0];
             
             if(operand.Grade < 0)
                 throw new MathException("Unable to determine grade of argument.");
-            else if(operand.Grade == 0)
-                throw new MathException("Polynomial factorization not yet implemented.");
-            else
+            else if(operand.Grade == 0 || operand.Grade == 1)
+                return operand;
+            
+            OuterProduct factorization = Factor(operand, context);
+            factorization.freezeFlags |= FreezeFlag.DISTRIBUTION;
+
+            operand = Operand.ExhaustEvaluation(factorization, context);
+            factorization = operand as OuterProduct;
+            if (factorization == null)
+                factorization = new OuterProduct(new List<Operand>() { operand });
+
+            // Provide a way to get at the individual factors.
+            for (int i = 0; i < factorization.operandList.Count; i++)
+                context.operandStorage.SetStorage($"factor{i}", factorization.operandList[i].Copy());
+
+            return factorization;
+        }
+
+        public static OuterProduct Factor(Operand operand, Context context)
+        {
+            // TODO: Support symbolic factorization?  For example, it would be quite useful
+            //       to be able to evaluate factor(n*(a^b)*n).  I wouldn't expect any kind
+            //       of miracle, though, like finding (n*a*n)^(n*b*n).
+
+            Sum multivector = CanonicalizeMultivector(operand);
+            OuterProduct factorization = FactorMultivectorAsBlade(multivector, context);
+            operand = Operand.ExhaustEvaluation(factorization.Copy(), context);
+            Sum expansion = CanonicalizeMultivector(operand);
+
+            if(expansion.operandList.Count != multivector.operandList.Count)
+                throw new MathException("The multivector is not a blade.");
+
+            // Note that this should work by the sorting performed by the sum operation.
+            double commonRatio = 0.0;
+            for(int i = 0; i < expansion.operandList.Count; i++)
             {
-                // TODO: Support symbolic factorization?  For example, it would be quite useful
-                //       to be able to evaluate factor(n*(a^b)*n).
+                Blade bladeA = multivector.operandList[i] as Blade;
+                Blade bladeB = expansion.operandList[i] as Blade;
 
-                Sum multivector = CanonicalizeMultivector(operand);
-                OuterProduct factorization = FactorMultivectorAsBlade(multivector, context);
-                operand = Operand.ExhaustEvaluation(factorization.Copy(), context);
-                Sum expansion = CanonicalizeMultivector(operand);
-
-                if(expansion.operandList.Count != multivector.operandList.Count)
+                if(!bladeA.IsLike(bladeB))
                     throw new MathException("The multivector is not a blade.");
-
-                // Note that this should work by the sorting performed by the sum operation.
-                double commonRatio = 0.0;
-                for(int i = 0; i < expansion.operandList.Count; i++)
-                {
-                    Blade bladeA = multivector.operandList[i] as Blade;
-                    Blade bladeB = expansion.operandList[i] as Blade;
-
-                    if(!bladeA.IsLike(bladeB))
-                        throw new MathException("The multivector is not a blade.");
                 
-                    double ratio = (bladeA.scalar as NumericScalar).value / (bladeB.scalar as NumericScalar).value;
-                    if(commonRatio == 0.0)
-                        commonRatio = ratio;
-                    else if(Math.Abs(ratio - commonRatio) >= context.epsilon)
-                        throw new MathException("The multivector is not a blade.");
-                }
-
-                factorization.operandList.Insert(0, new NumericScalar(commonRatio));
-                factorization.freezeFlags |= FreezeFlag.DISTRIBUTION;
-                
-                operand = Operand.ExhaustEvaluation(factorization, context);
-                factorization = operand as OuterProduct;
-                if(factorization == null)
-                    factorization = new OuterProduct(new List<Operand>() { operand });
-
-                // Provide a way to get at the individual factors.
-                for(int i = 0; i < factorization.operandList.Count; i++)
-                    context.operandStorage.SetStorage($"factor{i}", factorization.operandList[i].Copy());
-
-                return factorization;
+                double ratio = (bladeA.scalar as NumericScalar).value / (bladeB.scalar as NumericScalar).value;
+                if(commonRatio == 0.0)
+                    commonRatio = ratio;
+                else if(Math.Abs(ratio - commonRatio) >= context.epsilon)
+                    throw new MathException("The multivector is not a blade.");
             }
+
+            factorization.operandList.Insert(0, new NumericScalar(commonRatio));
+            return factorization;
         }
 
         // Note that factorizations of blades are not generally unique.

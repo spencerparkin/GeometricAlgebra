@@ -40,12 +40,17 @@ namespace GeometricAlgebra
             funcList.Add(new Power());
             funcList.Add(new Exponent());
             funcList.Add(new Logarithm());
+            funcList.Add(new SquareRoot());
             funcList.Add(new Adjugate());
             funcList.Add(new Determinant());
-            funcList.Add(new Factor());
-            funcList.Add(new SquareRoot());
+            funcList.Add(new FactorBlade());
+            funcList.Add(new FactorVersor());
+            funcList.Add(new FactorPolynomial());
+            funcList.Add(new Join());
+            funcList.Add(new Meet());
 
             // TODO: Add function to reset the context (i.e., clear all variables and then reset default storage.)
+            // TODO: Add function that will log all available functions, and maybe even give help on a specific function.
         }
 
         public virtual void GenerateDefaultStorage()
