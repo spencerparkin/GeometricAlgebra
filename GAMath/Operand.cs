@@ -27,8 +27,9 @@ namespace GeometricAlgebra
         [FlagsAttribute]
         public enum FreezeFlag
         {
-            DISTRIBUTION    = 0x0000001,
-            ASSOCIATION     = 0x0000002,
+            ALL             = 0x00000001,
+            DISTRIBUTION    = 0x00000002,
+            ASSOCIATION     = 0x00000004
         }
 
         public FreezeFlag freezeFlags;

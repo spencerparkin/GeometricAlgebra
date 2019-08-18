@@ -106,9 +106,16 @@ namespace GeometricAlgebra
             for (int i = 0; i < operandList.Count; i++)
             {
                 Operand oldOperand = operandList[i];
-                Operand newOperand = oldOperand.EvaluationStep(context);
 
-                if (newOperand != null)
+                // This if-statement is purely an optimization, and if it is suspected
+                // that it is causing any problems, it can be commented out.
+                if((oldOperand.freezeFlags & FreezeFlag.ALL) != 0)
+                    continue;
+
+                Operand newOperand = oldOperand.EvaluationStep(context);
+                if (newOperand == null)
+                    oldOperand.freezeFlags |= FreezeFlag.ALL;
+                else
                 {
                     operandList[i] = newOperand;
                     return this;
