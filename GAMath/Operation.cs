@@ -109,10 +109,8 @@ namespace GeometricAlgebra
 
                 // This if-statement is purely an optimization, and if it is suspected
                 // that it is causing any problems, it can be commented out.
-#if false   // TODO: Wherever an operand is being recycle during an manipulation, we need to clear the flag.  Until then, this optimization causes problems.
                 if((oldOperand.freezeFlags & FreezeFlag.ALL) != 0)
                     continue;
-#endif
 
                 Operand newOperand = oldOperand.EvaluationStep(context);
                 if (newOperand == null)

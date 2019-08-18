@@ -105,6 +105,7 @@ namespace GeometricAlgebra
                     {
                         operandList.RemoveAt(j);
                         collectable.scalar = new GeometricProduct(new List<Operand>() { scalar, collectable.scalar });
+                        collectable.freezeFlags &= ~FreezeFlag.ALL;
                         return this;
                     }
                 }
