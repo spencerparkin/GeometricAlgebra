@@ -93,10 +93,13 @@ namespace GeometricAlgebra
                 else
                     break;
 
-                double currentTimeMilliseconds = (DateTime.Now - DateTime.MinValue).TotalMilliseconds;
-                double elapsedTimeMilliseconds = currentTimeMilliseconds - startTimeMilliseconds;
-                if(elapsedTimeMilliseconds >= context.evaluationTimeoutMilliseconds)
-                    throw new MathException($"Evaluation loop timed-out (time-out was {context.evaluationTimeoutMilliseconds} milliseconds.)");
+                if(!Debugger.IsAttached)
+                {
+                    double currentTimeMilliseconds = (DateTime.Now - DateTime.MinValue).TotalMilliseconds;
+                    double elapsedTimeMilliseconds = currentTimeMilliseconds - startTimeMilliseconds;
+                    if (elapsedTimeMilliseconds >= context.evaluationTimeoutMilliseconds)
+                        throw new MathException($"Evaluation loop timed-out (time-out was {context.evaluationTimeoutMilliseconds} milliseconds.)");
+                }
             }
 
             return operand;
