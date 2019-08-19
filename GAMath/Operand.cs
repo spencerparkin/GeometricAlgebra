@@ -9,7 +9,7 @@ namespace GeometricAlgebra
 {
     public class MathException : Exception
     {
-        public MathException(string error) : base(error)
+        public MathException(string error,  Exception exc = null) : base(error, exc)
         {
         }
     }

@@ -25,9 +25,45 @@ namespace GeometricAlgebra
 
         public override Operand EvaluationStep(Context context)
         {
-            // TODO: Return join in frozen/factored state.
+            if (operandList.Count <= 0)
+                throw new MathException(string.Format("Join operation expects one or more operands, got {0}.", operandList.Count));
 
-            return null;
+            Operand operand = base.EvaluationStep(context);
+            if (operand != null)
+                return operand;
+
+            return CalculateJoin(this.operandList, context);
+        }
+
+        public static Operand CalculateJoin(List<Operand> operandList, Context context)
+        {
+            OuterProduct[] bladeArray = new OuterProduct[operandList.Count];
+            
+            for (int i = 0; i < bladeArray.Length; i++)
+            {
+                try
+                {
+                    bladeArray[i] = FactorBlade.Factor(operandList[i], context);
+                }
+                catch (MathException exc)
+                {
+                    throw new MathException($"Failed to factor argument {i} as blade.", exc);
+                }
+            }
+
+            OuterProduct join = new OuterProduct();
+
+            for(int i = 0; i < bladeArray.Length; i++)
+            {
+                foreach(Operand vector in bladeArray[i].operandList)
+                {
+                    Operand operand = Operand.ExhaustEvaluation(new Trim(new List<Operand>() { new OuterProduct(new List<Operand>() { vector.Copy(), join.Copy() }) }), context);
+                    if (!operand.IsAdditiveIdentity)
+                        join.operandList.Add(vector.Copy());
+                }
+            }
+
+            return join;
         }
     }
 }

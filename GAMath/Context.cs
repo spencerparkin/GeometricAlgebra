@@ -27,7 +27,7 @@ namespace GeometricAlgebra
             operandCache = new OperandStorage();
             useOperandCache = true;
             logMessageList = new List<string>();
-            epsilon = 1e-7;
+            epsilon = 1e-9;
             evaluationTimeoutMilliseconds = 4000.0;
 
             funcList.Add(new Inverse());
