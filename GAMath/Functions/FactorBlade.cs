@@ -28,6 +28,19 @@ namespace GeometricAlgebra
             return "factor_blade";
         }
 
+        public override string ShortDescription
+        {
+            get { return "Factor the given blade as an outer product of vectors."; }
+        }
+
+        public override void LogDetailedHelp(Context context)
+        {
+            context.Log("An attempt is made to factor the given multivector as an outer product of vectors.");
+            context.Log("If it is a blade, the factorization procedure should succeed.");
+            context.Log("If it is not a blade, an error is generated.");
+            context.Log("The computed factorization, when expanded, should always recover the originally given multivector.");
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if (operandList.Count != 1)

@@ -30,6 +30,7 @@ namespace GeometricAlgebra
             epsilon = 1e-9;
             evaluationTimeoutMilliseconds = 4000.0;
 
+            funcList.Add(new Help());
             funcList.Add(new Inverse());
             funcList.Add(new Reverse());
             funcList.Add(new GradePart());
@@ -50,7 +51,6 @@ namespace GeometricAlgebra
             funcList.Add(new Meet());
 
             // TODO: Add function to reset the context (i.e., clear all variables and then reset default storage.)
-            // TODO: Add function that will log all available functions, and maybe even give help on a specific function.
         }
 
         public virtual void GenerateDefaultStorage()

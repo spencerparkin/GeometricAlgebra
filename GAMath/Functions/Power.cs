@@ -28,6 +28,11 @@ namespace GeometricAlgebra
             return "pow";
         }
 
+        public override string ShortDescription
+        {
+            get { return "Calculate the first argument raised to the power of the second."; }
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if(operandList.Count != 2)
@@ -127,6 +132,11 @@ namespace GeometricAlgebra
             return "exp";
         }
 
+        public override string ShortDescription
+        {
+            get { return "Calculate e raised to the power of the given argument."; }
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if (operandList.Count != 1)
@@ -204,6 +214,11 @@ namespace GeometricAlgebra
             return "log";
         }
 
+        public override string ShortDescription
+        {
+            get { return "Calculate the natural logarithm of the given argument."; }
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if (operandList.Count != 1)
@@ -274,6 +289,11 @@ namespace GeometricAlgebra
                 return @"\mbox{sqrt}";
 
             return "sqrt";
+        }
+
+        public override string ShortDescription
+        {
+            get { return "Calculate the square root of the given argument."; }
         }
 
         public override Operand EvaluationStep(Context context)

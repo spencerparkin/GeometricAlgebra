@@ -28,6 +28,18 @@ namespace GeometricAlgebra
             return new Meet();
         }
 
+        public override string ShortDescription
+        {
+            get { return "Compute the meet of the given blades."; }
+        }
+
+        public override void LogDetailedHelp(Context context)
+        {
+            context.Log("Blades are represenative of vector sub-spaces.");
+            context.Log("This function computes a blade representative of the intersection of such vector sub-spaces.");
+            context.Log("The magnitude of the computed blade will be non-zero, but otherwise left undefined.");
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if (operandList.Count <= 0)

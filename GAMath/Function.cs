@@ -18,9 +18,9 @@ namespace GeometricAlgebra
 
         public abstract string Name(Format format);
 
-        public virtual string DetailedHelp
+        public virtual void LogDetailedHelp(Context context)
         {
-            get { return "No help."; }
+            context.Log(this.ShortDescription);
         }
 
         public virtual string ShortDescription

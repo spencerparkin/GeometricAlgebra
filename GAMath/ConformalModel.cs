@@ -121,8 +121,7 @@ namespace GeometricAlgebra.ConformalModel
                 {
                     if(vectorNameList.Any(vectorName => vectorName == "e3"))
                     {
-                        List<string> basisList = new List<string>() { "e1", "e2", "e3", "ni", "no" };
-                        if (vectorNameList.Any(vectorName => !basisList.Any(basisName => basisName == vectorName)))
+                        if (vectorNameList.Any(vectorName => !ReturnBasisVectors().Any(basisName => basisName == vectorName)))
                         {
                             return true;
                         }
@@ -155,6 +154,18 @@ namespace GeometricAlgebra.ConformalModel
             if (format == Format.LATEX)
                 return @"\mbox{id}";
             return "id";
+        }
+
+        public override string ShortDescription
+        {
+            get { return "Identify the given element of the conformal model in terms of what it reprsents as a geometry or transform."; }
+        }
+
+        public override void LogDetailedHelp(Context context)
+        {
+            context.Log("Identify the given element of the conformal model in terms of what it reprsents as a geometry or transform.");
+            context.Log("If the element factors as a blade, what it directly and indirectly represents is determined.");
+            context.Log("If the element factors as a versor, what transformation it performs is determined.");
         }
 
         public override Operand EvaluationStep(Context context)

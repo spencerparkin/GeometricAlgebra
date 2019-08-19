@@ -41,6 +41,19 @@ namespace GeometricAlgebra
             return "rev";
         }
 
+        public override string ShortDescription
+        {
+            get { return "Calculate the reverse of the given argument."; }
+        }
+
+        public override void LogDetailedHelp(Context context)
+        {
+            context.Log("Calculate the reverse of the given argument.");
+            context.Log("The reverse of a sum is the sum of the reverse of each element taken in the sum.");
+            context.Log("The reverse of a versor is the product of its vector factors taken in reverse order.");
+            context.Log("So the reverse of a blade can be defined in terms of a re-write of that blade as a sum of versors.");
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             Operand operand = base.EvaluationStep(context);

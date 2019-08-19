@@ -23,6 +23,11 @@ namespace GeometricAlgebra
             return new FactorPolynomial();
         }
 
+        public override string ShortDescription
+        {
+            get { return "Factor the given polynomial (not yet implemented.)"; }
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             // TODO: I have absolutely no idea how to do this and all the literature about the subject scares me.

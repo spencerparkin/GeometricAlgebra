@@ -48,6 +48,8 @@ tr:nth-child(even) {
     text-align: left;
     width: fit-content;
     margin-left: auto;
+    border-style: outset;
+    background: lightblue;
 }
 
 #expressionBox {
