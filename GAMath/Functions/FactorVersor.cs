@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace GeometricAlgebra
 {
@@ -38,9 +39,77 @@ namespace GeometricAlgebra
 
         public override Operand EvaluationStep(Context context)
         {
-            // TODO: Write this.  Make use of BladeFactor.Factor function.
+            if(operandList.Count != 1)
+                throw new MathException($"Versor factor function expected exactly one argument; got {operandList.Count}.");
 
-            return null;
+            Operand operand = base.EvaluationStep(context);
+            if (operand != null)
+                return operand;
+
+            GeometricProduct factorization = Factor(operandList[0], context);
+            factorization.freezeFlags |= FreezeFlag.DISTRIBUTION;
+
+            // Provide a way to get at the individual factors.
+            for (int i = 0; i < factorization.operandList.Count; i++)
+                context.operandStorage.SetStorage($"factor{i}", factorization.operandList[i].Copy());
+
+            return operand;
+        }
+
+        // The algorithm implemented here comes straight out of Christian Perwass' book.
+        // TODO: This is almost correct.  There is a sign bug.
+        public static GeometricProduct Factor(Operand operand, Context context)
+        {
+            Operand currentVersor = operand.Copy();
+            GeometricProduct versorFactorization = new GeometricProduct();
+
+            while(true)
+            {
+                HashSet<int> gradeSet = DiscoverGrades(currentVersor, context);
+                int maxGrade = gradeSet.ToList().Aggregate(0, (currentMaxGrade, grade) => grade > currentMaxGrade ? grade : currentMaxGrade);
+                if(maxGrade <= 0)
+                    break;
+
+                Operand blade = Operand.ExhaustEvaluation(new GradePart(new List<Operand>() { currentVersor.Copy(), new NumericScalar(maxGrade) }), context);
+                OuterProduct bladeFactorization = null;
+            
+                try
+                {
+                    bladeFactorization = FactorBlade.Factor(blade, context);
+                }
+                catch(MathException exc)
+                {
+                    throw new MathException("Highest-grade-part of multivector does not factor as a blade.", exc);
+                }
+
+                Operand nonNullVector = null, squareLength = null;
+
+                foreach(Operand vector in bladeFactorization.operandList)
+                {
+                    if(vector.Grade == 1)
+                    {
+                        squareLength = Operand.ExhaustEvaluation(new Trim(new List<Operand>() { new InnerProduct(new List<Operand>() { vector.Copy(), vector.Copy() }) }), context);
+                        if(!squareLength.IsAdditiveIdentity)
+                        {
+                            nonNullVector = vector;
+                            break;
+                        }
+                    }
+                }
+
+                if(nonNullVector == null)
+                    throw new MathException("Failed to find non-null vector in blade factorization.");
+
+                Operand unitVector = Operand.ExhaustEvaluation(new GeometricProduct(new List<Operand>() { nonNullVector, new Power(new List<Operand>() { squareLength, new NumericScalar(-0.5) }) }), context);
+
+                versorFactorization.operandList.Add(unitVector);
+
+                currentVersor = Operand.ExhaustEvaluation(new Trim(new List<Operand>() { new GeometricProduct(new List<Operand>() { currentVersor, unitVector.Copy() }) }), context);
+            }
+
+            versorFactorization.operandList.Add(currentVersor);
+
+            return versorFactorization;
         }
     }
 }
