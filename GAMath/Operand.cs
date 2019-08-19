@@ -142,12 +142,6 @@ namespace GeometricAlgebra
                 result.input = parser.Parse(expression);
                 result.output = ExhaustEvaluation(result.input.Copy(), context);
 
-                // Sadly, I've come across cases where it just takes way too long
-                // to perform the following calculation, so I'm just going to have
-                // to comment this out for now.  The solution did work, however, for
-                // the case I encountered where it was needed.  Until I can think of
-                // something else, it has to go.
-#if false
                 // If a symbolic vector was generated during parsing, then the
                 // evaluation of the expression does not always reduce all
                 // grade parts to zero that can be.  The only sure solution
@@ -170,7 +164,6 @@ namespace GeometricAlgebra
                         result.output = ExhaustEvaluation(result.output, context);
                     }
                 }
-#endif
             }
             catch (Exception exc)
             {
