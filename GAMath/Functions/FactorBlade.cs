@@ -83,7 +83,20 @@ namespace GeometricAlgebra
                 if(!bladeA.IsLike(bladeB))
                     throw new MathException("The multivector is not a blade.");
                 
-                double ratio = (bladeA.scalar as NumericScalar).value / (bladeB.scalar as NumericScalar).value;
+                double ratio = 0.0;
+
+                try
+                {
+                    ratio = (bladeA.scalar as NumericScalar).value / (bladeB.scalar as NumericScalar).value;
+                }
+                catch(DivideByZeroException)
+                {
+                    ratio = 1.0;
+                }
+
+                if(Double.IsNaN(ratio))
+                    ratio = 1.0;
+
                 if(commonRatio == 0.0)
                     commonRatio = ratio;
                 else if(Math.Abs(ratio - commonRatio) >= context.epsilon)
