@@ -164,8 +164,8 @@ namespace GeometricAlgebra.ConformalModel
         public override void LogDetailedHelp(Context context)
         {
             context.Log("Identify the given element of the conformal model in terms of what it reprsents as a geometry or transform.");
-            context.Log("If the element factors as a blade, what it represents is determined in terms of the inner product.");
-            context.Log("If the element factors as a versor, what transformation it performs is determined in terms of conjugation.");
+            context.Log("If the element is a blade, what it represents is determined in terms of the inner product.");
+            context.Log("If the element is a versor, what transformation it performs is determined in terms of conjugation.");
             context.Log("To determine what a blade represents in terms of the outer product, pass its dual as an argument to this function.");
         }
 
