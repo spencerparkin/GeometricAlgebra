@@ -35,7 +35,7 @@ namespace GeometricAlgebra
             return CalculateJoin(this.operandList, context);
         }
 
-        public static Operand CalculateJoin(List<Operand> operandList, Context context)
+        public static OuterProduct CalculateJoin(List<Operand> operandList, Context context)
         {
             OuterProduct[] bladeArray = new OuterProduct[operandList.Count];
             
