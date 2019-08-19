@@ -38,10 +38,10 @@ namespace GeometricAlgebra
 
         public static Operand CalculateMeet(List<Operand> operandList, Context context)
         {
-            Operand outerJoin = Join.CalculateJoin(operandList, context);
-
             // The following works in a purely euclidean GA, but not if null vectors are present.
 #if false
+            Operand outerJoin = Join.CalculateJoin(operandList, context);
+
             List<Operand> subspaceList = new List<Operand>();
             for(int i = 0; i < operandList.Count; i++)
                 subspaceList.Add(ExhaustEvaluation(new InnerProduct(new List<Operand>() { operandList[i].Copy(), outerJoin.Copy() }), context));
@@ -49,10 +49,50 @@ namespace GeometricAlgebra
             Operand innerJoin = Join.CalculateJoin(subspaceList, context);
             Operand meet = ExhaustEvaluation(new InnerProduct(new List<Operand>() { innerJoin, outerJoin }), context);
 #else
-            // TODO: Think about this.
-            Operand meet = null;
-#endif
+            OuterProduct[] bladeArray = new OuterProduct[operandList.Count];
 
+            for (int i = 0; i < bladeArray.Length; i++)
+            {
+                try
+                {
+                    bladeArray[i] = FactorBlade.Factor(operandList[i], context);
+                }
+                catch (MathException exc)
+                {
+                    throw new MathException($"Failed to factor argument {i} as blade.", exc);
+                }
+            }
+
+            List<Operand> vectorList = new List<Operand>();
+
+            for(int i = 0; i < bladeArray.Length; i++)
+            {
+                OuterProduct blade = bladeArray[i];
+
+                foreach(Operand vector in blade.operandList)
+                {
+                    bool containdInAllBlades = true;
+
+                    for(int j = 0; j < bladeArray.Length; j++)
+                    {
+                        if(j != i)
+                        {
+                            Operand operand = ExhaustEvaluation(new Trim(new List<Operand>() { new OuterProduct(new List<Operand>() { vector.Copy(), bladeArray[j].Copy() }) }), context);
+                            if(!operand.IsAdditiveIdentity)
+                            {
+                                containdInAllBlades = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if(containdInAllBlades)
+                        vectorList.Add(vector);
+                }
+            }
+
+            Operand meet = Join.CalculateJoin(vectorList, context);
+#endif
             return meet;
         }
     }
