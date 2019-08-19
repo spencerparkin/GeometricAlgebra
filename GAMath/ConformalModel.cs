@@ -164,8 +164,9 @@ namespace GeometricAlgebra.ConformalModel
         public override void LogDetailedHelp(Context context)
         {
             context.Log("Identify the given element of the conformal model in terms of what it reprsents as a geometry or transform.");
-            context.Log("If the element factors as a blade, what it directly and indirectly represents is determined.");
-            context.Log("If the element factors as a versor, what transformation it performs is determined.");
+            context.Log("If the element factors as a blade, what it represents is determined in terms of the inner product.");
+            context.Log("If the element factors as a versor, what transformation it performs is determined in terms of conjugation.");
+            context.Log("To determine what a blade represents in terms of the outer product, pass its dual as an argument to this function.");
         }
 
         public override Operand EvaluationStep(Context context)
@@ -182,12 +183,7 @@ namespace GeometricAlgebra.ConformalModel
             if (grade == -1)
                 throw new MathException("Could not identify grade of given element.");
 
-            // TODO: If our argument is a blade, determine what geometry it dually and directly represents.
-            //       If our argument is a versor, determine what transformation it performs.
-
-            context.Log("Hello!");
-            context.Log("Hello?");
-            context.Log("Yes, hello there!");
+            // TODO: Write this.
 
             return null;
         }
