@@ -31,6 +31,7 @@ namespace GeometricAlgebra
             evaluationTimeoutMilliseconds = 4000.0;
 
             funcList.Add(new Help());
+            funcList.Add(new Reset());
             funcList.Add(new Inverse());
             funcList.Add(new Reverse());
             funcList.Add(new GradePart());
@@ -49,8 +50,6 @@ namespace GeometricAlgebra
             funcList.Add(new FactorPolynomial());
             funcList.Add(new Join());
             funcList.Add(new Meet());
-
-            // TODO: Add function to reset the context (i.e., clear all variables and then reset default storage.)
         }
 
         public virtual void GenerateDefaultStorage()

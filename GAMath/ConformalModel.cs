@@ -134,7 +134,7 @@ namespace GeometricAlgebra.ConformalModel
 
         public override List<string> ReturnBasisVectors()
         {
-            return new List<string>() { "e1", "e2", "e3", "no", "ni" };
+            return new List<string>() { "e1", "e2", "e3", "ni", "no" };
         }
     }
 
