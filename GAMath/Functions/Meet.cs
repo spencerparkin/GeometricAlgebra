@@ -36,11 +36,11 @@ namespace GeometricAlgebra
             return CalculateMeet(this.operandList, context);
         }
 
-        public static OuterProduct CalculateMeet(List<Operand> operandList, Context context)
+        public static Operand CalculateMeet(List<Operand> operandList, Context context)
         {
-            OuterProduct outerJoin = Join.CalculateJoin(operandList, context);
+            Operand outerJoin = Join.CalculateJoin(operandList, context);
 
-            // The following works in a purely eucliden GA, but not if null vectors are present.
+            // The following works in a purely euclidean GA, but not if null vectors are present.
 #if false
             List<Operand> subspaceList = new List<Operand>();
             for(int i = 0; i < operandList.Count; i++)
@@ -49,27 +49,8 @@ namespace GeometricAlgebra
             Operand innerJoin = Join.CalculateJoin(subspaceList, context);
             Operand meet = ExhaustEvaluation(new InnerProduct(new List<Operand>() { innerJoin, outerJoin }), context);
 #else
-            OuterProduct meet = new OuterProduct();
-
-            // TODO: This is still wrong.  Consider meet(no^ni,ni).  Our join is (no-ni)^(ni+no), yet neither factor in in span{ni}.
-
-            foreach(Operand vector in outerJoin.operandList)
-            {
-                bool containedInAllSubspaces = true;
-
-                foreach(Operand blade in operandList)
-                {
-                    Operand operand = Operand.ExhaustEvaluation(new Trim(new List<Operand>() { new OuterProduct(new List<Operand>() { vector.Copy(), blade.Copy() }) }), context);
-                    if(!operand.IsAdditiveIdentity)
-                    {
-                        containedInAllSubspaces = false;
-                        break;
-                    }
-                }
-
-                if(containedInAllSubspaces)
-                    meet.operandList.Add(vector);
-            }
+            // TODO: Think about this.
+            Operand meet = null;
 #endif
 
             return meet;
