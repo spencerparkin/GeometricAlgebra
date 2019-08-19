@@ -51,6 +51,8 @@ namespace GeometricAlgebra
 #else
             OuterProduct meet = new OuterProduct();
 
+            // TODO: This is still wrong.  Consider meet(no^ni,ni).  Our join is (no-ni)^(ni+no), yet neither factor in in span{ni}.
+
             foreach(Operand vector in outerJoin.operandList)
             {
                 bool containedInAllSubspaces = true;
