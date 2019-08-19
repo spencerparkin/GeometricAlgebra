@@ -53,11 +53,11 @@ namespace GeometricAlgebra
             for (int i = 0; i < factorization.operandList.Count; i++)
                 context.operandStorage.SetStorage($"factor{i}", factorization.operandList[i].Copy());
 
-            return operand;
+            return factorization;
         }
 
         // The algorithm implemented here comes straight out of Christian Perwass' book.
-        // TODO: This is almost correct.  There is a sign bug.
+        // TODO: Also, as noted by Perwass, this algorithm doesn't work for null versors.
         public static GeometricProduct Factor(Operand operand, Context context)
         {
             Operand currentVersor = operand.Copy();
@@ -102,7 +102,7 @@ namespace GeometricAlgebra
 
                 Operand unitVector = Operand.ExhaustEvaluation(new GeometricProduct(new List<Operand>() { nonNullVector, new Power(new List<Operand>() { squareLength, new NumericScalar(-0.5) }) }), context);
 
-                versorFactorization.operandList.Add(unitVector);
+                versorFactorization.operandList.Insert(0, unitVector);
 
                 currentVersor = Operand.ExhaustEvaluation(new Trim(new List<Operand>() { new GeometricProduct(new List<Operand>() { currentVersor, unitVector.Copy() }) }), context);
             }
