@@ -10,6 +10,10 @@ namespace GeometricAlgebra
         {
         }
 
+        public Join(List<Operand> operandList) : base(operandList)
+        {
+        }
+
         public override string Name(Format format)
         {
             if (format == Format.LATEX)
@@ -39,11 +43,16 @@ namespace GeometricAlgebra
         {
             OuterProduct[] bladeArray = new OuterProduct[operandList.Count];
             
+            int j = -1;
+
             for (int i = 0; i < bladeArray.Length; i++)
             {
                 try
                 {
                     bladeArray[i] = FactorBlade.Factor(operandList[i], context);
+
+                    if(j < 0 || bladeArray[i].Grade > bladeArray[j].Grade)
+                        j = i;
                 }
                 catch (MathException exc)
                 {
@@ -51,15 +60,18 @@ namespace GeometricAlgebra
                 }
             }
 
-            OuterProduct join = new OuterProduct();
+            OuterProduct join = bladeArray[j];
 
             for(int i = 0; i < bladeArray.Length; i++)
             {
-                foreach(Operand vector in bladeArray[i].operandList)
+                if(i != j)
                 {
-                    Operand operand = Operand.ExhaustEvaluation(new Trim(new List<Operand>() { new OuterProduct(new List<Operand>() { vector.Copy(), join.Copy() }) }), context);
-                    if (!operand.IsAdditiveIdentity)
-                        join.operandList.Add(vector.Copy());
+                    foreach(Operand vector in bladeArray[i].operandList)
+                    {
+                        Operand operand = Operand.ExhaustEvaluation(new Trim(new List<Operand>() { new OuterProduct(new List<Operand>() { vector.Copy(), join.Copy() }) }), context);
+                        if (!operand.IsAdditiveIdentity)
+                            join.operandList.Add(vector);
+                    }
                 }
             }
 

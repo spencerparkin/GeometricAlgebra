@@ -20,7 +20,6 @@ namespace GeometricAlgebra.ConformalModel
             base.GenerateDefaultStorage();
 
             operandStorage.SetStorage("i", Operand.Evaluate("e1^e2^e3", this).output);
-            operandStorage.SetStorage("I", Operand.Evaluate("e1^e2^e3^ni^no", this).output);
 
             // Add formulas for the geometric primitives of the conformal model in 3D space.
             Operand.Evaluate("@point := weight * (no + @center + 0.5 * (@center . @center) * ni)", this);

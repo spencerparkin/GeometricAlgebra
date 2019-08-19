@@ -55,6 +55,7 @@ namespace GeometricAlgebra
 
         public virtual void GenerateDefaultStorage()
         {
+            operandStorage.SetStorage("I", this.MakePsuedoScalar());
             operandStorage.SetStorage("pi", Operand.Evaluate("3.1415926535897932384626434", this).output);
             operandStorage.SetStorage("e", Operand.Evaluate("2.7182818284590452353602874", this).output);
         }
@@ -106,6 +107,11 @@ namespace GeometricAlgebra
         public virtual List<string> ReturnBasisVectors()
         {
             return null;
+        }
+
+        public virtual Operand MakePsuedoScalar()
+        {
+            return new OuterProduct(ReturnBasisVectors().Select(vectorName => (Operand)new Blade(vectorName)).ToList());
         }
 
         public virtual Operation CreateFunction(string name)
