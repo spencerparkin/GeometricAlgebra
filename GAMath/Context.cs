@@ -153,4 +153,40 @@ namespace GeometricAlgebra
             return operandStorage.GetStorage(name, ref operand);
         }
     }
+
+    public class EuclideanContext : Context
+    {
+        public int dimension;
+        private Regex basisVectorRx;
+
+        public EuclideanContext(int dimension) : base()
+        {
+            this.dimension = dimension;
+            this.basisVectorRx = new Regex(@"^e([0-9]+)$", RegexOptions.Compiled);
+        }
+
+        public override Operand BilinearForm(string vectorNameA, string vectorNameB)
+        {
+            MatchCollection collectionA = this.basisVectorRx.Matches(vectorNameA);
+            if (collectionA.Count != 1)
+                return base.BilinearForm(vectorNameA, vectorNameB);
+
+            MatchCollection collectionB = this.basisVectorRx.Matches(vectorNameB);
+            if (collectionB.Count != 1)
+                return base.BilinearForm(vectorNameA, vectorNameB);
+
+            Match matchA = collectionA[0];
+            int dimA = Int32.Parse(matchA.Groups[1].Value);
+
+            Match matchB = collectionB[0];
+            int dimB = Int32.Parse(matchB.Groups[1].Value);
+
+            return new NumericScalar(dimA == dimB ? 1.0 : 0.0);
+        }
+
+        public override List<string> ReturnBasisVectors()
+        {
+            return Enumerable.Range(0, this.dimension).Select(i => $"e{i}").ToList();
+        }
+    }
 }
