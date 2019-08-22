@@ -11,8 +11,17 @@ namespace GeometricAlgebra.ConformalModel
         public Conformal3D_Context() : base()
         {
             funcList.Add(new Identify());
-
-            // TODO: I think we need convenience functions for making points, lines, spheres, etc.
+            funcList.Add(new Geometry("point"));
+            funcList.Add(new Geometry("sphere"));
+            funcList.Add(new Geometry("isphere"));
+            funcList.Add(new Geometry("circle"));
+            funcList.Add(new Geometry("icircle"));
+            funcList.Add(new Geometry("pointpair"));
+            funcList.Add(new Geometry("ipointpair"));
+            funcList.Add(new Geometry("plane"));
+            funcList.Add(new Geometry("line"));
+            funcList.Add(new Geometry("flatpoint"));
+            funcList.Add(new Geometry("tangentpoint"));
         }
 
         public override void GenerateDefaultStorage()
@@ -22,7 +31,7 @@ namespace GeometricAlgebra.ConformalModel
             operandStorage.SetStorage("i", Operand.Evaluate("e1^e2^e3", this).output);
 
             // Add formulas for the geometric primitives of the conformal model in 3D space.
-            Operand.Evaluate("@point := weight * (no + @center + 0.5 * (@center . @center) * ni)", this);
+            Operand.Evaluate("@point := @weight * (no + @center + 0.5 * (@center . @center) * ni)", this);
             Operand.Evaluate("@sphere := @weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni)", this);
             Operand.Evaluate("@isphere := @weight * (no + @center + 0.5 * (@center . @center + @radius * @radius) * ni)", this);
             Operand.Evaluate("@circle := @weight * (no + @center + 0.5 * (@center . @center - @radius * @radius) * ni) ^ (@normal + (@center . @normal) * ni)", this);
@@ -183,9 +192,132 @@ namespace GeometricAlgebra.ConformalModel
             if (grade == -1)
                 throw new MathException("Could not identify grade of given element.");
 
-            // TODO: Write this.
+            // TODO: Write this.  Make sure to set @weight, @center, @radius, @normal, etc.
 
             return null;
+        }
+    }
+
+    public class Geometry : Function
+    {
+        private string geometry;
+
+        public Geometry(string geometry = "") : base()
+        {
+            this.geometry = geometry;
+        }
+
+        public override Operand New()
+        {
+            return new Geometry();
+        }
+
+        public override Operand Copy()
+        {
+            Geometry copy = base.Copy() as Geometry;
+            copy.geometry = this.geometry;
+            return copy;
+        }
+
+        public override string Name(Format format)
+        {
+            return format == Format.LATEX ? @"\mbox{" + geometry + "}" : geometry;
+        }
+
+        public override string ShortDescription => $"Make a blade representative of a {this.geometry} of the conformal model in terms of the inner product.";
+
+        public override void LogDetailedHelp(Context context)
+        {
+            context.Log($"Make a blade representative of a {this.geometry} in the conformal model in terms of the inner product.");
+            context.Log("The required arguments are as follows...");
+            this.GrabAllArguments(context, true);
+            context.Log("Note that 3 scalars may be passed in place of any required euclidean vector.");
+        }
+
+        private void GrabArgument(string variableName, ref int i, Context context, bool justLog)
+        {
+            string expectedType = "";
+            if(new List<string>() { "weight", "radius", "__x__", "__y__", "__z__" }.Any(value => value == variableName))
+                expectedType = "scalar";
+            else if(new List<string>() { "center", "normal" }.Any(value => value == variableName))
+                expectedType = "vector";
+
+            if(justLog)
+            {
+                context.Log(expectedType + ": " + variableName);
+                return;
+            }
+
+            if(i >= operandList.Count)
+                throw new MathException("Ran out of arguments.");
+
+            if(expectedType == "vector")
+            {
+                if(operandList[i].Grade == 1)
+                {
+                    context.operandStorage.SetStorage(variableName, operandList[i++]);
+                    return;
+                }
+                else if(operandList[i].Grade == 0)
+                {
+                    GrabArgument("__x__", ref i, context, justLog);
+                    GrabArgument("__y__", ref i, context, justLog);
+                    GrabArgument("__z__", ref i, context, justLog);
+                    Operand.Evaluate("@" + variableName + " = @__x__*e1 + @__y__*e2 + @__z__*e3", context);
+                    if(variableName == "normal")
+                        Operand.Evaluate("@normal = @normal / sqrt(@normal . @normal)", context);
+                    return;
+                }
+            }
+            else if(expectedType == "scalar")
+            {
+                if(operandList[i].Grade == 0)
+                {
+                    context.operandStorage.SetStorage(variableName, operandList[i++]);
+                    return;
+                }
+            }
+            
+            throw new MathException("Could not make use of argument.");
+        }
+
+        private void GrabAllArguments(Context context, bool justLog)
+        {
+            int i = 0;
+
+            if (this.geometry == "point" || this.geometry == "flatpoint")
+            {
+                GrabArgument("center", ref i, context, justLog);
+            }
+            else if (this.geometry == "sphere" || this.geometry == "isphere")
+            {
+                GrabArgument("center", ref i, context, justLog);
+                GrabArgument("radius", ref i, context, justLog);
+            }
+            else if (new List<string>() { "sphere", "isphere", "circle", "icircle", "pointpair", "ipointpair" }.Any(value => value == this.geometry))
+            {
+                GrabArgument("center", ref i, context, justLog);
+                GrabArgument("radius", ref i, context, justLog);
+                GrabArgument("normal", ref i, context, justLog);
+            }
+            else if (this.geometry == "tangentpoint" || this.geometry == "plane" || this.geometry == "line")
+            {
+                GrabArgument("center", ref i, context, justLog);
+                GrabArgument("normal", ref i, context, justLog);
+            }
+        }
+
+        public override Operand EvaluationStep(Context context)
+        {
+            Operand operand = base.EvaluationStep(context);
+            if(operand != null)
+                return operand;
+
+            context.operandStorage.SetStorage("weight", new NumericScalar(1.0));
+
+            this.GrabAllArguments(context, false);
+
+            return Operand.Evaluate("@" + this.geometry, context).output;
         }
     }
 }
