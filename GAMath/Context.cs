@@ -32,6 +32,8 @@ namespace GeometricAlgebra
 
             funcList.Add(new Help());
             funcList.Add(new Reset());
+            funcList.Add(new Magnitude());
+            funcList.Add(new Normalize());
             funcList.Add(new Inverse());
             funcList.Add(new Reverse());
             funcList.Add(new GradePart());

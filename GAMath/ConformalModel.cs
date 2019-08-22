@@ -197,28 +197,26 @@ namespace GeometricAlgebra.ConformalModel
             if (grade == -1)
                 throw new MathException("Could not identify grade of given element.");
 
-            bool isBlade = true;
-            bool isVersor = true;
+            OuterProduct blade = null;
+            GeometricProduct versor = null;
 
             try
             {
-                OuterProduct blade = FactorBlade.Factor(operand, context);
+                blade = FactorBlade.Factor(operand, context);
             }
             catch(MathException)
             {
-                isBlade = false;
             }
             
             try
             {
-                GeometricProduct versor = FactorVersor.Factor(operand, context);
+                versor = FactorVersor.Factor(operand, context);
             }
             catch(MathException)
             {
-                isVersor = false;
             }
 
-            if(isBlade)
+            if(blade != null)
             {
                 context.operandStorage.SetStorage("__blade__", operand);
 
@@ -241,14 +239,14 @@ namespace GeometricAlgebra.ConformalModel
                         {
                             context.Log("The blade is a plane.");
 
-                            weight = Evaluate("@weight = abs(no . @__blade__^ni)", context).output;
+                            weight = Evaluate("@weight = mag(no . @__blade__^ni)", context).output;
                             Evaluate("@__blade__ = @__blade__ / @weight", context);
 
                             Evaluate("@normal = no . @__blade__^ni", context);
                             context.Log($"The normal is {this.MakeCoordinatesString("normal", context)}.");
 
                             Evaluate("@center = (-no . @__blade__) * @normal", context);
-                            context.Log($"The point on the plane closest to origin is {this.MakeCoordinatesString("normal", context)}.");
+                            context.Log($"The center is {this.MakeCoordinatesString("normal", context)}.  (Point on plane closest to origin.)");
                         }
                         else
                         {
@@ -305,12 +303,12 @@ namespace GeometricAlgebra.ConformalModel
                 }
             }
 
-            if(isVersor)
+            if(versor != null)
             {
                 //...
             }
 
-            if(!isBlade && !isVersor)
+            if(blade == null && versor == null)
                 context.Log("The given element was not a blade nor a versor.  I'm not sure what it represents.");
 
             return operand;

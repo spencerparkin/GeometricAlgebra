@@ -42,14 +42,14 @@ namespace GeometricAlgebra
 
             if(operandList.Count == 0)
             {
-                foreach(Function function in context.funcList)
+                foreach(Function function in context.funcList.OrderBy(function => function.Name(Format.PARSEABLE)))
                 {
                     context.Log($"{function.Name(Format.PARSEABLE)} -- {function.ShortDescription}");
                 }
             }
             else
             {
-                foreach(Function function in operandList.Select(operand => operand as Function))
+                foreach(Function function in operandList.Where(operand => operand is Function).Select(operand => operand as Function).OrderBy(function => function.Name(Format.PARSEABLE)))
                 {
                     context.Log(function.Name(Format.PARSEABLE) + ":");
                     function.LogDetailedHelp(context);

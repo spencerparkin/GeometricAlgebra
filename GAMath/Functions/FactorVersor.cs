@@ -82,14 +82,14 @@ namespace GeometricAlgebra
                     throw new MathException("Highest-grade-part of multivector does not factor as a blade.", exc);
                 }
 
-                Operand nonNullVector = null, squareLength = null;
+                Operand nonNullVector = null, magnitude = null;
 
                 foreach(Operand vector in bladeFactorization.operandList)
                 {
                     if(vector.Grade == 1)
                     {
-                        squareLength = Operand.ExhaustEvaluation(new Trim(new List<Operand>() { new InnerProduct(new List<Operand>() { vector.Copy(), vector.Copy() }) }), context);
-                        if(!squareLength.IsAdditiveIdentity)
+                        magnitude = Operand.ExhaustEvaluation(new Trim(new List<Operand>() { new Magnitude(new List<Operand>() { vector.Copy() }) }), context);
+                        if(!magnitude.IsAdditiveIdentity)
                         {
                             nonNullVector = vector;
                             break;
@@ -100,10 +100,7 @@ namespace GeometricAlgebra
                 if(nonNullVector == null)
                     throw new MathException("Failed to find non-null vector in blade factorization.");
 
-                if(squareLength is NumericScalar numericScalar && numericScalar.value < 0.0)
-                    numericScalar.value = -numericScalar.value;
-
-                Operand unitVector = Operand.ExhaustEvaluation(new GeometricProduct(new List<Operand>() { nonNullVector, new Power(new List<Operand>() { squareLength, new NumericScalar(-0.5) }) }), context);
+                Operand unitVector = Operand.ExhaustEvaluation(new Normalize(new List<Operand>() { nonNullVector }), context);
 
                 versorFactorization.operandList.Insert(0, unitVector);
 
