@@ -382,7 +382,7 @@ namespace GeometricAlgebra.ConformalModel
                     GrabArgument("__z__", ref i, context, justLog);
                     Operand.Evaluate("@" + variableName + " = @__x__*e1 + @__y__*e2 + @__z__*e3", context);
                     if(variableName == "normal")
-                        Operand.Evaluate("@normal = @normal / sqrt(@normal . @normal)", context);
+                        Operand.Evaluate("@normal = normalize(@normal)", context);
                     return;
                 }
             }
