@@ -58,6 +58,9 @@ namespace GeometricAlgebra
             {
                 if(baseOperand is NumericScalar numericScalarBase)
                 {
+                    if(numericScalarBase.value < 0.0 && numericScalarExponent.value < 0.0)
+                        throw new MathException("Imaginary root avoided in power computation.");
+
                     return new NumericScalar(Math.Pow(numericScalarBase.value, numericScalarExponent.value));
                 }
                 else if(Math.Round(numericScalarExponent.value) == numericScalarExponent.value)

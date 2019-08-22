@@ -178,6 +178,11 @@ namespace GeometricAlgebra.ConformalModel
             context.Log("To determine what a blade represents in terms of the outer product, pass its dual as an argument to this function.");
         }
 
+        private string MakeCoordinatesString(string variableName, Context context)
+        {
+            return "(" + string.Join(",", Enumerable.Range(1, 3).Select(i => Operand.Evaluate($"@{variableName} . e{i}", context).output).Select(operand => operand.Print(Format.PARSEABLE, context))) + ")";
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if (operandList.Count != 1)
@@ -192,9 +197,123 @@ namespace GeometricAlgebra.ConformalModel
             if (grade == -1)
                 throw new MathException("Could not identify grade of given element.");
 
-            // TODO: Write this.  Make sure to set @weight, @center, @radius, @normal, etc.
+            bool isBlade = true;
+            bool isVersor = true;
 
-            return null;
+            try
+            {
+                OuterProduct blade = FactorBlade.Factor(operand, context);
+            }
+            catch(MathException)
+            {
+                isBlade = false;
+            }
+            
+            try
+            {
+                GeometricProduct versor = FactorVersor.Factor(operand, context);
+            }
+            catch(MathException)
+            {
+                isVersor = false;
+            }
+
+            if(isBlade)
+            {
+                context.operandStorage.SetStorage("__blade__", operand);
+
+                Evaluate("del(weight, center, radius, normal)", context);
+
+                switch(grade)
+                {
+                    case 0:
+                    {
+                        if(operand.IsAdditiveIdentity)
+                            context.Log("The blade is all of space.");
+                        else
+                            context.Log("The blade is the empty set.");
+                        break;
+                    }
+                    case 1:
+                    {
+                        Operand weight = Evaluate("@weight = -ni . @__blade__", context).output;
+                        if(weight.IsAdditiveIdentity)
+                        {
+                            context.Log("The blade is a plane.");
+
+                            weight = Evaluate("@weight = abs(no . @__blade__^ni)", context).output;
+                            Evaluate("@__blade__ = @__blade__ / @weight", context);
+
+                            Evaluate("@normal = no . @__blade__^ni", context);
+                            context.Log($"The normal is {this.MakeCoordinatesString("normal", context)}.");
+
+                            Evaluate("@center = (-no . @__blade__) * @normal", context);
+                            context.Log($"The point on the plane closest to origin is {this.MakeCoordinatesString("normal", context)}.");
+                        }
+                        else
+                        {
+                            Evaluate("@__blade__ = @__blade__ / @weight", context);
+
+                            Operand radius = null;
+                            Operand squareRadius = Operand.Evaluate("@__square_radius__ = @__blade__ . @__blade__", context).output;
+                            if(squareRadius.IsAdditiveIdentity)
+                                context.Log("The blade is a point.");
+                            else if(!(squareRadius is NumericScalar numericScalar))
+                            {
+                                context.Log("The blade is a sphere.");
+                                radius = Operand.Evaluate("sqrt(@__square_radius__)", context).output;
+                            }
+                            else
+                            {
+                                if(numericScalar.value > 0.0)
+                                {
+                                    context.Log("The blade is a real sphere.");
+                                    radius = Operand.Evaluate("sqrt(@__square_radius__)", context).output;
+                                }
+                                else
+                                {
+                                    context.Log("The blade is an imaginary sphere.");
+                                    radius = Operand.Evaluate("sqrt(-@__square_radius__)", context).output;
+                                }
+                            }
+                            
+                            context.Log($"The radius is {radius.Print(Format.PARSEABLE, context)}.");
+
+                            Evaluate("@center = no^ni . no^ni^@__blade__", context);
+                            context.Log($"The center is {this.MakeCoordinatesString("center", context)}.");
+                        }
+
+                        context.Log($"The weight is {weight.Print(Format.PARSEABLE, context)}.");
+                        break;
+                    }
+                    case 2:
+                    {
+                        break;
+                    }
+                    case 3:
+                    {
+                        break;
+                    }
+                    case 4:
+                    {
+                        break;
+                    }
+                    case 5:
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if(isVersor)
+            {
+                //...
+            }
+
+            if(!isBlade && !isVersor)
+                context.Log("The given element was not a blade nor a versor.  I'm not sure what it represents.");
+
+            return operand;
         }
     }
 

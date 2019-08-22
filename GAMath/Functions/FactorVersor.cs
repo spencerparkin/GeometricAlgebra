@@ -100,6 +100,9 @@ namespace GeometricAlgebra
                 if(nonNullVector == null)
                     throw new MathException("Failed to find non-null vector in blade factorization.");
 
+                if(squareLength is NumericScalar numericScalar && numericScalar.value < 0.0)
+                    numericScalar.value = -numericScalar.value;
+
                 Operand unitVector = Operand.ExhaustEvaluation(new GeometricProduct(new List<Operand>() { nonNullVector, new Power(new List<Operand>() { squareLength, new NumericScalar(-0.5) }) }), context);
 
                 versorFactorization.operandList.Insert(0, unitVector);
