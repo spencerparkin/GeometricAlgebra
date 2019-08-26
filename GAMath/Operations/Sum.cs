@@ -96,7 +96,7 @@ namespace GeometricAlgebra
                         if(collectableA.IsLike(collectableB))
                         {
                             collectableA.scalar = new Sum(new List<Operand>() { collectableA.scalar, collectableB.scalar });
-                            collectableA.freezeFlags &= ~FreezeFlag.ALL;
+                            collectableA.freezeFlags &= ~FreezeFlag.SUB_EVAL;
                             sum = collectableA;
                         }
                     }

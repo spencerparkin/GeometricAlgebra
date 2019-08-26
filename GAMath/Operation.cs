@@ -109,12 +109,12 @@ namespace GeometricAlgebra
 
                 // This if-statement is purely an optimization, and if it is suspected
                 // that it is causing any problems, it can be commented out.
-                if((oldOperand.freezeFlags & FreezeFlag.ALL) != 0)
+                if((oldOperand.freezeFlags & FreezeFlag.SUB_EVAL) != 0)
                     continue;
 
                 Operand newOperand = oldOperand.EvaluationStep(context);
                 if (newOperand == null)
-                    oldOperand.freezeFlags |= FreezeFlag.ALL;
+                    oldOperand.freezeFlags |= FreezeFlag.SUB_EVAL;
                 else
                 {
                     operandList[i] = newOperand;

@@ -62,7 +62,7 @@ namespace GeometricAlgebra
             if(operand is Collectable collectable)
             {
                 collectable.scalar = new Trim(new List<Operand>() { collectable.scalar });
-                collectable.freezeFlags &= ~FreezeFlag.ALL;
+                collectable.freezeFlags &= ~FreezeFlag.SUB_EVAL;
                 return collectable;
             }
 
