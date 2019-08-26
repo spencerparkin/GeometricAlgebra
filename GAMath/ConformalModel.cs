@@ -258,17 +258,17 @@ namespace GeometricAlgebra.ConformalModel
                             else if(!(squareRadius is NumericScalar numericScalar))
                             {
                                 context.Log("The blade is a sphere.");
-                                radius = Evaluate("sqrt(@__square_radius__)", context).output;
+                                radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
                             }
                             else if(numericScalar.value > 0.0)
                             {
                                 context.Log("The blade is a real sphere.");
-                                radius = Evaluate("sqrt(@__square_radius__)", context).output;
+                                radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
                             }
                             else
                             {
                                 context.Log("The blade is an imaginary sphere.");
-                                radius = Evaluate("sqrt(-@__square_radius__)", context).output;
+                                radius = Evaluate("@radius = sqrt(-@__square_radius__)", context).output;
                             }
                         }
 
@@ -280,40 +280,73 @@ namespace GeometricAlgebra.ConformalModel
                         if(weight.IsAdditiveIdentity)
                         {
                             context.Log("The blade is a line.");
-                            Evaluate("@normal = grade((no . ni ^ @__blade__) * @i, 1)", context);
+                            Evaluate("@normal = (no . ni ^ @__blade__) * @i", context);
                             weight = Evaluate("@weight = mag(@normal)", context).output;
                             normal = Evaluate("@normal = @normal / @weight", context).output;
-                            center = Evaluate("@center = grade(((no . @__blade__ / @weight) * @normal) * @i, 1)", context).output;
+                            center = Evaluate("@center = ((no . @__blade__ / @weight) * @normal) * @i", context).output;
                         }
                         else
                         {
                             Evaluate("@__blade__ = @__blade__ / @weight", context);
                             normal = Evaluate("@normal = ni^no . ni ^ @__blade__", context).output;
-                            center = Evaluate("@center = @normal * grade(ni^no . @__blade__ ^ ni*no, 0)", context).output;
+                            center = Evaluate("@center = @normal * (ni^no . @__blade__ ^ ni*no)", context).output;
                             Operand squareRadius = Evaluate("@__square_radius__ = -@__blade__ . @__blade__", context).output;
                             if(squareRadius.IsAdditiveIdentity)
                                 context.Log("The blade is a tangent point (degenerate circle.)");
                             else if (!(squareRadius is NumericScalar numericScalar))
                             {
                                 context.Log("The blade is a circle.");
-                                radius = Evaluate("sqrt(@__square_radius__)", context).output;
+                                radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
                             }
                             else if (numericScalar.value > 0.0)
                             {
                                 context.Log("The blade is a real circle.");
-                                radius = Evaluate("sqrt(@__square_radius__)", context).output;
+                                radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
                             }
                             else
                             {
                                 context.Log("The blade is an imaginary circle.");
-                                radius = Evaluate("sqrt(-@__square_radius__)", context).output;
+                                radius = Evaluate("@radius = sqrt(-@__square_radius__)", context).output;
                             }
                         }
-
+                        
                         break;
                     }
                     case 3:
                     {
+                        weight = Evaluate("@weight = mag((ni^no . ni ^ @__blade__) * @i)", context).output;
+                        if (weight.IsAdditiveIdentity)
+                        {
+                            context.Log("The blade is a flat-point.");
+                            weight = Evaluate("@weight = (no . ni ^ @__blade__) * @i", context).output;
+                            Evaluate("@__blade__ = @__blade__ / @weight", context);
+                            center = Evaluate("@center = (no . @__blade__) * @i", context).output;
+                        }
+                        else
+                        {
+                            Evaluate("@__blade__ = @__blade__ / @weight", context);
+                            normal = Evaluate("@normal = (ni^no . ni ^ @__blade__) * -@i", context).output;
+                            center = Evaluate("@center = @normal * (ni^no . @__blade__ ^ ni*no) * @i", context).output;
+                            Operand squareRadius = Evaluate("@__square_radius__ = -@__blade__ . @__blade__", context).output;
+                            if (squareRadius.IsAdditiveIdentity)
+                                context.Log("The blade is a tangent point (degenerate point-pair.)");
+                            else if (!(squareRadius is NumericScalar numericScalar))
+                            {
+                                context.Log("The blade is a point-pair.");
+                                radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
+                            }
+                            else if (numericScalar.value > 0.0)
+                            {
+                                context.Log("The blade is a real point-pair.");
+                                radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
+                            }
+                            else
+                            {
+                                context.Log("The blade is an imaginary point-pair.");
+                                radius = Evaluate("@radius = sqrt(-@__square_radius__)", context).output;
+                            }
+                        }
+
                         break;
                     }
                     case 4:
