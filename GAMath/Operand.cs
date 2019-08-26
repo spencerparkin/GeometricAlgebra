@@ -29,7 +29,8 @@ namespace GeometricAlgebra
         {
             SUB_EVAL        = 0x00000001,
             DISTRIBUTION    = 0x00000002,
-            ASSOCIATION     = 0x00000004
+            ASSOCIATION     = 0x00000004,
+            BAIL            = 0x00000008,
         }
 
         public FreezeFlag freezeFlags;
@@ -85,7 +86,8 @@ namespace GeometricAlgebra
         public static Operand ExhaustEvaluation(Operand operand, Context context)
         {
             double startTimeMilliseconds = (DateTime.Now - DateTime.MinValue).TotalMilliseconds;
-            while (true)
+            
+            while ((operand.freezeFlags & FreezeFlag.BAIL) == 0)
             {
                 Operand newOperand = operand.EvaluationStep(context);
                 if (newOperand != null)

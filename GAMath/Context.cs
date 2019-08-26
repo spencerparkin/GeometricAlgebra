@@ -32,6 +32,7 @@ namespace GeometricAlgebra
 
             funcList.Add(new Help());
             funcList.Add(new Reset());
+            funcList.Add(new Freeze());
             funcList.Add(new Magnitude());
             funcList.Add(new Normalize());
             funcList.Add(new Inverse());
