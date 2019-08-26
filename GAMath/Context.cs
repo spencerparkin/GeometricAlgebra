@@ -137,7 +137,7 @@ namespace GeometricAlgebra
 
         public virtual string TranslateVariableNameForLatex(string varName)
         {
-            return @"\boldmath{" + SubscriptNameForLatex(varName) + "}";
+            return @"\mathbf{" + SubscriptNameForLatex(varName) + "}";
         }
 
         public static string SubscriptNameForLatex(string name)
