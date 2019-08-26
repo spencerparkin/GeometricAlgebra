@@ -245,7 +245,7 @@ namespace GeometricAlgebra.ConformalModel
                             context.Log("The blade is a plane.");
                             weight = Evaluate("@weight = mag(no . ni ^ @__blade__)", context).output;
                             Evaluate("@__blade__ = @__blade__ / @weight", context);
-                            normal = Evaluate("@normal = no . ni ^ @__blade__", context).output;
+                            normal = Evaluate("@normal = -no . ni ^ @__blade__", context).output;
                             center = Evaluate("@center = (-no . @__blade__) * @normal", context).output;
                         }
                         else
