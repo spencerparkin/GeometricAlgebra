@@ -144,6 +144,11 @@ namespace GeometricAlgebra
                 }
             }
 
+            // TODO: We might consider looking for (x.b1)b1 + (x.b2)b2 + ... + (x.bn)bn = x.
+            //       We don't need all the basis vectors if we know that x.bk = 0 for some k.
+            //       Since this is possibly time-consuming, we might only provide this kind
+            //       of evaluation in a function, perhaps.
+
             return null;
         }
 
