@@ -147,7 +147,10 @@ namespace GeometricAlgebra
             // TODO: We might consider looking for (x.b1)b1 + (x.b2)b2 + ... + (x.bn)bn = x.
             //       We don't need all the basis vectors if we know that x.bk = 0 for some k.
             //       Since this is possibly time-consuming, we might only provide this kind
-            //       of evaluation in a function, perhaps.
+            //       of evaluation in a function, perhaps.  Harder to recognize would be something
+            //       like (x.e1)(y.e1) + (x.e2)(y.e2) + (x.e3)(y.e3) = x.y, but maybe we first
+            //       discover that it is x.((y.e1)e1 + (y.e2)e2 + (y.e3)e3) and then use the
+            //       logic originaly talked about to finish.  Maybe call the function "factor_dot."
 
             return null;
         }
