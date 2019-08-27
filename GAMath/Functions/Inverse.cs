@@ -40,6 +40,18 @@ namespace GeometricAlgebra
             return "inv";
         }
 
+        public override string ShortDescription
+        {
+            get { return "Calculate the inverse, if any, of the given multivector or matrix."; }
+        }
+
+        public override void LogDetailedHelp(Context context)
+        {
+            context.Log("Calculate the inverse, if any, of the given multivector or matrix.");
+            context.Log("If the argument is singular, an error is generated.");
+            context.Log("There is currently only limited support for computing symbolic inverses.");
+        }
+
         public override int Grade
         {
             get

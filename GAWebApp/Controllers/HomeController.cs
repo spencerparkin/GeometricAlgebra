@@ -69,8 +69,8 @@ namespace GAWebApp.Controllers
 
         private State GetState(string calculatorID)
         {
-            State state = new State();
-            if(!this.redisDatabase.GetState(calculatorID, state))
+            State state = null;
+            if(!this.redisDatabase.GetState(calculatorID, out state))
                 return defaultState;
             return state;
         }

@@ -25,6 +25,13 @@
                     } else if(item.outputPlain.Length > 0) {
                         <div>@item.outputPlain</div>
                     }
+                    @if(item.log.Length > 0) {
+                        <div class="historyLogBlock">
+                            @foreach(string line in item.log.Split('\n')) {
+                                <div>@line</div>
+                            }
+                        </div>
+                    }
                 </td>
             </tr>
         }

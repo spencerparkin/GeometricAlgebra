@@ -24,6 +24,11 @@ namespace GeometricAlgebra
             return new Adjugate();
         }
 
+        public override string ShortDescription
+        {
+            get { return "Calculate the adjugate/adjoint of the given matrix."; }
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if (operandList.Count != 1)

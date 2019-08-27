@@ -32,6 +32,18 @@ namespace GeometricAlgebra
             return new GradePart();
         }
 
+        public override string ShortDescription
+        {
+            get { return "Select the parts of the given multivector of the given grade."; }
+        }
+
+        public override void LogDetailedHelp(Context context)
+        {
+            context.Log("Select the parts of the given multivector of the given grade.");
+            context.Log("Give the multivector first, then the desired grade.");
+            context.Log("This function is the identity for multivectors homogeneous of a certain grade.");
+        }
+
         public override string Name(Format format)
         {
             if (format == Format.LATEX)

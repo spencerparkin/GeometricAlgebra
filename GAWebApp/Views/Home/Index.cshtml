@@ -75,13 +75,9 @@ else
         for the geometric algebra of the 3D conformal model, the second for its largest euclidean sub-algebra.
     </p>
     <p>
-        A number of built-in functions are also available.  Use <code>del()</code> to delete a variable.
-        Use <code>grade()</code> to take a given grade-part of any multivector.  Use <code>rev()</code>
-        to compute the reverse of the given multivector, and <code>inv()</code> to compute the inverse.
-        Use <code>trim()</code> to remove all parts of a multivector near zero.  Use <code>id()</code>
-        to identify a given blade in the conformal model in terms of what it represents with respect
-        to the inner product.  (This function is not yet implimented.)  To find out what a blade representswith respect to the outer product,
-        pass in the dual.
+        A number of built-in functions are also available.  Use the <code>help()</code> function
+        with no arguments to enumerate them all.  Pass a function to this function to get help
+        on that particular function (e.g., <code>help(inv())</code>.)
     </p>
     <p>
         The inner, outer and geometric products are invoked using <code>.</code>, <code>^</code>
@@ -94,15 +90,9 @@ else
         <code>~</code> on the right.
     </p>
     <p>
-        Note that juxtaposition will never be used to denote the geometric product, because it
+        Note that juxtaposition is not generally used to denote the geometric product, because it
         ambiguates the use of symbols having more than one letter in the name.  Alternatively,
         a cross is used, which should not be confused with the traditional cross product.
-    </p>
-    <p>
-        Lastly, note that the calculator is still a work in progress.  For example, consider the following
-        expressions: <code>(a^b)*@@i</code> and <code>a.(b*@@i)</code>.  These are algebraically identical,
-        but evaluate to different expressions.  It takes a sharp eye to discover that the extraneous terms
-        do indeed cancel.  Until then, you can enter <code>grade((a^b)*@@i,1)</code> to get the desired result.
     </p>
     <p>
         If you find bugs or have comments or questions, don't hesitate to send me an e-mail

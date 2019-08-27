@@ -17,6 +17,7 @@ namespace GAWebApp.Models
         public string outputPlain;
         public string expression;
         public string error;
+        public string log;
         public Operand input;
         public Operand output;
 
@@ -27,6 +28,7 @@ namespace GAWebApp.Models
             inputPlain = "?";
             outputPlain = "?";
             error = "";
+            log = "";
             input = null;
             output = null;
         }
@@ -73,28 +75,26 @@ namespace GAWebApp.Models
             HistoryItem item = new HistoryItem();
             item.expression = expression;
 
-            Task task = Task.Factory.StartNew(() => {
-                var result = Operand.Evaluate(expression, this);
+            this.ClearLog();
 
-                item.inputLatex = result.input == null ? "" : result.input.Print(Operand.Format.LATEX, this);
-                item.outputLatex = result.output == null ? "" : result.output.Print(Operand.Format.LATEX, this);
-                item.inputPlain = result.input == null ? "" : result.input.Print(Operand.Format.PARSEABLE, this);
-                item.outputPlain = result.output == null ? "" : result.output.Print(Operand.Format.PARSEABLE, this);
-                item.input = result.input;
-                item.output = result.output;
-                item.error = result.error;
+            var result = Operand.Evaluate(expression, this);
 
-                item.inputLatex = item.inputLatex.Replace(" ", "&space;");
-                item.outputLatex = item.outputLatex.Replace(" ", "&space;");
-            });
+            item.log = string.Join('\n', this.logMessageList);
+            item.inputLatex = result.input == null ? "" : result.input.Print(Operand.Format.LATEX, this);
+            item.outputLatex = result.output == null ? "" : result.output.Print(Operand.Format.LATEX, this);
+            item.inputPlain = result.input == null ? "" : result.input.Print(Operand.Format.PARSEABLE, this);
+            item.outputPlain = result.output == null ? "" : result.output.Print(Operand.Format.PARSEABLE, this);
+            item.input = result.input;
+            item.output = result.output;
+            item.error = result.error;
 
-            TimeSpan timeout = TimeSpan.FromSeconds(4.0);
-            if (!task.Wait(timeout))
-            {
-                item.error = "Timed-out waiting for evaluation to complete.";
-            }
+            // I wish I could just pass the latex in as payload instead of as part of the URI.
+            item.inputLatex = item.inputLatex.Replace(" ", "&space;");
+            item.outputLatex = item.outputLatex.Replace(" ", "&space;");
 
             history.Add(item);
+
+            // TODO: If the history gets too large, delete the oldest entry.
         }
 
         public override bool SerializeToXml(XElement rootElement)
@@ -114,6 +114,7 @@ namespace GAWebApp.Models
                 entryElement.Add(new XElement("inputPlain", item.inputPlain));
                 entryElement.Add(new XElement("outputPlain", item.outputPlain));
                 entryElement.Add(new XElement("error", item.error));
+                entryElement.Add(new XElement("log", item.log));
 
                 historyElement.Add(entryElement);
             }
@@ -152,6 +153,7 @@ namespace GAWebApp.Models
                     item.inputPlain = entryElement.Element("inputPlain").Value;
                     item.outputPlain = entryElement.Element("outputPlain").Value;
                     item.error = entryElement.Element("error").Value;
+                    item.log = entryElement.Element("log") == null ? "" : entryElement.Element("log").Value;
 
                     history.Add(item);
                 }

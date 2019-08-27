@@ -34,6 +34,11 @@ namespace GeometricAlgebra
             return new Determinant();
         }
 
+        public override string ShortDescription
+        {
+            get { return "Calculate the determinant of the given square matrix."; }
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if(operandList.Count != 1)

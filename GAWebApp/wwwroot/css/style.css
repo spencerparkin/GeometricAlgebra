@@ -41,6 +41,17 @@ tr:nth-child(even) {
     background-color: #e2e2e2;
 }
 
+.historyLogBlock {
+    color: black;
+    font-family: "Courier New";
+    font-size: small;
+    text-align: left;
+    width: fit-content;
+    margin-left: auto;
+    border-style: outset;
+    background: lightblue;
+}
+
 #expressionBox {
     font-family: "Courier New";
     width: 100%;

@@ -18,6 +18,16 @@ namespace GeometricAlgebra
 
         public abstract string Name(Format format);
 
+        public virtual void LogDetailedHelp(Context context)
+        {
+            context.Log(this.ShortDescription);
+        }
+
+        public virtual string ShortDescription
+        {
+            get { return "No description."; }
+        }
+
         public override bool IsDistributiveOver(Operation operation)
         {
             return false;

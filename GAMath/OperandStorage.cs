@@ -55,9 +55,11 @@ namespace GeometricAlgebra
             return true;
         }
 
-        public void ClearStorage(string key)
+        public void ClearStorage(string key = null)
         {
-            if (operandMap.ContainsKey(key))
+            if(key == null)
+                operandMap.Clear();
+            else if (operandMap.ContainsKey(key))
                 operandMap.Remove(key);
         }
 

@@ -28,6 +28,18 @@ namespace GeometricAlgebra
             return "trim";
         }
 
+        public override string ShortDescription
+        {
+            get { return "Round scalars to the nearest integer, provided they're within a small epsilon of that integer."; }
+        }
+
+        public override void LogDetailedHelp(Context context)
+        {
+            context.Log("Round scalars to the nearest integer, provided they're within a small epsilon of that integer.");
+            context.Log("This function is useful in dealing with round-off error.");
+            context.Log("For example, if a result should essentially be zero, this function can be used to get zero.");
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if(operandList.Count != 1)
@@ -50,6 +62,7 @@ namespace GeometricAlgebra
             if(operand is Collectable collectable)
             {
                 collectable.scalar = new Trim(new List<Operand>() { collectable.scalar });
+                collectable.freezeFlags &= ~FreezeFlag.SUB_EVAL;
                 return collectable;
             }
 

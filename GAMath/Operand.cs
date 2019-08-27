@@ -9,7 +9,7 @@ namespace GeometricAlgebra
 {
     public class MathException : Exception
     {
-        public MathException(string error) : base(error)
+        public MathException(string error,  Exception exc = null) : base(error, exc)
         {
         }
     }
@@ -27,8 +27,10 @@ namespace GeometricAlgebra
         [FlagsAttribute]
         public enum FreezeFlag
         {
-            DISTRIBUTION    = 0x0000001,
-            ASSOCIATION     = 0x0000002,
+            SUB_EVAL        = 0x00000001,
+            DISTRIBUTION    = 0x00000002,
+            ASSOCIATION     = 0x00000004,
+            BAIL            = 0x00000008,
         }
 
         public FreezeFlag freezeFlags;
@@ -38,7 +40,7 @@ namespace GeometricAlgebra
             freezeFlags = 0;
         }
 
-        public abstract Operand New();
+        public abstract Operand New();  // TODO: I think we can get rid of this in favor of C#'s run-time type stuff.
 
         public virtual Operand Copy()
         {
@@ -83,13 +85,23 @@ namespace GeometricAlgebra
 
         public static Operand ExhaustEvaluation(Operand operand, Context context)
         {
-            while (true)
+            double startTimeMilliseconds = (DateTime.Now - DateTime.MinValue).TotalMilliseconds;
+            
+            while ((operand.freezeFlags & FreezeFlag.BAIL) == 0)
             {
                 Operand newOperand = operand.EvaluationStep(context);
                 if (newOperand != null)
                     operand = newOperand;
                 else
                     break;
+
+                if(!Debugger.IsAttached)
+                {
+                    double currentTimeMilliseconds = (DateTime.Now - DateTime.MinValue).TotalMilliseconds;
+                    double elapsedTimeMilliseconds = currentTimeMilliseconds - startTimeMilliseconds;
+                    if (elapsedTimeMilliseconds >= context.evaluationTimeoutMilliseconds)
+                        throw new MathException($"Evaluation loop timed-out (time-out was {context.evaluationTimeoutMilliseconds} milliseconds.)");
+                }
             }
 
             return operand;
@@ -132,12 +144,6 @@ namespace GeometricAlgebra
                 result.input = parser.Parse(expression);
                 result.output = ExhaustEvaluation(result.input.Copy(), context);
 
-                // Sadly, I've come across cases where it just takes way too long
-                // to perform the following calculation, so I'm just going to have
-                // to comment this out for now.  The solution did work, however, for
-                // the case I encountered where it was needed.  Until I can think of
-                // something else, it has to go.
-#if false
                 // If a symbolic vector was generated during parsing, then the
                 // evaluation of the expression does not always reduce all
                 // grade parts to zero that can be.  The only sure solution
@@ -160,7 +166,6 @@ namespace GeometricAlgebra
                         result.output = ExhaustEvaluation(result.output, context);
                     }
                 }
-#endif
             }
             catch (Exception exc)
             {

@@ -24,6 +24,17 @@ namespace GeometricAlgebra
             return "del";
         }
 
+        public override string ShortDescription
+        {
+            get { return "Delete the given variable."; }
+        }
+
+        public override void LogDetailedHelp(Context context)
+        {
+            context.Log("Delete the given variable.");
+            context.Log("Once deleted, the variable is treated as an unknown multivector value.");
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if(operandList.Count != 1)

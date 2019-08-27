@@ -28,6 +28,11 @@ namespace GeometricAlgebra
             return "pow";
         }
 
+        public override string ShortDescription
+        {
+            get { return "Calculate the first argument raised to the power of the second."; }
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if(operandList.Count != 2)
@@ -53,6 +58,9 @@ namespace GeometricAlgebra
             {
                 if(baseOperand is NumericScalar numericScalarBase)
                 {
+                    if(numericScalarBase.value < 0.0 && numericScalarExponent.value < 0.0)
+                        throw new MathException("Imaginary root avoided in power computation.");
+
                     return new NumericScalar(Math.Pow(numericScalarBase.value, numericScalarExponent.value));
                 }
                 else if(Math.Round(numericScalarExponent.value) == numericScalarExponent.value)
@@ -74,7 +82,32 @@ namespace GeometricAlgebra
 
         public override string Print(Format format, Context context)
         {
-            // TODO: Print x^{y}.
+            if (operandList.Count != 2 || format != Format.LATEX)
+                return base.Print(format, context);
+
+            Operand baseOperand = operandList[0];
+            Operand exponentOperand = operandList[1];
+
+            if(!(exponentOperand is NumericScalar scalar))
+                return base.Print(format, context);
+            
+            if(Math.Abs(scalar.value - Math.Round(scalar.value)) < context.epsilon)
+            {
+                int exponent = (int)Math.Round(scalar.value);
+                if(exponent == 1)
+                    return @"\left(" + baseOperand.Print(format, context) + @"\right)";
+                else
+                    return @"\left(" + baseOperand.Print(format, context) + @"\right)^{" + exponent.ToString() + "}";
+            }
+            else if(Math.Abs(1.0 / scalar.value - Math.Round(1.0 / scalar.value)) < context.epsilon)
+            {
+                int root = (int)Math.Round(1.0 / scalar.value);
+                if(root == 2)
+                    return @"\sqrt{" + baseOperand.Print(format, context) + "}";
+                else
+                    return @"\sqrt[" + root.ToString() + "]{" + baseOperand.Print(format, context) + "}";
+            }
+
             return base.Print(format, context);
         }
     }
@@ -100,6 +133,11 @@ namespace GeometricAlgebra
                 return @"\exp";
 
             return "exp";
+        }
+
+        public override string ShortDescription
+        {
+            get { return "Calculate e raised to the power of the given argument."; }
         }
 
         public override Operand EvaluationStep(Context context)
@@ -179,6 +217,11 @@ namespace GeometricAlgebra
             return "log";
         }
 
+        public override string ShortDescription
+        {
+            get { return "Calculate the natural logarithm of the given argument."; }
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if (operandList.Count != 1)
@@ -225,6 +268,55 @@ namespace GeometricAlgebra
 
             // TODO: Solve e^x = y, for x in terms of y and e.
             return null;
+        }
+    }
+
+    public class SquareRoot : Function
+    {
+        public SquareRoot() : base()
+        {
+        }
+
+        public SquareRoot(List<Operand> operandList) : base(operandList)
+        {
+        }
+
+        public override Operand New()
+        {
+            return new SquareRoot();
+        }
+
+        public override string Name(Format format)
+        {
+            if (format == Format.LATEX)
+                return @"\mbox{sqrt}";
+
+            return "sqrt";
+        }
+
+        public override string ShortDescription
+        {
+            get { return "Calculate the square root of the given argument."; }
+        }
+
+        public override Operand EvaluationStep(Context context)
+        {
+            if (operandList.Count != 1)
+                throw new MathException(string.Format("Square-root function expected exactly 1 argument, got {0}.", operandList.Count));
+
+            Operand operand = base.EvaluationStep(context);
+            if (operand != null)
+                return operand;
+
+            return new Power(new List<Operand>() { operandList[0], new NumericScalar(0.5) });
+        }
+
+        public override string Print(Format format, Context context)
+        {
+            if(operandList.Count != 1 || format != Format.LATEX)
+                return base.Print(format, context);
+
+            return @"\sqrt{" + operandList[0].Print(format, context) + "}";
         }
     }
 }

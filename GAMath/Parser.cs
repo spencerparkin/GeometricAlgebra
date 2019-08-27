@@ -486,10 +486,13 @@ namespace GeometricAlgebra
 
             List<List<Token>> listOfTokenLists = new List<List<Token>>();
 
-            for(int i = 0; i < boundaryList.Count - 1; i++)
+            if(tokenList.Count > 0)
             {
-                List<Token> subTokenList = tokenList.Skip(boundaryList[i] + 1).Take(boundaryList[i + 1] - boundaryList[i] - 1).ToList();
-                listOfTokenLists.Add(subTokenList);
+                for(int i = 0; i < boundaryList.Count - 1; i++)
+                {
+                    List<Token> subTokenList = tokenList.Skip(boundaryList[i] + 1).Take(boundaryList[i + 1] - boundaryList[i] - 1).ToList();
+                    listOfTokenLists.Add(subTokenList);
+                }
             }
 
             return listOfTokenLists;

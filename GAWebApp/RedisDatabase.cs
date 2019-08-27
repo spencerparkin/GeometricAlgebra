@@ -11,6 +11,14 @@ namespace GAWebApp
     {
         private ConnectionMultiplexer connection;
 
+        public class StateCacheEntry
+        {
+            public State state;
+            public DateTime timeStamp;
+        }
+
+        private Dictionary<string, StateCacheEntry> stateCacheMap = new Dictionary<string, StateCacheEntry>();
+
         public RedisDatabase()
         {
             try
@@ -30,12 +38,31 @@ namespace GAWebApp
             }
         }
 
-        public bool GetState(string calculatorID, State state)
+        public bool GetState(string calculatorID, out State state)
         {
+            state = null;
+
             if(connection == null)
                 return false;
 
             IDatabase database = connection.GetDatabase();
+
+            if(stateCacheMap.ContainsKey(calculatorID) && database.KeyExists(calculatorID + "_timeStamp"))
+            {
+                DateTime timeStamp;
+
+                if(DateTime.TryParse(database.StringGet(calculatorID + "_timeStamp"), out timeStamp))
+                {
+                    if(stateCacheMap[calculatorID].timeStamp >= timeStamp)
+                    {
+                        state = stateCacheMap[calculatorID].state;
+                        return true;
+                    }
+                }
+            }
+
+            state = new State();
+
             if(database.KeyExists(calculatorID))
                 state.DeserializeFromString(database.StringGet(calculatorID));
             else
@@ -56,6 +83,17 @@ namespace GAWebApp
             // Put another way, the store operation is a fire-and-forget kind of operation.
             IDatabase database = connection.GetDatabase();
             await database.StringSetAsync(calculatorID, state.SerializeToString());
+
+            DateTime timeStamp = DateTime.Now;
+            await database.StringSetAsync(calculatorID + "_timeStamp", timeStamp.ToString());
+
+            if(stateCacheMap.ContainsKey(calculatorID))
+                stateCacheMap.Remove(calculatorID);
+            
+            StateCacheEntry cacheEntry = new StateCacheEntry();
+            cacheEntry.timeStamp = timeStamp;
+            cacheEntry.state = state;
+            stateCacheMap.Add(calculatorID, cacheEntry);
         }
     }
 }

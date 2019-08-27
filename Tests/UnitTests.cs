@@ -186,7 +186,7 @@ namespace Tests
         {
             Context context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
             Operand.Evaluate("@x = (e1 - 2*e2 + 3*e3 + no)^(ni - no - 6*e1 + 8*e3)", context);
-            Operand.Evaluate("@y = factor(@x)", context);
+            Operand.Evaluate("@y = factor_blade(@x)", context);
             Operand operand = Operand.Evaluate("trim(@x - @y)", context).output;
             Assert.IsTrue(operand != null && operand.IsAdditiveIdentity);
         }

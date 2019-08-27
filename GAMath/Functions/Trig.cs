@@ -28,6 +28,11 @@ namespace GeometricAlgebra
             return "sin";
         }
 
+        public override string ShortDescription
+        {
+            get { return "Calculate the trigonemetric sine of the given argument."; }
+        }
+
         public override Operand EvaluationStep(Context context)
         {
             if(operandList.Count != 1)
@@ -67,6 +72,11 @@ namespace GeometricAlgebra
                 return @"\cos";
 
             return "cos";
+        }
+
+        public override string ShortDescription
+        {
+            get { return "Calculate the trigonemetric cosine of the given argument."; }
         }
 
         public override Operand EvaluationStep(Context context)
