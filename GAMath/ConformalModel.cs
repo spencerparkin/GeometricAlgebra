@@ -278,7 +278,7 @@ namespace GeometricAlgebra.ConformalModel
                     }
                     case 2:
                     {
-                        weight = Evaluate("mag(ni^no . ni ^ @__blade__)", context).output;
+                        weight = Evaluate("@weight = mag(ni^no . ni ^ @__blade__)", context).output;
                         if(weight.IsAdditiveIdentity)
                         {
                             context.Log("The blade is a line.");
