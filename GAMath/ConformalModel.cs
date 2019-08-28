@@ -22,6 +22,8 @@ namespace GeometricAlgebra.ConformalModel
             funcList.Add(new Geometry("line"));
             funcList.Add(new Geometry("flatpoint"));
             funcList.Add(new Geometry("tangentpoint"));
+
+            // TODO: Add convenience functions for rotors, motors, inversions, dilations, transversions, etc.
         }
 
         public override void GenerateDefaultStorage()
@@ -276,7 +278,7 @@ namespace GeometricAlgebra.ConformalModel
                     }
                     case 2:
                     {
-                        weight = Evaluate("mag(ni^no . ni ^ @__blade__)", context).output;
+                        weight = Evaluate("@weight = mag(ni^no . ni ^ @__blade__)", context).output;
                         if(weight.IsAdditiveIdentity)
                         {
                             context.Log("The blade is a line.");
@@ -351,6 +353,7 @@ namespace GeometricAlgebra.ConformalModel
                     }
                     case 4:
                     {
+                        // ((sphere((-1*1)*1, 0, 0, 1))^(line(0, 0, 0, e1)))^(sphere(1, 0, 0, 1))
                         break;
                     }
                     case 5:
