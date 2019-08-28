@@ -222,26 +222,24 @@ namespace GeometricAlgebra
                         if(token.data[0] == '$')
                             return new SymbolicScalarTerm(token.data.Substring(1));
 
-                        if(basisVectorsOnly)
+                        string vectorName = token.data;
+                        List<string> basisVectorList = context.ReturnBasisVectors();
+                        bool isBasisVector = basisVectorList.Contains(vectorName);
+                        if (basisVectorsOnly && !isBasisVector)
                         {
-                            string vectorName = token.data;
-                            List<string> basisVectorList = context.ReturnBasisVectors();
-                            if(!basisVectorList.Contains(vectorName))
+                            Sum sum = new Sum();
+
+                            foreach (string basisVectorName in basisVectorList)
                             {
-                                Sum sum = new Sum();
-
-                                foreach (string basisVectorName in basisVectorList)
-                                {
-                                    InnerProduct dot = new InnerProduct(new List<Operand>() { new Blade(vectorName), new Blade(basisVectorName) });
-                                    sum.operandList.Add(new GeometricProduct(new List<Operand>() { dot, new Blade(basisVectorName) }));
-                                }
-
-                                return sum;
+                                InnerProduct dot = new InnerProduct(new List<Operand>() { new Blade(vectorName), new Blade(basisVectorName) });
+                                sum.operandList.Add(new GeometricProduct(new List<Operand>() { dot, new Blade(basisVectorName) }));
                             }
+
+                            return sum;
                         }
 
-                        generatedSymbolicVector = true;
-                        return new Blade(token.data);
+                        generatedSymbolicVector = !isBasisVector;
+                        return new Blade(vectorName);
                     }
                     case Token.Kind.NUMBER:
                     {
