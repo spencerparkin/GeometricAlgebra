@@ -18,11 +18,6 @@ namespace GeometricAlgebra
         {
         }
 
-        public override Operand New()
-        {
-            return new Sum();
-        }
-
         public override bool IsAssociative()
         {
             return true;

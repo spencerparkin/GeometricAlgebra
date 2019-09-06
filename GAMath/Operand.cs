@@ -40,11 +40,9 @@ namespace GeometricAlgebra
             freezeFlags = 0;
         }
 
-        public abstract Operand New();  // TODO: I think we can get rid of this in favor of C#'s run-time type stuff.
-
         public virtual Operand Copy()
         {
-            Operand operand = New();
+            Operand operand = Activator.CreateInstance(this.GetType()) as Operand;
             operand.freezeFlags = this.freezeFlags;
             return operand;
         }

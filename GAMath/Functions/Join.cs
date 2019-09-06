@@ -22,11 +22,6 @@ namespace GeometricAlgebra
             return "join";
         }
 
-        public override Operand New()
-        {
-            return new Join();
-        }
-
         public override string ShortDescription
         {
             get { return "Compute the join of the given blades."; }

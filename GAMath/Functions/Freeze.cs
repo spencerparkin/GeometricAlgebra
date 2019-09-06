@@ -10,11 +10,6 @@ namespace GeometricAlgebra
         {
         }
 
-        public override Operand New()
-        {
-            return new Freeze();
-        }
-
         public override string ShortDescription => "Return the given argument without evaluation, unless it's a variable.";
 
         public override string Name(Format format)

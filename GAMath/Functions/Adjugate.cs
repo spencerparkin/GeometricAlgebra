@@ -19,11 +19,6 @@ namespace GeometricAlgebra
             return "adj";
         }
 
-        public override Operand New()
-        {
-            return new Adjugate();
-        }
-
         public override string ShortDescription
         {
             get { return "Calculate the adjugate/adjoint of the given matrix."; }

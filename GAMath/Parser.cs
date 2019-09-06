@@ -223,19 +223,24 @@ namespace GeometricAlgebra
                             return new SymbolicScalarTerm(token.data.Substring(1));
 
                         string vectorName = token.data;
+                        bool isBasisVector = false;
+                        
                         List<string> basisVectorList = context.ReturnBasisVectors();
-                        bool isBasisVector = basisVectorList.Contains(vectorName);
-                        if (basisVectorsOnly && !isBasisVector)
+                        if(basisVectorList != null)
                         {
-                            Sum sum = new Sum();
-
-                            foreach (string basisVectorName in basisVectorList)
+                            isBasisVector = basisVectorList.Contains(vectorName);
+                            if (basisVectorsOnly && !isBasisVector)
                             {
-                                InnerProduct dot = new InnerProduct(new List<Operand>() { new Blade(vectorName), new Blade(basisVectorName) });
-                                sum.operandList.Add(new GeometricProduct(new List<Operand>() { dot, new Blade(basisVectorName) }));
-                            }
+                                Sum sum = new Sum();
 
-                            return sum;
+                                foreach (string basisVectorName in basisVectorList)
+                                {
+                                    InnerProduct dot = new InnerProduct(new List<Operand>() { new Blade(vectorName), new Blade(basisVectorName) });
+                                    sum.operandList.Add(new GeometricProduct(new List<Operand>() { dot, new Blade(basisVectorName) }));
+                                }
+
+                                return sum;
+                            }
                         }
 
                         generatedSymbolicVector = !isBasisVector;

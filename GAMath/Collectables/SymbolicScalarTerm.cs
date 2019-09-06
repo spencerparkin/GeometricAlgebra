@@ -247,11 +247,6 @@ namespace GeometricAlgebra
             return clone;
         }
 
-        public override Operand New()
-        {
-            return new SymbolicScalarTerm();
-        }
-
         public override Operand EvaluationStep(Context context)
         {
             if (factorList.Count == 0)

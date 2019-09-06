@@ -11,11 +11,6 @@ namespace GeometricAlgebra
         {
         }
 
-        public override Operand New()
-        {
-            return new Delete();
-        }
-
         public override string Name(Format format)
         {
             if(format == Format.LATEX)

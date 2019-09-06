@@ -81,11 +81,6 @@ namespace GeometricAlgebra
             this.scalar = scalar;
         }
 
-        public override Operand New()
-        {
-            return new Blade();
-        }
-
         public override Operand Copy()
         {
             Blade clone = base.Copy() as Blade;

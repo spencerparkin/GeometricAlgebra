@@ -23,11 +23,6 @@ namespace GeometricAlgebra
             return "meet";
         }
 
-        public override Operand New()
-        {
-            return new Meet();
-        }
-
         public override string ShortDescription
         {
             get { return "Compute the meet of the given blades."; }

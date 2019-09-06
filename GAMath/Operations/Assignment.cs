@@ -10,6 +10,11 @@ namespace GeometricAlgebra
     {
         public bool storeEvaluation;
 
+        public Assignment() : base()
+        {
+            this.storeEvaluation = true;
+        }
+
         public Assignment(bool storeEvaluation = true) : base()
         {
             this.storeEvaluation = storeEvaluation;
@@ -28,11 +33,6 @@ namespace GeometricAlgebra
         public override bool IsDistributiveOver(Operation operation)
         {
             return false;
-        }
-
-        public override Operand New()
-        {
-            return new Assignment();
         }
 
         public override Operand Copy()

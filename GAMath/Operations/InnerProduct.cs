@@ -17,11 +17,6 @@ namespace GeometricAlgebra
         {
         }
 
-        public override Operand New()
-        {
-            return new InnerProduct();
-        }
-
         public override bool IsAssociative()
         {
             return false;

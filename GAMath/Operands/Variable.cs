@@ -20,11 +20,6 @@ namespace GeometricAlgebra
             return new Variable(this.name);
         }
 
-        public override Operand New()
-        {
-            return new Variable();
-        }
-
         public override Operand EvaluationStep(Context context)
         {
             Operand operand = null;

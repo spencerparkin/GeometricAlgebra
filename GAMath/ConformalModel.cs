@@ -155,11 +155,6 @@ namespace GeometricAlgebra.ConformalModel
         {
         }
 
-        public override Operand New()
-        {
-            return new Identify();
-        }
-
         public override string Name(Format format)
         {
             if (format == Format.LATEX)
@@ -391,14 +386,14 @@ namespace GeometricAlgebra.ConformalModel
     {
         private string geometry;
 
+        public Geometry() : base()
+        {
+            this.geometry = "";
+        }
+
         public Geometry(string geometry = "") : base()
         {
             this.geometry = geometry;
-        }
-
-        public override Operand New()
-        {
-            return new Geometry();
         }
 
         public override Operand Copy()
