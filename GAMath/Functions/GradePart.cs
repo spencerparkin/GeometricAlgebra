@@ -27,11 +27,6 @@ namespace GeometricAlgebra
             return operation is Sum;
         }
 
-        public override Operand New()
-        {
-            return new GradePart();
-        }
-
         public override string ShortDescription
         {
             get { return "Select the parts of the given multivector of the given grade."; }

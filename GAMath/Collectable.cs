@@ -26,7 +26,7 @@ namespace GeometricAlgebra
 
         public override Operand Copy()
         {
-            Collectable collectable = New() as Collectable;
+            Collectable collectable = base.Copy() as Collectable;
             collectable.scalar = this.scalar.Copy();
             return collectable;
         }

@@ -18,11 +18,6 @@ namespace GeometricAlgebra
             return "factor_poly";
         }
 
-        public override Operand New()
-        {
-            return new FactorPolynomial();
-        }
-
         public override string ShortDescription
         {
             get { return "Factor the given polynomial (not yet implemented.)"; }

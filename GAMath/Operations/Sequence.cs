@@ -21,11 +21,6 @@ namespace GeometricAlgebra
             return false;
         }
 
-        public override Operand New()
-        {
-            return new Sequence();
-        }
-
         // The only purpose of this operation is to evaluate its operands left to right.  The last operand is returned as the result.
         public override Operand EvaluationStep(Context context)
         {

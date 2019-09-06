@@ -15,11 +15,6 @@ namespace GeometricAlgebra
         {
         }
 
-        public override Operand New()
-        {
-            return new Power();
-        }
-
         public override string Name(Format format)
         {
             if(format == Format.LATEX)
@@ -122,11 +117,6 @@ namespace GeometricAlgebra
         {
         }
 
-        public override Operand New()
-        {
-            return new Exponent();
-        }
-
         public override string Name(Format format)
         {
             if (format == Format.LATEX)
@@ -204,11 +194,6 @@ namespace GeometricAlgebra
         {
         }
 
-        public override Operand New()
-        {
-            return new Logarithm();
-        }
-
         public override string Name(Format format)
         {
             if (format == Format.LATEX)
@@ -279,11 +264,6 @@ namespace GeometricAlgebra
 
         public SquareRoot(List<Operand> operandList) : base(operandList)
         {
-        }
-
-        public override Operand New()
-        {
-            return new SquareRoot();
         }
 
         public override string Name(Format format)

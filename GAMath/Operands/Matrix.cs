@@ -140,11 +140,6 @@ namespace GeometricAlgebra
             return matrix;
         }
 
-        public override Operand New()
-        {
-            return new Matrix();
-        }
-
         public override void CollectAllOperands(List<Operand> operandList)
         {
             base.CollectAllOperands(operandList);

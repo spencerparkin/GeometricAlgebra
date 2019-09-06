@@ -29,11 +29,6 @@ namespace GeometricAlgebra
             return base.Print(format, context);
         }
 
-        public override Operand New()
-        {
-            return new Determinant();
-        }
-
         public override string ShortDescription
         {
             get { return "Calculate the determinant of the given square matrix."; }

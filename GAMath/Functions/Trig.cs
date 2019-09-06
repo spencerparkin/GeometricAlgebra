@@ -15,11 +15,6 @@ namespace GeometricAlgebra
         {
         }
 
-        public override Operand New()
-        {
-            return new Sine();
-        }
-
         public override string Name(Format format)
         {
             if (format == Format.LATEX)
@@ -59,11 +54,6 @@ namespace GeometricAlgebra
 
         public Cosine(List<Operand> operandList) : base(operandList)
         {
-        }
-
-        public override Operand New()
-        {
-            return new Cosine();
         }
 
         public override string Name(Format format)

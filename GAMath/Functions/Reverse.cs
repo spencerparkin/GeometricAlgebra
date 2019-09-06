@@ -28,11 +28,6 @@ namespace GeometricAlgebra
             return operation is Sum;
         }
 
-        public override Operand New()
-        {
-            return new Reverse();
-        }
-
         public override string Name(Format format)
         {
             if (format == Format.LATEX)

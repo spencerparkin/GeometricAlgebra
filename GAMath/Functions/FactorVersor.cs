@@ -19,11 +19,6 @@ namespace GeometricAlgebra
             return "factor_versor";
         }
 
-        public override Operand New()
-        {
-            return new FactorVersor();
-        }
-
         public override string ShortDescription
         {
             get { return "Factor the given versor as a geometric product of vectors."; }

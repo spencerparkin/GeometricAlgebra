@@ -18,11 +18,6 @@ namespace GeometricAlgebra
         {
         }
 
-        public override Operand New()
-        {
-            return new Sum();
-        }
-
         public override bool IsAssociative()
         {
             return true;
@@ -151,6 +146,9 @@ namespace GeometricAlgebra
             //       like (x.e1)(y.e1) + (x.e2)(y.e2) + (x.e3)(y.e3) = x.y, but maybe we first
             //       discover that it is x.((y.e1)e1 + (y.e2)e2 + (y.e3)e3) and then use the
             //       logic originaly talked about to finish.  Maybe call the function "factor_dot."
+            //       factor_dot((x.e1)(y.e1) + (x.e2)(y.e2) + (x.e3)(y.e3)) becomes...
+            //       x.factor_dot((y.e1)e1 + (y.e2)e2 + (y.e3)e3) becomes...
+            //       x.y
 
             return null;
         }

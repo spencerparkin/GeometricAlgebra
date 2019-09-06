@@ -44,11 +44,6 @@ namespace GeometricAlgebra
             return new NumericScalar(this.value);
         }
 
-        public override Operand New()
-        {
-            return new NumericScalar();
-        }
-
         public override Operand EvaluationStep(Context context)
         {
             return null;

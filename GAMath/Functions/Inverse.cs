@@ -27,11 +27,6 @@ namespace GeometricAlgebra
             return false;
         }
 
-        public override Operand New()
-        {
-            return new Inverse();
-        }
-
         public override string Name(Format format)
         {
             if (format == Format.LATEX)
