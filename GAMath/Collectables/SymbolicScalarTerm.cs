@@ -159,6 +159,17 @@ namespace GeometricAlgebra
                 return factor is SymbolicDot dot && dot.vectorNameA == vectorNameA && dot.vectorNameB == vectorNameB;
             }
 
+            public bool InvolvesVectors(string vectorNameA, string vectorNameB)
+            {
+                if(this.vectorNameA == vectorNameA && this.vectorNameB == vectorNameB)
+                    return true;
+
+                if(this.vectorNameA == vectorNameB && this.vectorNameB == vectorNameA)
+                    return true;
+
+                return false;
+            }
+
             public override string SortKey()
             {
                 return this.vectorNameA + this.vectorNameB;

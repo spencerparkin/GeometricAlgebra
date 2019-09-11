@@ -31,28 +31,8 @@ namespace GeometricAlgebra
             if(operand != null)
                 return operand;
 
-            operand = operandList[0];
-            Sum sum = null;
-
             List<string> basisVectorList = context.ReturnBasisVectors();
-
-            int grade = operand.Grade;
-            if(grade == -1)
-            {
-                sum = new Sum();
-                for(int i = 0; i <= basisVectorList.Count; i++)
-                    sum.operandList.Add(new FactorDot(new List<Operand>() { new GradePart(new List<Operand>() { operand.Copy(), new NumericScalar(i) }) }));
-                return sum;    
-            }
-
-            if(grade >= 2)
-                return operand;
-
-            // factor_dot(s1(x.e1)(y.e1) + s2(x.e2)(y.e2) + s3(x.e3)(y.e3) + r) becomes...
-            // x.factor_dot(s1(y.e1)e1 + s2(y.e2)e2 + s3(y.e3)e3) + factor_dot(r) becomes...
-            // x.(s*y) + factor_dot(r) if s = s1 = s2 = s3.
-
-            sum = Operand.CanonicalizeMultivector(operand.Copy());
+            Sum sum = Operand.CanonicalizeMultivector(operandList[0].Copy());
 
             // Go find all the symbolic vectors involved in dot products.
             HashSet<string> symbolicVectorNameSet = new HashSet<string>();
@@ -77,18 +57,78 @@ namespace GeometricAlgebra
             // Try factoring each symbolic vector out in terms of the inner product until we find one that works.
             foreach(string vectorName in symbolicVectorNameSet)
             {
-                if(grade == 0)
-                {
-                    // Remember that we need to address each basis vector, whether it
-                    // can be pulled out, or whether it is zero in the inner product
-                    // with our symbolic vector.
-                }
-                else if(grade == 1)
-                {
-                }
+                Operand result = FactorScalar(vectorName, sum, context);
+                if(result != null)
+                    return result;
+
+                result = FactorBlade(vectorName, sum, context);
+                if(result != null)
+                    return result;
             }
 
-            return operand;
+            return operandList[0];
+        }
+
+        private Operand FactorScalar(string vectorName, Sum sum, Context context)
+        {
+            List<string> basisVectorList = context.ReturnBasisVectors();
+
+            Sum remainderSum = sum.Copy() as Sum;
+            Sum modifiedSum = new Sum();
+
+            foreach(string basisVectorName in basisVectorList)
+            {
+                if(context.BilinearForm(vectorName, basisVectorName).IsAdditiveIdentity)
+                    continue;
+
+                bool found = false;
+
+                foreach (Blade blade in remainderSum.operandList.Select(term => term as Blade))
+                {
+                    if (blade.Grade == 0 && blade.scalar is SymbolicScalarTerm scalarTerm)
+                    {
+                        foreach (SymbolicScalarTerm.Factor factor in scalarTerm.factorList)
+                        {
+                            if (factor is SymbolicScalarTerm.SymbolicDot symbolicDot && symbolicDot.InvolvesVectors(vectorName, basisVectorName))
+                            {
+                                remainderSum.operandList.Remove(blade);
+                                scalarTerm.factorList.Remove(symbolicDot);
+                                blade.vectorList.Add(basisVectorName);
+                                modifiedSum.operandList.Add(blade);
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if(found)
+                        break;
+                }
+
+                if(!found)
+                    return null;
+            }
+
+            Sum resultSum = new Sum();
+            resultSum.operandList.Add(new InnerProduct(new List<Operand>() { new Blade(vectorName), new FactorDot(new List<Operand>() { modifiedSum }) }));
+            resultSum.operandList.Add(new FactorDot(new List<Operand>() { remainderSum }));
+            return resultSum;
+        }
+
+        private Operand FactorBlade(string vectorName, Sum sum, Context context)
+        {
+            List<string> basisVectorList = context.ReturnBasisVectors();
+            basisVectorList = basisVectorList.Where(basisVectorName => !context.BilinearForm(vectorName, basisVectorName).IsAdditiveIdentity).ToList();
+
+            //Sum remainderSum = sum.Copy() as Sum;
+            //Sum modifiedSum = new Sum();
+
+            // account for sign in extraction...
+            // might have r = (y.e2)e2^C with C != B.
+            // factor_dot((y.e1)e1^B + (y.e2)e2^B + (y.e3)e3^B + r) becomes...
+            // y^B + factor_dot(r)
+
+            return null;
         }
     }
 }
