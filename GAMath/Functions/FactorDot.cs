@@ -120,14 +120,16 @@ namespace GeometricAlgebra
             List<string> basisVectorList = context.ReturnBasisVectors();
             basisVectorList = basisVectorList.Where(basisVectorName => !context.BilinearForm(vectorName, basisVectorName).IsAdditiveIdentity).ToList();
 
-            foreach(List<int> bladeOffsetList in this.IteratePotentiallyFactorableBladesSets(sum, basisVectorList, vectorName))
+            List<int> emptyBladeOffsetList = new List<int>();
+
+            foreach (List<int> bladeOffsetList in this.IteratePotentiallyFactorableBladesLists(emptyBladeOffsetList, sum, basisVectorList, vectorName))
             {
                 List<Operand> modifiedOperandList = new List<Operand>();
 
                 for(int i = 0; i < bladeOffsetList.Count; i++)
                 {
                     string basisVectorName = basisVectorList[i];
-                    Blade blade = sum.operandList[i].Copy() as Blade;
+                    Blade blade = sum.operandList[bladeOffsetList[i]].Copy() as Blade;
                     SymbolicScalarTerm term = blade.scalar as SymbolicScalarTerm;
                     int j = blade.vectorList.IndexOf(basisVectorName);
                     if(j % 2 == 1)
@@ -158,49 +160,36 @@ namespace GeometricAlgebra
             return null;
         }
 
-        private IEnumerable<List<int>> IteratePotentiallyFactorableBladesLists(List<int> bladeOffsetList, Sum sum, List<string> basisVectorList, string vectorName, int i = 0)
+        private IEnumerable<List<int>> IteratePotentiallyFactorableBladesLists(List<int> bladeOffsetList, Sum sum, List<string> basisVectorList, string vectorName)
         {
-            if(i == basisVectorList.Count)
+            if(bladeOffsetList.Count == basisVectorList.Count)
                 yield return bladeOffsetList;
-
-            string basisVectorName = basisVectorList[i];
-
-            for(int j = 0; j < sum.operandList.Count; j++)
+            else
             {
-                Blade blade = sum.operandList[j] as Blade;
+                string basisVectorName = basisVectorList[bladeOffsetList.Count];
 
-                if(blade.vectorList.Contains(basisVectorName))
+                for(int i = 0; i < sum.operandList.Count; i++)
                 {
-                    if(blade.scalar is SymbolicScalarTerm term)
-                    {
-                        if(term.factorList.Any(factor => factor is SymbolicScalarTerm.SymbolicDot symbolicDot && symbolicDot.InvolvesVectors(vectorName, basisVectorName)))
-                        {
-                            bladeOffsetList.Add(j);
-                            
-                            foreach(List<int> otherBladeOffsetList in IteratePotentiallyFactorableBladesLists(bladeOffsetList, sum, basisVectorList, vectorName, i + 1))
-                                yield return otherBladeOffsetList;
+                    if(bladeOffsetList.Contains(i))
+                        continue;
 
-                            bladeOffsetList.Remove(j);
+                    Blade blade = sum.operandList[i] as Blade;
+
+                    if(blade.vectorList.Contains(basisVectorName))
+                    {
+                        if(blade.scalar is SymbolicScalarTerm term)
+                        {
+                            if(term.factorList.Any(factor => factor is SymbolicScalarTerm.SymbolicDot symbolicDot && symbolicDot.InvolvesVectors(vectorName, basisVectorName)))
+                            {
+                                bladeOffsetList.Add(i);
+                            
+                                foreach(List<int> otherBladeOffsetList in IteratePotentiallyFactorableBladesLists(bladeOffsetList, sum, basisVectorList, vectorName))
+                                    yield return otherBladeOffsetList;
+
+                                bladeOffsetList.Remove(i);
+                            }
                         }
                     }
-                }
-            }
-        }
-
-        private IEnumerable<List<int>> IteratePotentiallyFactorableBladesSets(Sum sum, List<string> basisVectorList, string vectorName)
-        {
-            List<int> emptyBladeOffsetList = new List<int>();
-            HashSet<string> keySet = new HashSet<string>();
-            foreach(List<int> bladeOffsetList in IteratePotentiallyFactorableBladesLists(emptyBladeOffsetList, sum, basisVectorList, vectorName))
-            {
-                // The order of the returned list is important, but we want to iterate the lists uniquely as sets.
-                List<int> sortedBladeOffsetList = bladeOffsetList.ToList();
-                sortedBladeOffsetList.Sort();
-                string key = string.Join(", ", sortedBladeOffsetList);
-                if(!keySet.Contains(key))
-                {
-                    keySet.Add(key);
-                    yield return bladeOffsetList;
                 }
             }
         }

@@ -19,7 +19,7 @@ namespace GACalculator
 
         public CalculatorForm()
         {
-            context = new EuclideanContext(5); //new GeometricAlgebra.ConformalModel.Conformal3D_Context();
+            context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
             context.GenerateDefaultStorage();
 
             InitializeComponent();
