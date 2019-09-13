@@ -15,20 +15,23 @@ namespace GeometricAlgebra
         public OperandStorage operandStorage;
         public OperandStorage operandCache;
         public bool useOperandCache;
-        public List<Function> funcList;
         public List<string> logMessageList;
         public double epsilon;
         public double evaluationTimeoutMilliseconds;
 
         public Context()
         {
-            funcList = new List<Function>();
             operandStorage = new OperandStorage();
             operandCache = new OperandStorage();
             useOperandCache = true;
             logMessageList = new List<string>();
             epsilon = 1e-9;
             evaluationTimeoutMilliseconds = 4000.0;
+        }
+
+        public virtual List<Function> GenerateFunctionList()
+        {
+            List<Function> funcList = new List<Function>();
 
             funcList.Add(new Help());
             funcList.Add(new Reset());
@@ -50,9 +53,12 @@ namespace GeometricAlgebra
             funcList.Add(new Determinant());
             funcList.Add(new FactorBlade());
             funcList.Add(new FactorVersor());
+            funcList.Add(new FactorDot());
             funcList.Add(new FactorPolynomial());
             funcList.Add(new Join());
             funcList.Add(new Meet());
+
+            return funcList;
         }
 
         public virtual void GenerateDefaultStorage()
@@ -116,13 +122,14 @@ namespace GeometricAlgebra
             return new OuterProduct(ReturnBasisVectors().Select(vectorName => (Operand)new Blade(vectorName)).ToList());
         }
 
-        public virtual Operation CreateFunction(string name)
+        public virtual Function CreateFunction(string name)
         {
+            List<Function> funcList = GenerateFunctionList();
             IEnumerable<Function> enumerable = from func in funcList where func.Name(Operand.Format.PARSEABLE) == name select func;
             if (enumerable.Count() == 0)
                 return null;
 
-            return enumerable.ToArray()[0].Copy() as Operation;
+            return enumerable.ToArray()[0];
         }
 
         public virtual string TranslateVectorNameForLatex(string vectorName)

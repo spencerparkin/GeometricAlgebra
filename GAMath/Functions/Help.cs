@@ -37,7 +37,7 @@ namespace GeometricAlgebra
 
             if(operandList.Count == 0)
             {
-                foreach(Function function in context.funcList.OrderBy(function => function.Name(Format.PARSEABLE)))
+                foreach(Function function in context.GenerateFunctionList().OrderBy(function => function.Name(Format.PARSEABLE)))
                 {
                     context.Log($"{function.Name(Format.PARSEABLE)} -- {function.ShortDescription}");
                 }

@@ -10,6 +10,12 @@ namespace GeometricAlgebra.ConformalModel
     {
         public Conformal3D_Context() : base()
         {
+        }
+
+        public override List<Function> GenerateFunctionList()
+        {
+            List<Function> funcList = base.GenerateFunctionList();
+
             funcList.Add(new Identify());
             funcList.Add(new Geometry("point"));
             funcList.Add(new Geometry("sphere"));
@@ -24,6 +30,8 @@ namespace GeometricAlgebra.ConformalModel
             funcList.Add(new Geometry("tangentpoint"));
 
             // TODO: Add convenience functions for rotors, motors, inversions, dilations, transversions, etc.
+
+            return funcList;
         }
 
         public override void GenerateDefaultStorage()
