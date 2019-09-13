@@ -190,17 +190,16 @@ namespace GeometricAlgebra
         private IEnumerable<List<int>> IteratePotentiallyFactorableBladesSets(Sum sum, List<string> basisVectorList, string vectorName)
         {
             List<int> emptyBladeOffsetList = new List<int>();
-            HashSet<HashSet<int>> setOfSets = new HashSet<HashSet<int>>();
-
+            HashSet<string> keySet = new HashSet<string>();
             foreach(List<int> bladeOffsetList in IteratePotentiallyFactorableBladesLists(emptyBladeOffsetList, sum, basisVectorList, vectorName))
             {
-                HashSet<int> offsetSet = new HashSet<int>();
-                foreach(int i in bladeOffsetList)
-                    offsetSet.Add(i);
-
-                if(!setOfSets.Contains(offsetSet))
+                // The order of the returned list is important, but we want to iterate the lists uniquely as sets.
+                List<int> sortedBladeOffsetList = bladeOffsetList.ToList();
+                sortedBladeOffsetList.Sort();
+                string key = string.Join(", ", sortedBladeOffsetList);
+                if(!keySet.Contains(key))
                 {
-                    setOfSets.Add(offsetSet);
+                    keySet.Add(key);
                     yield return bladeOffsetList;
                 }
             }
