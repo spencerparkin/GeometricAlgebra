@@ -120,15 +120,73 @@ namespace GeometricAlgebra
             List<string> basisVectorList = context.ReturnBasisVectors();
             basisVectorList = basisVectorList.Where(basisVectorName => !context.BilinearForm(vectorName, basisVectorName).IsAdditiveIdentity).ToList();
 
-            //Sum remainderSum = sum.Copy() as Sum;
-            //Sum modifiedSum = new Sum();
+            List<int> emptyBladeOffsetList = new List<int>();
 
-            // account for sign in extraction...
-            // might have r = (y.e2)e2^C with C != B.
-            // factor_dot((y.e1)e1^B + (y.e2)e2^B + (y.e3)e3^B + r) becomes...
-            // y^B + factor_dot(r)
+            foreach(List<int> bladeOffsetList in this.IteratePotentiallyFactorableBladesSets(emptyBladeOffsetList, sum, basisVectorList, vectorName))
+            {
+                List<Operand> modifiedOperandList = new List<Operand>();
+
+                for(int i = 0; i < bladeOffsetList.Count; i++)
+                {
+                    string basisVectorName = basisVectorList[i];
+                    Blade blade = sum.operandList[i].Copy() as Blade;
+                    SymbolicScalarTerm term = blade.scalar as SymbolicScalarTerm;
+                    int j = blade.vectorList.IndexOf(basisVectorName);
+                    if(j % 2 == 1)
+                        term.scalar = new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), term.scalar });
+                    blade.vectorList.Remove(basisVectorName);
+                    term.factorList = term.factorList.Where(factor => !(factor is SymbolicScalarTerm.SymbolicDot symbolicDot && symbolicDot.InvolvesVectors(vectorName, basisVectorName))).ToList();
+                    modifiedOperandList.Add(ExhaustEvaluation(blade, context));
+                }
+
+                bool canFactor = Enumerable.Range(0, modifiedOperandList.Count - 1).All(j => {
+                    Operand bladeA = modifiedOperandList[j];
+                    Operand bladeB = modifiedOperandList[j + 1];
+                    Operand difference = new Sum(new List<Operand>() { bladeA.Copy(), new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), bladeB.Copy() }) });
+                    difference = ExhaustEvaluation(difference, context);
+                    return difference.IsAdditiveIdentity;
+                });
+                
+                if(canFactor)
+                {
+                    Sum remainderSum = new Sum(sum.operandList.Where(operand => !bladeOffsetList.Contains(sum.operandList.IndexOf(operand))).ToList());
+                    Sum resultSum = new Sum();
+                    resultSum.operandList.Add(new OuterProduct(new List<Operand>() { new Blade(vectorName), modifiedOperandList[0] }));
+                    resultSum.operandList.Add(new FactorDot(new List<Operand>() { remainderSum }));
+                    return resultSum;
+                }
+            }
 
             return null;
+        }
+
+        private IEnumerable<List<int>> IteratePotentiallyFactorableBladesSets(List<int> bladeOffsetList, Sum sum, List<string> basisVectorList, string vectorName, int i = 0)
+        {
+            if(i == basisVectorList.Count)
+                yield return bladeOffsetList;
+
+            string basisVectorName = basisVectorList[i];
+
+            for(int j = 0; j < sum.operandList.Count; j++)
+            {
+                Blade blade = sum.operandList[j] as Blade;
+
+                if(blade.vectorList.Contains(basisVectorName))
+                {
+                    if(blade.scalar is SymbolicScalarTerm term)
+                    {
+                        if(term.factorList.Any(factor => factor is SymbolicScalarTerm.SymbolicDot symbolicDot && symbolicDot.InvolvesVectors(vectorName, basisVectorName)))
+                        {
+                            bladeOffsetList.Add(j);
+                            
+                            foreach(List<int> otherBladeOffsetList in IteratePotentiallyFactorableBladesSets(bladeOffsetList, sum, basisVectorList, vectorName, i + 1))
+                                yield return otherBladeOffsetList;
+
+                            bladeOffsetList.Remove(j);
+                        }
+                    }
+                }
+            }
         }
     }
 }
