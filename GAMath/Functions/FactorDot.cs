@@ -120,9 +120,7 @@ namespace GeometricAlgebra
             List<string> basisVectorList = context.ReturnBasisVectors();
             basisVectorList = basisVectorList.Where(basisVectorName => !context.BilinearForm(vectorName, basisVectorName).IsAdditiveIdentity).ToList();
 
-            List<int> emptyBladeOffsetList = new List<int>();
-
-            foreach(List<int> bladeOffsetList in this.IteratePotentiallyFactorableBladesSets(emptyBladeOffsetList, sum, basisVectorList, vectorName))
+            foreach(List<int> bladeOffsetList in this.IteratePotentiallyFactorableBladesSets(sum, basisVectorList, vectorName))
             {
                 List<Operand> modifiedOperandList = new List<Operand>();
 
@@ -160,7 +158,7 @@ namespace GeometricAlgebra
             return null;
         }
 
-        private IEnumerable<List<int>> IteratePotentiallyFactorableBladesSets(List<int> bladeOffsetList, Sum sum, List<string> basisVectorList, string vectorName, int i = 0)
+        private IEnumerable<List<int>> IteratePotentiallyFactorableBladesLists(List<int> bladeOffsetList, Sum sum, List<string> basisVectorList, string vectorName, int i = 0)
         {
             if(i == basisVectorList.Count)
                 yield return bladeOffsetList;
@@ -179,12 +177,31 @@ namespace GeometricAlgebra
                         {
                             bladeOffsetList.Add(j);
                             
-                            foreach(List<int> otherBladeOffsetList in IteratePotentiallyFactorableBladesSets(bladeOffsetList, sum, basisVectorList, vectorName, i + 1))
+                            foreach(List<int> otherBladeOffsetList in IteratePotentiallyFactorableBladesLists(bladeOffsetList, sum, basisVectorList, vectorName, i + 1))
                                 yield return otherBladeOffsetList;
 
                             bladeOffsetList.Remove(j);
                         }
                     }
+                }
+            }
+        }
+
+        private IEnumerable<List<int>> IteratePotentiallyFactorableBladesSets(Sum sum, List<string> basisVectorList, string vectorName)
+        {
+            List<int> emptyBladeOffsetList = new List<int>();
+            HashSet<HashSet<int>> setOfSets = new HashSet<HashSet<int>>();
+
+            foreach(List<int> bladeOffsetList in IteratePotentiallyFactorableBladesLists(emptyBladeOffsetList, sum, basisVectorList, vectorName))
+            {
+                HashSet<int> offsetSet = new HashSet<int>();
+                foreach(int i in bladeOffsetList)
+                    offsetSet.Add(i);
+
+                if(!setOfSets.Contains(offsetSet))
+                {
+                    setOfSets.Add(offsetSet);
+                    yield return bladeOffsetList;
                 }
             }
         }
