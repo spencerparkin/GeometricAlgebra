@@ -361,6 +361,7 @@ namespace GeometricAlgebra.ConformalModel
                         if (weight.IsAdditiveIdentity)
                         {
                             Evaluate("del(@weight)", context);
+                            weight = null;
                             context.Log("The blade is the empty set.");
                         }
                         else
@@ -373,6 +374,8 @@ namespace GeometricAlgebra.ConformalModel
                             else
                             {
                                 Evaluate("del(@weight, @center)", context);
+                                weight = null;
+                                center = null;
                                 context.Log("The blade is the empty set.");
                             }
                         }
