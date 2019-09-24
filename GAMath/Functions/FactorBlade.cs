@@ -55,14 +55,14 @@ namespace GeometricAlgebra
             OuterProduct factorization = Factor(operand, context);
             factorization.freezeFlags |= FreezeFlag.DISTRIBUTION;
 
-            operand = Operand.ExhaustEvaluation(factorization, context);
-            factorization = operand as OuterProduct;
-            if (factorization == null)
-                factorization = new OuterProduct(new List<Operand>() { operand });
+            int count = context.ReturnBasisVectors().Count;
+            Evaluate("del(" + string.Join(", ", Enumerable.Range(0, count).Select(i => $"@factor{i}")) + ")", context);
 
             // Provide a way to get at the individual factors.
+            int j = 0;
             for (int i = 0; i < factorization.operandList.Count; i++)
-                context.operandStorage.SetStorage($"factor{i}", factorization.operandList[i].Copy());
+                if(factorization.operandList[i].Grade == 1)
+                    context.operandStorage.SetStorage($"factor{j++}", factorization.operandList[i].Copy());
 
             return factorization;
         }
