@@ -356,8 +356,8 @@ namespace GeometricAlgebra.ConformalModel
                     }
                     case 4:
                     {
-                        // Planes, spheres and imaginary spheres make up case 1.
-                        // So the duals of each of these makes up case 4.
+                        // I'm certain that this is either a point or the empty set in all cases.
+                        // It is a point if and only if the dual is a point.
                         break;
                     }
                     case 5:
