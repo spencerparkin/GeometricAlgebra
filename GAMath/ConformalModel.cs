@@ -225,6 +225,9 @@ namespace GeometricAlgebra.ConformalModel
             {
                 context.operandStorage.SetStorage("__blade__", operand);
 
+                // TODO: Move this code into a subroutine so we can use it in versor analysis.
+                //       Add push/pop mechanism to context variable storage.
+
                 Evaluate("del(@weight, @center, @radius, @normal)", context);
 
                 Operand weight = null;
