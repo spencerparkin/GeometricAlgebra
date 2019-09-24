@@ -225,7 +225,7 @@ namespace GeometricAlgebra.ConformalModel
             {
                 context.operandStorage.SetStorage("__blade__", operand);
 
-                Evaluate("del(weight, center, radius, normal)", context);
+                Evaluate("del(@weight, @center, @radius, @normal)", context);
 
                 Operand weight = null;
                 Operand center = null;
@@ -356,13 +356,32 @@ namespace GeometricAlgebra.ConformalModel
                     }
                     case 4:
                     {
-                        // I'm certain that this is either a point or the empty set in all cases.
-                        // It is a point if and only if the dual is a point.
+                        Evaluate("@__blade__ = @__blade__ * @I", context);
+                        weight = Evaluate("@weight = mag(ni . @__blade__)", context).output;
+                        if (weight.IsAdditiveIdentity)
+                        {
+                            Evaluate("del(@weight)", context);
+                            context.Log("The blade is the empty set.");
+                        }
+                        else
+                        {
+                            Evaluate("@__blade__ = @__blade__ / @weight", context);
+                            center = Evaluate("@center = ni^no . ni^no ^ @__blade__", context).output;
+                            Operand squareRadius = Evaluate("@__square_radius__ = trim(@__blade__ . @__blade__)", context).output;
+                            if (squareRadius.IsAdditiveIdentity)
+                                context.Log("The blade is a point.");
+                            else
+                            {
+                                Evaluate("del(@weight, @center)", context);
+                                context.Log("The blade is the empty set.");
+                            }
+                        }
+
                         break;
                     }
                     case 5:
                     {
-                        // It can be proven that all of these are the empty set.
+                        context.Log("The blade is the empty set.");
                         break;
                     }
                 }
