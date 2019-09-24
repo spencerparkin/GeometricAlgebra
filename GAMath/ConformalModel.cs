@@ -356,11 +356,13 @@ namespace GeometricAlgebra.ConformalModel
                     }
                     case 4:
                     {
-                        // ((sphere((-1*1)*1, 0, 0, 1))^(line(0, 0, 0, e1)))^(sphere(1, 0, 0, 1))
+                        // Planes, spheres and imaginary spheres make up case 1.
+                        // So the duals of each of these makes up case 4.
                         break;
                     }
                     case 5:
                     {
+                        // It can be proven that all of these are the empty set.
                         break;
                     }
                 }
