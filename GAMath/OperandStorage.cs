@@ -16,6 +16,13 @@ namespace GeometricAlgebra
             operandMap = new Dictionary<string, Operand>();
         }
 
+        public OperandStorage(OperandStorage operandStorage)
+        {
+            operandMap = new Dictionary<string, Operand>();
+            foreach(var pair in operandStorage.operandMap)
+                operandMap.Add(pair.Key, pair.Value.Copy());
+        }
+
         public bool SerializeToXml(XElement rootElement, Context context)
         {
             XElement storageElement = new XElement("Storage");

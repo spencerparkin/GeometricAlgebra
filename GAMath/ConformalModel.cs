@@ -198,222 +198,369 @@ namespace GeometricAlgebra.ConformalModel
                 return operand;
 
             operand = operandList[0];
-            int grade = operand.Grade;
-            if (grade == -1)
-                throw new MathException("Could not identify grade of given element.");
 
-            OuterProduct blade = null;
-            GeometricProduct versor = null;
+            BladeDecomposition bladeDecomposition = AnalyzeBlade(operand, context);
+            context.Log("Blade analysis:");
+            context.Log(bladeDecomposition.analysisList);
 
-            try
-            {
-                blade = FactorBlade.Factor(operand, context);
-            }
-            catch(MathException)
-            {
-            }
-            
-            try
-            {
-                versor = FactorVersor.Factor(operand, context);
-            }
-            catch(MathException)
-            {
-            }
+            VersorDecomposition versorDecomposition = AnalyzeVersor(operand, context);
+            context.Log("Versor analysis:");
+            context.Log(versorDecomposition.analysisList);
 
-            if(blade != null)
-            {
-                context.operandStorage.SetStorage("__blade__", operand);
+            if(bladeDecomposition.weight != null)
+                context.operandStorage.SetStorage("weight", bladeDecomposition.weight);
 
-                // TODO: Move this code into a subroutine so we can use it in versor analysis.
-                //       Add push/pop mechanism to context variable storage.
+            if(bladeDecomposition.center != null)
+                context.operandStorage.SetStorage("center", bladeDecomposition.center);
 
-                Evaluate("del(@weight, @center, @radius, @normal)", context);
+            if (bladeDecomposition.radius != null)
+                context.operandStorage.SetStorage("radius", bladeDecomposition.radius);
 
-                Operand weight = null;
-                Operand center = null;
-                Operand radius = null;
-                Operand normal = null;
-
-                switch(grade)
-                {
-                    case 0:
-                    {
-                        if(operand.IsAdditiveIdentity)
-                            context.Log("The blade is all of space.");
-                        else
-                            context.Log("The blade is the empty set.");
-                        break;
-                    }
-                    case 1:
-                    {
-                        weight = Evaluate("@weight = mag(ni . @__blade__)", context).output;
-                        if(weight.IsAdditiveIdentity)
-                        {
-                            context.Log("The blade is a plane.");
-                            weight = Evaluate("@weight = mag(no . ni ^ @__blade__)", context).output;
-                            Evaluate("@__blade__ = @__blade__ / @weight", context);
-                            normal = Evaluate("@normal = -no . ni ^ @__blade__", context).output;
-                            center = Evaluate("@center = (-no . @__blade__) * @normal", context).output;
-                        }
-                        else
-                        {
-                            Evaluate("@__blade__ = @__blade__ / @weight", context);
-                            center = Evaluate("@center = ni^no . ni^no ^ @__blade__", context).output;
-                            Operand squareRadius = Evaluate("@__square_radius__ = @__blade__ . @__blade__", context).output;
-                            if(squareRadius.IsAdditiveIdentity)
-                                context.Log("The blade is a point.");
-                            else if(!(squareRadius is NumericScalar numericScalar))
-                            {
-                                context.Log("The blade is a sphere.");
-                                radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
-                            }
-                            else if(numericScalar.value > 0.0)
-                            {
-                                context.Log("The blade is a real sphere.");
-                                radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
-                            }
-                            else
-                            {
-                                context.Log("The blade is an imaginary sphere.");
-                                radius = Evaluate("@radius = sqrt(-@__square_radius__)", context).output;
-                            }
-                        }
-
-                        break;
-                    }
-                    case 2:
-                    {
-                        weight = Evaluate("@weight = mag(ni^no . ni ^ @__blade__)", context).output;
-                        if(weight.IsAdditiveIdentity)
-                        {
-                            context.Log("The blade is a line.");
-                            Evaluate("@normal = (no . ni ^ @__blade__) * @i", context);
-                            weight = Evaluate("@weight = mag(@normal)", context).output;
-                            normal = Evaluate("@normal = @normal / @weight", context).output;
-                            center = Evaluate("@center = ((no . @__blade__ / @weight) * @normal) * @i", context).output;
-                        }
-                        else
-                        {
-                            Evaluate("@__blade__ = @__blade__ / @weight", context);
-                            normal = Evaluate("@normal = ni^no . ni ^ @__blade__", context).output;
-                            center = Evaluate("@center = @normal * (ni^no . @__blade__ ^ ni*no)", context).output;
-                            Operand squareRadius = Evaluate("@__square_radius__ = -@__blade__ . @__blade__", context).output;
-                            if(squareRadius.IsAdditiveIdentity)
-                                context.Log("The blade is a tangent point (degenerate circle.)");
-                            else if (!(squareRadius is NumericScalar numericScalar))
-                            {
-                                context.Log("The blade is a circle.");
-                                radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
-                            }
-                            else if (numericScalar.value > 0.0)
-                            {
-                                context.Log("The blade is a real circle.");
-                                radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
-                            }
-                            else
-                            {
-                                context.Log("The blade is an imaginary circle.");
-                                radius = Evaluate("@radius = sqrt(-@__square_radius__)", context).output;
-                            }
-                        }
-                        
-                        break;
-                    }
-                    case 3:
-                    {
-                        weight = Evaluate("@weight = mag((ni^no . ni ^ @__blade__) * @i)", context).output;
-                        if (weight.IsAdditiveIdentity)
-                        {
-                            context.Log("The blade is a flat-point.");
-                            weight = Evaluate("@weight = (no . ni ^ @__blade__) * @i", context).output;
-                            Evaluate("@__blade__ = @__blade__ / @weight", context);
-                            center = Evaluate("@center = (no . @__blade__) * @i", context).output;
-                        }
-                        else
-                        {
-                            Evaluate("@__blade__ = @__blade__ / @weight", context);
-                            normal = Evaluate("@normal = (ni^no . ni ^ @__blade__) * -@i", context).output;
-                            center = Evaluate("@center = @normal * (ni^no . @__blade__ ^ ni*no) * @i", context).output;
-                            Operand squareRadius = Evaluate("@__square_radius__ = -@__blade__ . @__blade__", context).output;
-                            if (squareRadius.IsAdditiveIdentity)
-                                context.Log("The blade is a tangent point (degenerate point-pair.)");
-                            else if (!(squareRadius is NumericScalar numericScalar))
-                            {
-                                context.Log("The blade is a point-pair.");
-                                radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
-                            }
-                            else if (numericScalar.value > 0.0)
-                            {
-                                context.Log("The blade is a real point-pair.");
-                                radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
-                            }
-                            else
-                            {
-                                context.Log("The blade is an imaginary point-pair.");
-                                radius = Evaluate("@radius = sqrt(-@__square_radius__)", context).output;
-                            }
-                        }
-
-                        break;
-                    }
-                    case 4:
-                    {
-                        Evaluate("@__blade__ = @__blade__ * @I", context);
-                        weight = Evaluate("@weight = mag(ni . @__blade__)", context).output;
-                        if (weight.IsAdditiveIdentity)
-                        {
-                            Evaluate("del(@weight)", context);
-                            weight = null;
-                            context.Log("The blade is the empty set.");
-                        }
-                        else
-                        {
-                            Evaluate("@__blade__ = @__blade__ / @weight", context);
-                            center = Evaluate("@center = ni^no . ni^no ^ @__blade__", context).output;
-                            Operand squareRadius = Evaluate("@__square_radius__ = trim(@__blade__ . @__blade__)", context).output;
-                            if (squareRadius.IsAdditiveIdentity)
-                                context.Log("The blade is a point.");
-                            else
-                            {
-                                Evaluate("del(@weight, @center)", context);
-                                weight = null;
-                                center = null;
-                                context.Log("The blade is the empty set.");
-                            }
-                        }
-
-                        break;
-                    }
-                    case 5:
-                    {
-                        context.Log("The blade is the empty set.");
-                        break;
-                    }
-                }
-
-                if (center != null)
-                    context.Log($"The center is {this.MakeCoordinatesString("center", context)}.");
-
-                if (radius != null)
-                    context.Log($"The radius is {radius.Print(Format.PARSEABLE, context)}.");
-
-                if (normal != null)
-                    context.Log($"The normal is {this.MakeCoordinatesString("normal", context)}.");
-
-                if (weight != null)
-                    context.Log($"The weight is {weight.Print(Format.PARSEABLE, context)}.");
-            }
-
-            if(versor != null)
-            {
-                //...
-            }
-
-            if(blade == null && versor == null)
-                context.Log("The given element was not a blade nor a versor.  I'm not sure what it represents.");
+            if (bladeDecomposition.normal != null)
+                context.operandStorage.SetStorage("normal", bladeDecomposition.normal);
 
             return operand;
+        }
+
+        public struct VersorDecomposition
+        {
+            public List<string> analysisList;
+        }
+
+        public VersorDecomposition AnalyzeVersor(Operand operand, Context context)
+        {
+            VersorDecomposition decomposition;
+            decomposition.analysisList = new List<string>();
+
+            using (var pushPopper = new ContextPushPopper(context))
+            {
+                int grade = operand.Grade;
+                if(grade == 0)
+                {
+                    if(operand.IsAdditiveIdentity)
+                        decomposition.analysisList.Add("Zero is not a versor because it is not invertible.");
+                    else
+                        decomposition.analysisList.Add("Non-zero scalars act as the identity transformation.");
+                }
+                else
+                {
+                    GeometricProduct versor = null;
+
+                    try
+                    {
+                        versor = FactorVersor.Factor(operand, context);
+                    }
+                    catch(MathException)
+                    {
+                    }
+
+                    if(versor == null)
+                        decomposition.analysisList.Add("The given element was not a versor.");
+                    else
+                    {
+                        // The reflections and rotations of conformal space give us the conformal transformations in the embedded 3D euclidean sub-space.
+                        int i = versor.operandList.Count - 1;
+                        while(i >= 0)
+                        {
+                            if(i - 1 >= 0 && AnalyzeRotation(versor.operandList[i - 1], versor.operandList[i], ref decomposition, context))
+                                i -= 2;
+                            else if(AnalyzeReflection(versor.operandList[i], ref decomposition, context))
+                                i--;
+                            else
+                            {
+                                decomposition.analysisList.Add("Failed to recognize transformation performed by vector.");
+                                i--;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return decomposition;
+        }
+
+        private bool AnalyzeRotation(Operand vectorA, Operand vectorB, ref VersorDecomposition versorDecomposition, Context context)
+        {
+            BladeDecomposition decompA = this.AnalyzeBlade(vectorA, context);
+            BladeDecomposition decompB = this.AnalyzeBlade(vectorB, context);
+
+            if(decompA.analysisList[0] == "The blade is a plane." && decompB.analysisList[0] == "The blade is a plane.")
+            {
+                Operand wedgeProduct = ExhaustEvaluation(new Trim(new List<Operand>() { new OuterProduct(new List<Operand>() { decompA.normal, decompB.normal }) }), context);
+                if(wedgeProduct.IsAdditiveIdentity)
+                {
+                    versorDecomposition.analysisList.Add("Translation:");
+                    //...calculate translation vector...
+                }
+                else
+                {
+                    versorDecomposition.analysisList.Add("Rotation:");
+                    //...calculate center of rotation, axis of rotation, and rotation angle...
+                }
+
+                return true;
+            }
+            else if(decompA.analysisList[0] == "The blade is a real sphere." && decompB.analysisList[0] == "The blade is a real sphere.")
+            {
+                Operand difference = ExhaustEvaluation(new Trim(new List<Operand>() { new Sum(new List<Operand>() { decompA.center, new GeometricProduct(new List<Operand>() { new NumericScalar(-1.0), decompB.center }) }) }), context);
+                if (difference.IsAdditiveIdentity)
+                {
+                    versorDecomposition.analysisList.Add("Dilation:");
+                    //...calculate center of dilation and dilation scale...
+                }
+                else
+                {
+                    versorDecomposition.analysisList.Add("Transversion:");
+                    //...
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool AnalyzeReflection(Operand vector, ref VersorDecomposition versorDecomposition, Context context)
+        {
+            BladeDecomposition decomp = this.AnalyzeBlade(vector, context);
+
+            if(decomp.analysisList[0] == "The blade is a real plane.")
+            {
+                versorDecomposition.analysisList.Add("Reflection:");
+                //...
+                return true;
+            }
+            else if(decomp.analysisList[0] == "The blade is a real sphere.")
+            {
+                versorDecomposition.analysisList.Add("Inversion:");
+                //...
+                return true;
+            }
+            else if(decomp.analysisList[0] == "The blade is an imaginary sphere.")
+            {
+                versorDecomposition.analysisList.Add("Imaginary inversion?");
+                //...
+                return true;
+            }
+
+            return false;
+        }
+
+        public struct BladeDecomposition
+        {
+            public Operand weight;
+            public Operand center;
+            public Operand radius;
+            public Operand normal;
+            public List<string> analysisList;
+        }
+
+        public BladeDecomposition AnalyzeBlade(Operand operand, Context context)
+        {
+            BladeDecomposition decomposition;
+            decomposition.weight = null;
+            decomposition.center = null;
+            decomposition.radius = null;
+            decomposition.normal = null;
+            decomposition.analysisList = new List<string>();
+
+            using(var pushPopper = new ContextPushPopper(context))
+            {
+                int grade = operand.Grade;
+                if (grade < 0)
+                    decomposition.analysisList.Add("Could not identify grade of given element.");
+                else
+                {
+                    OuterProduct blade = null;
+
+                    try
+                    {
+                        blade = FactorBlade.Factor(operand, context);
+                    }
+                    catch (MathException)
+                    {
+                    }
+
+                    if(blade == null)
+                        decomposition.analysisList.Add("The given element was not a blade.");
+                    else
+                    {
+                        context.operandStorage.SetStorage("__blade__", operand);
+                        Evaluate("del(@weight, @center, @radius, @normal)", context);
+
+                        switch (grade)
+                        {
+                            case 0:
+                            {
+                                if (operand.IsAdditiveIdentity)
+                                    decomposition.analysisList.Add("The blade is all of space.");
+                                else
+                                    decomposition.analysisList.Add("The blade is the empty set.");
+                                break;
+                            }
+                            case 1:
+                            {
+                                decomposition.weight = Evaluate("@weight = mag(ni . @__blade__)", context).output;
+                                if (decomposition.weight.IsAdditiveIdentity)
+                                {
+                                    decomposition.analysisList.Add("The blade is a plane.");
+                                    decomposition.weight = Evaluate("@weight = mag(no . ni ^ @__blade__)", context).output;
+                                    Evaluate("@__blade__ = @__blade__ / @weight", context);
+                                    decomposition.normal = Evaluate("@normal = -no . ni ^ @__blade__", context).output;
+                                    decomposition.center = Evaluate("@center = (-no . @__blade__) * @normal", context).output;
+                                }
+                                else
+                                {
+                                    Evaluate("@__blade__ = @__blade__ / @weight", context);
+                                    decomposition.center = Evaluate("@center = ni^no . ni^no ^ @__blade__", context).output;
+                                    Operand squareRadius = Evaluate("@__square_radius__ = @__blade__ . @__blade__", context).output;
+                                    if (squareRadius.IsAdditiveIdentity)
+                                        decomposition.analysisList.Add("The blade is a point.");
+                                    else if (!(squareRadius is NumericScalar numericScalar))
+                                    {
+                                        decomposition.analysisList.Add("The blade is a sphere.");
+                                        decomposition.radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
+                                    }
+                                    else if (numericScalar.value > 0.0)
+                                    {
+                                        decomposition.analysisList.Add("The blade is a real sphere.");
+                                        decomposition.radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
+                                    }
+                                    else
+                                    {
+                                        decomposition.analysisList.Add("The blade is an imaginary sphere.");
+                                        decomposition.radius = Evaluate("@radius = sqrt(-@__square_radius__)", context).output;
+                                    }
+                                }
+
+                                break;
+                            }
+                            case 2:
+                            {
+                                decomposition.weight = Evaluate("@weight = mag(ni^no . ni ^ @__blade__)", context).output;
+                                if (decomposition.weight.IsAdditiveIdentity)
+                                {
+                                    decomposition.analysisList.Add("The blade is a line.");
+                                    Evaluate("@normal = (no . ni ^ @__blade__) * @i", context);
+                                    decomposition.weight = Evaluate("@weight = mag(@normal)", context).output;
+                                    decomposition.normal = Evaluate("@normal = @normal / @weight", context).output;
+                                    decomposition.center = Evaluate("@center = ((no . @__blade__ / @weight) * @normal) * @i", context).output;
+                                }
+                                else
+                                {
+                                    Evaluate("@__blade__ = @__blade__ / @weight", context);
+                                    decomposition.normal = Evaluate("@normal = ni^no . ni ^ @__blade__", context).output;
+                                    decomposition.center = Evaluate("@center = @normal * (ni^no . @__blade__ ^ ni*no)", context).output;
+                                    Operand squareRadius = Evaluate("@__square_radius__ = -@__blade__ . @__blade__", context).output;
+                                    if (squareRadius.IsAdditiveIdentity)
+                                        decomposition.analysisList.Add("The blade is a tangent point (degenerate circle.)");
+                                    else if (!(squareRadius is NumericScalar numericScalar))
+                                    {
+                                        decomposition.analysisList.Add("The blade is a circle.");
+                                        decomposition.radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
+                                    }
+                                    else if (numericScalar.value > 0.0)
+                                    {
+                                        decomposition.analysisList.Add("The blade is a real circle.");
+                                        decomposition.radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
+                                    }
+                                    else
+                                    {
+                                        decomposition.analysisList.Add("The blade is an imaginary circle.");
+                                        decomposition.radius = Evaluate("@radius = sqrt(-@__square_radius__)", context).output;
+                                    }
+                                }
+
+                                break;
+                            }
+                            case 3:
+                            {
+                                decomposition.weight = Evaluate("@weight = mag((ni^no . ni ^ @__blade__) * @i)", context).output;
+                                if (decomposition.weight.IsAdditiveIdentity)
+                                {
+                                    decomposition.analysisList.Add("The blade is a flat-point.");
+                                    decomposition.weight = Evaluate("@weight = (no . ni ^ @__blade__) * @i", context).output;
+                                    Evaluate("@__blade__ = @__blade__ / @weight", context);
+                                    decomposition.center = Evaluate("@center = (no . @__blade__) * @i", context).output;
+                                }
+                                else
+                                {
+                                    Evaluate("@__blade__ = @__blade__ / @weight", context);
+                                    decomposition.normal = Evaluate("@normal = (ni^no . ni ^ @__blade__) * -@i", context).output;
+                                    decomposition.center = Evaluate("@center = @normal * (ni^no . @__blade__ ^ ni*no) * @i", context).output;
+                                    Operand squareRadius = Evaluate("@__square_radius__ = -@__blade__ . @__blade__", context).output;
+                                    if (squareRadius.IsAdditiveIdentity)
+                                        decomposition.analysisList.Add("The blade is a tangent point (degenerate point-pair.)");
+                                    else if (!(squareRadius is NumericScalar numericScalar))
+                                    {
+                                        decomposition.analysisList.Add("The blade is a point-pair.");
+                                        decomposition.radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
+                                    }
+                                    else if (numericScalar.value > 0.0)
+                                    {
+                                        decomposition.analysisList.Add("The blade is a real point-pair.");
+                                        decomposition.radius = Evaluate("@radius = sqrt(@__square_radius__)", context).output;
+                                    }
+                                    else
+                                    {
+                                        decomposition.analysisList.Add("The blade is an imaginary point-pair.");
+                                        decomposition.radius = Evaluate("@radius = sqrt(-@__square_radius__)", context).output;
+                                    }
+                                }
+
+                                break;
+                            }
+                            case 4:
+                            {
+                                Evaluate("@__blade__ = @__blade__ * @I", context);
+                                decomposition.weight = Evaluate("@weight = mag(ni . @__blade__)", context).output;
+                                if (decomposition.weight.IsAdditiveIdentity)
+                                {
+                                    Evaluate("del(@weight)", context);
+                                    decomposition.weight = null;
+                                    decomposition.analysisList.Add("The blade is the empty set.");
+                                }
+                                else
+                                {
+                                    Evaluate("@__blade__ = @__blade__ / @weight", context);
+                                    decomposition.center = Evaluate("@center = ni^no . ni^no ^ @__blade__", context).output;
+                                    Operand squareRadius = Evaluate("@__square_radius__ = trim(@__blade__ . @__blade__)", context).output;
+                                    if (squareRadius.IsAdditiveIdentity)
+                                        decomposition.analysisList.Add("The blade is a point.");
+                                    else
+                                    {
+                                        Evaluate("del(@weight, @center)", context);
+                                        decomposition.weight = null;
+                                        decomposition.center = null;
+                                        decomposition.analysisList.Add("The blade is the empty set.");
+                                    }
+                                }
+
+                                break;
+                            }
+                            case 5:
+                            {
+                                decomposition.analysisList.Add("The blade is the empty set.");
+                                break;
+                            }
+                        }
+
+                        if (decomposition.center != null)
+                            decomposition.analysisList.Add($"The center is {this.MakeCoordinatesString("center", context)}.");
+
+                        if (decomposition.radius != null)
+                            decomposition.analysisList.Add($"The radius is {decomposition.radius.Print(Format.PARSEABLE, context)}.");
+
+                        if (decomposition.normal != null)
+                            decomposition.analysisList.Add($"The normal is {this.MakeCoordinatesString("normal", context)}.");
+
+                        if (decomposition.weight != null)
+                            decomposition.analysisList.Add($"The weight is {decomposition.weight.Print(Format.PARSEABLE, context)}.");
+                    }
+                }
+            }
+
+            return decomposition;
         }
     }
 

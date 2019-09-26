@@ -89,6 +89,12 @@ namespace GeometricAlgebra
             logMessageList.Add(message);
         }
 
+        public void Log(List<string> messageList)
+        {
+            foreach(string message in messageList)
+                this.Log(message);
+        }
+
         public void ClearLog()
         {
             logMessageList.Clear();
@@ -197,6 +203,29 @@ namespace GeometricAlgebra
         public override List<string> ReturnBasisVectors()
         {
             return Enumerable.Range(0, this.dimension).Select(i => $"e{i}").ToList();
+        }
+    }
+
+    // This class makes it convenient to temporarily use a context without polluting its operand storage or log.
+    public class ContextPushPopper : IDisposable
+    {
+        private OperandStorage operandStorage;
+        private List<string> logMessageList;
+        private Context context;
+
+        public ContextPushPopper(Context context)
+        {
+            this.context = context;
+            this.operandStorage = context.operandStorage;
+            this.logMessageList = context.logMessageList;
+            context.operandStorage = new OperandStorage(this.operandStorage);
+            context.logMessageList = new List<string>();
+        }
+
+        public void Dispose()
+        {
+            this.context.operandStorage = this.operandStorage;
+            this.context.logMessageList = this.logMessageList;
         }
     }
 }
