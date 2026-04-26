@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28922.388
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35919.96 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GACalculator", "GACalculator\GACalculator.csproj", "{1065C4C4-A133-42D6-859B-2BD5D704764B}"
 EndProject
@@ -10,6 +10,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{5258D259-AE56-4F3D-A3C3-F06C4ED9E733}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GAMath", "GAMath\GAMath.csproj", "{129951B0-E31C-4A7A-A879-763BAF27B3F3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GACodeGenerator", "GACodeGenerator\GACodeGenerator.csproj", "{FEDD1FA0-661D-49FF-88BD-4C1D6562861D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{129951B0-E31C-4A7A-A879-763BAF27B3F3} = {129951B0-E31C-4A7A-A879-763BAF27B3F3}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +38,10 @@ Global
 		{129951B0-E31C-4A7A-A879-763BAF27B3F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{129951B0-E31C-4A7A-A879-763BAF27B3F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{129951B0-E31C-4A7A-A879-763BAF27B3F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FEDD1FA0-661D-49FF-88BD-4C1D6562861D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FEDD1FA0-661D-49FF-88BD-4C1D6562861D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FEDD1FA0-661D-49FF-88BD-4C1D6562861D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FEDD1FA0-661D-49FF-88BD-4C1D6562861D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

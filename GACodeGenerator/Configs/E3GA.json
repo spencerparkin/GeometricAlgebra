@@ -1,0 +1,62 @@
+{
+	"namespace": "E3GA",
+	"class_list":
+	[
+		{
+			"name": "Scalar",
+			"basis":
+			[
+				"1"
+			]
+		},
+		{
+			"name": "PsuedoScalar",
+			"basis":
+			[
+				"e1^e2^e3"
+			]
+		},
+		{
+			"name": "Vector",
+			"basis":
+			[
+				"e1",
+				"e2",
+				"e3"
+			]
+		},
+		{
+			"name": "Bivector",
+			"basis":
+			[
+				"e1^e2",
+				"e2^e3",
+				"e3^e1"
+			]
+		},
+		{
+			"name": "Rotor",
+			"basis":
+			[
+				"1",
+				"e1^e2",
+				"e2^e3",
+				"e3^e1"
+			]
+		},
+		{
+			"name": "Multivector",
+			"basis":
+			[
+				"1",
+				"e1",
+				"e2",
+				"e3",
+				"e1^e2",
+				"e2^e3",
+				"e3^e1",
+				"e1^e2^e3"
+			]
+		}
+	]
+}

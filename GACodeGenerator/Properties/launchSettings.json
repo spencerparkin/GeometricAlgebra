@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GACodeGenerator": {
+      "commandName": "Project",
+      "commandLineArgs": "--GAFile=D:\\git_repos\\GeometricAlgebra\\GACodeGenerator\\Configs\\E3GA.json --OutDir=D:\\git_repos\\GeometricAlgebra\\CppLibrary\\Source\\E3GA"
+    }
+  }
+}

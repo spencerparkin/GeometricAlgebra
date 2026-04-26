@@ -1,0 +1,46 @@
+{
+	"namespace": "E2GA",
+	"class_list":
+	[
+		{
+			"name": "Scalar",
+			"basis":
+			[
+				"1"
+			]
+		},
+		{
+			"name": "PsuedoScalar",
+			"basis":
+			[
+				"e1^e2"
+			]
+		},
+		{
+			"name": "Vector",
+			"basis":
+			[
+				"e1",
+				"e2"
+			]
+		},
+		{
+			"name": "Rotor",
+			"basis":
+			[
+				"1",
+				"e1^e2"
+			]
+		},
+		{
+			"name": "Multivector",
+			"basis":
+			[
+				"1",
+				"e1",
+				"e2",
+				"e1^e2"
+			]
+		}
+	]
+}
