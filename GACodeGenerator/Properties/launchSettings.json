@@ -2,7 +2,7 @@
   "profiles": {
     "GACodeGenerator": {
       "commandName": "Project",
-      "commandLineArgs": "--GAFile=D:\\git_repos\\GeometricAlgebra\\GACodeGenerator\\Configs\\C2GA.json --OutDir=D:\\git_repos\\GAMath\\Source\\C2GA"
+      "commandLineArgs": "--MasterFile=D:/git_repos/GAMath/Configs/MasterConfig.json"
     }
   }
 }

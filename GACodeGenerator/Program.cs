@@ -16,18 +16,19 @@ namespace GACodeGenerator
                     .AddCommandLine(argsArray)
                     .Build();
 
-                string gaFile = config["GAFile"];
-                string outputDir = config["OutDir"];
-
-                string nameSpace;
-                List<GAClass>? gaClassList = GenerateGAClassList(gaFile, out nameSpace);
-                if (gaClassList == null)
-                    return 1;
-
-                for(int i = 0; i < gaClassList.Count; i++)
+                string masterFile = config["MasterFile"];
+                if (masterFile != null)
                 {
-                    GAClass gaClass = gaClassList[i];
-                    gaClass.GenerateSourceCode(outputDir, nameSpace, gaClassList);
+                    if (!ProcessMasterFile(masterFile))
+                        return 1;
+                }
+                else
+                {
+                    string gaFile = config["GAFile"];
+                    string outputDir = config["OutDir"];
+
+                    if (!ProcessGAFile(gaFile, outputDir))
+                        return 1;
                 }
             }
             catch(Exception exception)
@@ -37,6 +38,65 @@ namespace GACodeGenerator
             }
 
             return 0;
+        }
+
+        static bool ProcessMasterFile(string masterFile)
+        {
+            string jsonText = File.ReadAllText(masterFile);
+            JsonDocument jsonDoc = JsonDocument.Parse(jsonText);
+
+            JsonElement jsonSubConfigList;
+            if (!jsonDoc.RootElement.TryGetProperty("sub_config_list", out jsonSubConfigList))
+            {
+                Console.WriteLine("No \"sub_config_list\" found.");
+                return false;
+            }
+
+            for(int i = 0; i < jsonSubConfigList.GetArrayLength(); i++)
+            {
+                JsonElement jsonSubConfig = jsonSubConfigList[i];
+
+                JsonElement jsonConfigFile;
+                if(!jsonSubConfig.TryGetProperty("config_file", out jsonConfigFile))
+                {
+                    Console.WriteLine("No \"config_file\" found in entry.");
+                    return false;
+                }
+
+                string gaFile = Path.Combine(Path.GetDirectoryName(masterFile), jsonConfigFile.GetString());
+
+                JsonElement jsonOutputDir;
+                if(!jsonSubConfig.TryGetProperty("output_dir", out jsonOutputDir))
+                {
+                    Console.WriteLine("No \"output_dir\" found in entry.");
+                    return false;
+                }
+
+                string outDir = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(masterFile), jsonOutputDir.GetString()));
+
+                Console.WriteLine($"Processing {gaFile}...");
+
+                if(!ProcessGAFile(gaFile, outDir))
+                    return false;
+            }
+
+            return true;
+        }
+
+        static bool ProcessGAFile(string gaFile, string outputDir)
+        {
+            string nameSpace;
+            List<GAClass>? gaClassList = GenerateGAClassList(gaFile, out nameSpace);
+            if (gaClassList == null)
+                return false;
+
+            for (int i = 0; i < gaClassList.Count; i++)
+            {
+                GAClass gaClass = gaClassList[i];
+                gaClass.GenerateSourceCode(outputDir, nameSpace, gaClassList);
+            }
+
+            return true;
         }
 
         static List<GAClass>? GenerateGAClassList(string gaFile, out string nameSpace)

@@ -69,64 +69,80 @@ namespace GACodeGenerator
             return expression;
         }
 
+        private Sum StandardizeResult(Operand result)
+        {
+            Sum sum = result as Sum;
+            if (sum == null)
+            {
+                sum = new Sum();
+                sum.operandList.Add(result);
+                result = sum;
+            }
+
+            for(int i = 0; i < sum.operandList.Count; i++)
+            {
+                if (!(sum.operandList[i] is Blade))
+                {
+                    Debug.Assert(sum.operandList[i].Grade == 0);
+                    Blade blade = new Blade();
+                    blade.scalar = sum.operandList[i];
+                    sum.operandList[i] = blade;
+                }
+            }
+
+            return sum;
+        }
+
+        // Our job here is to determine whether the two given basis elements are a
+        // positive or negative unit-multiple of one another.  That is, do we have A == B or A == -B?
+        // Note that it's tempting to multiply one by the inverse of the other, but we can't
+        // assume here that either basis element is invertible.
+        private bool BasisElementsAreTheSame(Operand basisElementA, Operand basisElementB, out double sign, Context context)
+        {
+            Sum sum = new Sum();
+            sum.operandList.Add(basisElementA.Copy());
+            sum.operandList.Add(basisElementB.Copy());
+            Operand result = Operand.ExhaustEvaluation(sum, context);
+            if(result.IsAdditiveIdentity)
+            {
+                sign = -1.0;
+                return true;
+            }
+
+            GeometricProduct product = new GeometricProduct();
+            product.operandList.Add(new NumericScalar(-1.0));
+            product.operandList.Add(basisElementA.Copy());
+
+            sum = new Sum();
+            sum.operandList.Add(product);
+            sum.operandList.Add(basisElementB.Copy());
+            result = Operand.ExhaustEvaluation(sum, context);
+            if(result.IsAdditiveIdentity)
+            {
+                sign = 1.0;
+                return true;
+            }
+
+            sign = 0.0;
+            return false;
+        }
+
         private bool CanTakeResult(Result result, Context context)
         {
-            Operand resultOperand = result.output.Copy();
+            Sum resultSum = StandardizeResult(result.output.Copy());
 
-            if(resultOperand is SymbolicScalarTerm || resultOperand is NumericScalar)
+            return resultSum.operandList.All(resultTerm =>
             {
-                Blade blade = new Blade();
-                blade.scalar = resultOperand;
-                resultOperand = blade;
-            }
+                Operand resultBasisElement = resultTerm.Copy();
+                Debug.Assert(resultBasisElement is Blade);
+                (resultBasisElement as Blade).scalar = new NumericScalar(1.0);
 
-            if(resultOperand is Blade)
-            {
-                Sum sum = new Sum();
-                sum.operandList.Add(resultOperand);
-                resultOperand = sum;
-            }
-
-            Sum resultSum = resultOperand as Sum;
-
-            for(int i = 0; i < resultSum.operandList.Count; i++)
-            {
-                Operand term = resultSum.operandList[i];
-                if(term.IsAdditiveIdentity)
+                return basisElementToOperandMap.Values.Any(basisElement =>
                 {
-                    resultSum.operandList[i] = new NumericScalar(1.0);
-                }
-            }
-
-            foreach(Operand resultBasisElement in resultSum.operandList)
-            {
-                bool hasBasisElement = false;
-
-                foreach (var keyValuePair in basisElementToOperandMap)
-                {
-                    Operand basisElement = keyValuePair.Value;
-
-                    Inverse inverse = new Inverse();
-                    inverse.operandList.Add(basisElement.Copy());
-
-                    GeometricProduct geometricProduct = new GeometricProduct();
-                    geometricProduct.operandList.Add(resultBasisElement.Copy());
-                    geometricProduct.operandList.Add(inverse);
-
-                    Operand geometricProductResult = Operand.ExhaustEvaluation(geometricProduct, context);
-
-                    if(geometricProductResult.Grade == 0)
-                    {
-                        hasBasisElement = true;
-                        break;
-                    }
-                }
-
-                if (!hasBasisElement)
-                    return false;
-            }
-
-            return true;
+                    double sign = 0.0;
+                    return BasisElementsAreTheSame(basisElement, resultBasisElement, out sign, context);
+                });
+            });
         }
 
         private string ReplaceScalarsInExpression(string expression, GAClass gaClass, string gaClassInstanceName, string varName)
@@ -135,7 +151,8 @@ namespace GACodeGenerator
 
             List<string> basisElementList = gaClass.GetSortedListOfBasisElements();
 
-            for (int i = 0; i < basisElementList.Count; i++)
+            // We count backwards so that we, for example, match "b11" before "b1".
+            for (int i = basisElementList.Count - 1; i >= 0; i--)
             {
                 string memberName = basisElementList[i];
                 if (memberName == "1")
@@ -152,37 +169,35 @@ namespace GACodeGenerator
 
         private string GenerateCodeForResult(Result result, Context context, GAClass gaClassA, GAClass gaClassB)
         {
-            Operand resultOperand = result.output.Copy();
-
-            if (!(resultOperand is Sum))
-            {
-                Sum sum = new Sum();
-                sum.operandList.Add(result.output);
-                resultOperand = sum;
-            }
-
-            Sum resultSum = resultOperand as Sum;
+            Sum resultSum = StandardizeResult(result.output.Copy());
 
             var componentMap = new Dictionary<string, List<string>>();
 
-            foreach (Operand resultBasisElement in resultSum.operandList)
+            foreach (Operand resultTerm in resultSum.operandList)
             {
+                Operand resultBasisElement = resultTerm.Copy();
+                Debug.Assert(resultBasisElement is Blade);
+                (resultBasisElement as Blade).scalar = new NumericScalar(1.0);
+
                 foreach (var keyValuePair in basisElementToOperandMap)
                 {
                     Operand basisElement = keyValuePair.Value;
-
-                    Inverse inverse = new Inverse();
-                    inverse.operandList.Add(basisElement.Copy());
-
-                    GeometricProduct geometricProduct = new GeometricProduct();
-                    geometricProduct.operandList.Add(resultBasisElement.Copy());
-                    geometricProduct.operandList.Add(inverse);
-
-                    Operand geometricProductResult = Operand.ExhaustEvaluation(geometricProduct, context);
-                    if (geometricProductResult.Grade != 0)
+                    double sign = 0.0;
+                    if (!BasisElementsAreTheSame(basisElement, resultBasisElement, out sign, context))
                         continue;
 
-                    string expression = geometricProductResult.Print(Operand.Format.PARSEABLE, context);
+                    Operand resultScalar = (resultTerm.Copy() as Blade).scalar;
+
+                    if (sign == -1.0)
+                    {
+                        GeometricProduct geometricProduct = new GeometricProduct();
+                        geometricProduct.operandList.Add(new NumericScalar(sign));
+                        geometricProduct.operandList.Add(resultScalar);
+
+                        resultScalar = Operand.ExhaustEvaluation(geometricProduct, context);
+                    }
+
+                    string expression = resultScalar.Print(Operand.Format.PARSEABLE, context);
 
                     expression = ReplaceScalarsInExpression(expression, gaClassA, $"{gaClassA.name.ToLower()}A", "a");
                     expression = ReplaceScalarsInExpression(expression, gaClassB, $"{gaClassB.name.ToLower()}B", "b");
@@ -231,6 +246,8 @@ namespace GACodeGenerator
         {
             string cppFilePath = Path.Combine(outDir, name + ".cpp");
             string hFilePath = Path.Combine(outDir, name + ".h");
+
+            Console.WriteLine($"Generating {name}.cpp/.h...");
 
             Context context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
 
@@ -399,7 +416,7 @@ namespace GACodeGenerator
                             else if (gaClassA.basisSet.Contains(basisElement))
                                 cppFileText += $"\tthis->{member} = {gaClassA.name.ToLower()}A.{member};\n";
                             else if (gaClassB.basisSet.Contains(basisElement))
-                                cppFileText += $"\tthis->{member} = {gaClassB.name.ToLower()}B.{member};\n";
+                                cppFileText += $"\tthis->{member} = {((i == 0) ? "" : "-")}{gaClassB.name.ToLower()}B.{member};\n";
                             else
                                 cppFileText += $"\tthis->{member} = 0.0;\n";
                         }
