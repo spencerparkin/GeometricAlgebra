@@ -258,6 +258,11 @@ namespace GACodeGenerator
             hFileText += $"namespace {nameSpace}\n";
             hFileText += "{\n";
 
+            foreach(GAClass gaClass in gaClassList)
+                if (gaClass != this)
+                    hFileText += $"\tclass {gaClass.name};\n";
+
+            hFileText += "\n";
             hFileText += $"\tclass {name}\n";
             hFileText += "\t{\n";
             hFileText += "\tpublic:\n";
@@ -293,7 +298,7 @@ namespace GACodeGenerator
             foreach (GAClass gaClassA in gaClassList)
                 foreach (GAClass gaClassB in gaClassList)
                     if (gaClassA.basisSet.IsSubsetOf(basisSet) && gaClassB.basisSet.IsSubsetOf(basisSet))
-                        hFileText += $"\t\tvoid Subract(const {gaClassA.name}& {gaClassA.name.ToLower()}A, const {gaClassB.name}& {gaClassB.name.ToLower()}B);\n";
+                        hFileText += $"\t\tvoid Subtract(const {gaClassA.name}& {gaClassA.name.ToLower()}A, const {gaClassB.name}& {gaClassB.name.ToLower()}B);\n";
 
             hFileText += "\n";
 
@@ -351,6 +356,11 @@ namespace GACodeGenerator
             //--------------------------------------------------------------------
 
             string cppFileText = $"#include \"{name}.h\"\n";
+
+            foreach (GAClass gaClass in gaClassList)
+                if (gaClass != this)
+                    cppFileText += $"#include \"{gaClass.name}.h\"\n";
+
             cppFileText += "\n";
             cppFileText += $"using namespace {nameSpace};\n";
             cppFileText += "\n";

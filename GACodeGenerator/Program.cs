@@ -4,6 +4,8 @@ using System.IO;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json.Nodes;
 
+#nullable disable
+
 namespace GACodeGenerator
 {
     static class Program
