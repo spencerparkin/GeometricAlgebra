@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using GeometricAlgebra;
@@ -70,21 +71,23 @@ namespace GACodeGenerator
 
         private bool CanTakeResult(Result result, Context context)
         {
-            if(result.output is SymbolicScalarTerm || result.output is NumericScalar)
+            Operand resultOperand = result.output.Copy();
+
+            if(resultOperand is SymbolicScalarTerm || resultOperand is NumericScalar)
             {
                 Blade blade = new Blade();
-                blade.scalar = result.output;
-                result.output = blade;
+                blade.scalar = resultOperand;
+                resultOperand = blade;
             }
 
-            if(result.output is Blade)
+            if(resultOperand is Blade)
             {
                 Sum sum = new Sum();
-                sum.operandList.Add(result.output);
-                result.output = sum;
+                sum.operandList.Add(resultOperand);
+                resultOperand = sum;
             }
 
-            Sum resultSum = result.output as Sum;
+            Sum resultSum = resultOperand as Sum;
 
             for(int i = 0; i < resultSum.operandList.Count; i++)
             {
@@ -124,6 +127,104 @@ namespace GACodeGenerator
             }
 
             return true;
+        }
+
+        private string ReplaceScalarsInExpression(string expression, GAClass gaClass, string gaClassInstanceName, string varName)
+        {
+            string newExpression = expression;
+
+            List<string> basisElementList = gaClass.GetSortedListOfBasisElements();
+
+            for (int i = 0; i < basisElementList.Count; i++)
+            {
+                string memberName = basisElementList[i];
+                if (memberName == "1")
+                    memberName = "_1";
+
+                memberName = memberName.Replace("^", "_");
+                memberName = $"{gaClassInstanceName}.{memberName}";
+
+                newExpression = newExpression.Replace($"${varName}{i}", memberName);
+            }
+
+            return newExpression;
+        }
+
+        private string GenerateCodeForResult(Result result, Context context, GAClass gaClassA, GAClass gaClassB)
+        {
+            Operand resultOperand = result.output.Copy();
+
+            if (!(resultOperand is Sum))
+            {
+                Sum sum = new Sum();
+                sum.operandList.Add(result.output);
+                resultOperand = sum;
+            }
+
+            Sum resultSum = resultOperand as Sum;
+
+            var componentMap = new Dictionary<string, List<string>>();
+
+            foreach (Operand resultBasisElement in resultSum.operandList)
+            {
+                foreach (var keyValuePair in basisElementToOperandMap)
+                {
+                    Operand basisElement = keyValuePair.Value;
+
+                    Inverse inverse = new Inverse();
+                    inverse.operandList.Add(basisElement.Copy());
+
+                    GeometricProduct geometricProduct = new GeometricProduct();
+                    geometricProduct.operandList.Add(resultBasisElement.Copy());
+                    geometricProduct.operandList.Add(inverse);
+
+                    Operand geometricProductResult = Operand.ExhaustEvaluation(geometricProduct, context);
+                    if (geometricProductResult.Grade != 0)
+                        continue;
+
+                    string expression = geometricProductResult.Print(Operand.Format.PARSEABLE, context);
+
+                    expression = ReplaceScalarsInExpression(expression, gaClassA, $"{gaClassA.name.ToLower()}A", "a");
+                    expression = ReplaceScalarsInExpression(expression, gaClassB, $"{gaClassB.name.ToLower()}B", "b");
+
+                    expression = expression.Replace("0", "0.0");
+                    expression = expression.Replace("-1", "-1.0");
+                    expression = expression.Replace("*", " * ");
+
+                    List<string> termList = null;
+                    if (componentMap.ContainsKey(keyValuePair.Key))
+                        termList = componentMap[keyValuePair.Key];
+                    else
+                    {
+                        termList = new List<string>();
+                        componentMap[keyValuePair.Key] = termList;
+                    }
+
+                    termList.Add(expression);
+                }
+            }
+
+            string code = "";
+
+            foreach (var basisElement in basisSet)
+            {
+                string memberName = basisElement;
+                if (memberName == "1")
+                    memberName = "_1";
+
+                memberName = memberName.Replace("^", "_");
+
+                if (!componentMap.ContainsKey(basisElement))
+                    code += $"\tthis->{memberName} = 0.0;\n";
+                else
+                {
+                    List<string> termList = componentMap[basisElement];
+                    string expression = string.Join(" + ", termList);
+                    code += $"\tthis->{memberName} = {expression};\n";
+                }
+            }
+
+            return code;
         }
 
         public void GenerateSourceCode(string outDir, string nameSpace, List<GAClass> gaClassList)
@@ -226,7 +327,6 @@ namespace GACodeGenerator
             // Members
             //
 
-            hFileText += "\n";
             hFileText += $"\t\tdouble {string.Join(", ", memberList)};\n";
             hFileText += "\t};\n";
             hFileText += "}";
@@ -306,6 +406,50 @@ namespace GACodeGenerator
 
                         cppFileText += "}\n";
                         cppFileText += "\n";
+                    }
+                }
+            }
+
+            //
+            // Inner/Outer/Geometric Products
+            //
+
+            for (int i = 0; i < 3; i++)
+            {
+                foreach (GAClass gaClassA in gaClassList)
+                {
+                    string expressionA = gaClassA.GenerateExpression("a");
+
+                    foreach (GAClass gaClassB in gaClassList)
+                    {
+                        string expressionB = gaClassB.GenerateExpression("b");
+
+                        string operation = "";
+                        switch (i)
+                        {
+                            case 0: operation = "."; break;
+                            case 1: operation = "^"; break;
+                            case 2: operation = "*"; break;
+                        }
+
+                        string expression = $"({expressionA}) {operation} ({expressionB})";
+
+                        Result result = Operand.Evaluate(expression, context);
+                        if (!CanTakeResult(result, context))
+                            continue;
+
+                        string funcName = "";
+                        switch (i)
+                        {
+                            case 0: funcName = "InnerProduct"; break;
+                            case 1: funcName = "OuterProduct"; break;
+                            case 2: funcName = "GeometricProduct"; break;
+                        }
+
+                        cppFileText += $"void {name}::{funcName}(const {gaClassA.name}& {gaClassA.name.ToLower()}A, const {gaClassB.name}& {gaClassB.name.ToLower()}B)\n";
+                        cppFileText += "{\n";
+                        cppFileText += GenerateCodeForResult(result, context, gaClassA, gaClassB);
+                        cppFileText += "}\n\n";
                     }
                 }
             }
