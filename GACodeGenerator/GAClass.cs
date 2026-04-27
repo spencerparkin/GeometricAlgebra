@@ -271,6 +271,8 @@ namespace GACodeGenerator
             // Construction
             //
 
+            hFileText += $"\t\t{name}();\n";
+
             List<string> memberList = new List<string>();
             foreach (var keyValuePair in basisElementToMemberMap)
                 memberList.Add(keyValuePair.Value);
@@ -368,6 +370,15 @@ namespace GACodeGenerator
             //
             // Construction
             //
+
+            cppFileText += $"{name}::{name}()\n";
+            cppFileText += "{\n";
+
+            foreach (string member in memberList)
+                cppFileText += $"\tthis->{member} = 0.0;\n";
+
+            cppFileText += "}\n";
+            cppFileText += "\n";
 
             cppFileText += $"{name}::{name}({string.Join(", ", paramList)})\n";
             cppFileText += "{\n";
