@@ -18,6 +18,7 @@ namespace GeometricAlgebra
         public List<string> logMessageList;
         public double epsilon;
         public double evaluationTimeoutMilliseconds;
+        public bool unrollPowers;
 
         public Context()
         {
@@ -27,6 +28,7 @@ namespace GeometricAlgebra
             logMessageList = new List<string>();
             epsilon = 1e-9;
             evaluationTimeoutMilliseconds = 4000.0;
+            unrollPowers = false;
         }
 
         public virtual List<Function> GenerateFunctionList()

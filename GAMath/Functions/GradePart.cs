@@ -47,51 +47,42 @@ namespace GeometricAlgebra
             return "grade";
         }
 
-        // Notice that we try to cull by grade first before evaluating our main argument.
-        // This is what may be an optimization by early detection of grade.  We must evaluate
-        // our main argument as long as its grade remains indeterminant.  How good the optimization
-        // is depends on how well we can determine the grade of an arbitrary operand tree.
-        // Of course, some trees well never have a grade, such as a sum of blades of non-homogeneous grade.
         public override Operand EvaluationStep(Context context)
         {
             if (operandList.Count < 2)
                 throw new MathException(string.Format("Grade-part operation expects two or more arguments, got {0}.", operandList.Count));
 
+            Operand operand = base.EvaluationStep(context);
+            if (operand != null)
+                return operand;
+
             int grade = operandList[0].Grade;
             if (grade == -1)
+                throw new MathException("Could not determine grade of operand.");
+            
+            var gradeSet = new HashSet<int>();
+            for (int i = 1; i < operandList.Count; i++)
             {
-                Operand operand = base.EvaluationStep(context);
-                if (operand != null)
-                    return operand;
-            }
-            else
-            {
-                var gradeSet = new HashSet<int>();
-                for (int i = 1; i < operandList.Count; i++)
+                NumericScalar scalar = operandList[i] as NumericScalar;
+                if (scalar == null)
                 {
-                    NumericScalar scalar = operandList[i] as NumericScalar;
-                    if (scalar == null)
+                    Operand gradeOperand = operandList[i].EvaluationStep(context);
+                    if (gradeOperand != null)
                     {
-                        Operand operand = operandList[i].EvaluationStep(context);
-                        if (operand != null)
-                        {
-                            operandList[i] = operand;
-                            return this;
-                        }
-
-                        throw new MathException("Encountered non-numeric-scalar when looking for grade arguments.");
+                        operandList[i] = gradeOperand;
+                        return this;
                     }
 
-                    gradeSet.Add((int)scalar.value);
+                    throw new MathException("Encountered non-numeric-scalar when looking for grade arguments.");
                 }
 
-                if (gradeSet.Contains(grade))
-                    return operandList[0];
-
-                return new NumericScalar(0.0);
+                gradeSet.Add((int)scalar.value);
             }
 
-            return null;
+            if (gradeSet.Contains(grade))
+                return operandList[0];
+
+            return new NumericScalar(0.0);
         }
 
         public override string Print(Format format, Context context)

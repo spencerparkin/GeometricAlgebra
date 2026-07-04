@@ -159,7 +159,11 @@ namespace GACodeGenerator
                     memberName = "_1";
 
                 memberName = memberName.Replace("^", "_");
-                memberName = $"{gaClassInstanceName}.{memberName}";
+
+                if (gaClassInstanceName == "this")
+                    memberName = $"this->{memberName}";
+                else
+                    memberName = $"{gaClassInstanceName}.{memberName}";
 
                 newExpression = newExpression.Replace($"${varName}{i}", memberName);
             }
@@ -199,8 +203,11 @@ namespace GACodeGenerator
 
                     string expression = resultScalar.Print(Operand.Format.PARSEABLE, context);
 
-                    expression = ReplaceScalarsInExpression(expression, gaClassA, $"{gaClassA.name.ToLower()}A", "a");
-                    expression = ReplaceScalarsInExpression(expression, gaClassB, $"{gaClassB.name.ToLower()}B", "b");
+                    if (gaClassA != null)
+                        expression = ReplaceScalarsInExpression(expression, gaClassA, $"{gaClassA.name.ToLower()}A", "a");
+
+                    if (gaClassB != null)
+                        expression = ReplaceScalarsInExpression(expression, gaClassB, $"{gaClassB.name.ToLower()}B", "b");
 
                     expression = expression.Replace("0", "0.0");
                     expression = expression.Replace("-1", "-1.0");
@@ -251,10 +258,16 @@ namespace GACodeGenerator
 
             Context context = new GeometricAlgebra.ConformalModel.Conformal3D_Context();
 
+            context.unrollPowers = true;
+
             //--------------------------------------------------------------------
 
-            string hFileText = "#pragma once\n\n";
+            string hFileText = "";
 
+            hFileText += "// NOTE: This is a generated source file!  Any edits you make will not be preserved.\n";
+            hFileText += "\n";
+            hFileText += "#pragma once\n";
+            hFileText += "\n";
             hFileText += $"namespace {nameSpace}\n";
             hFileText += "{\n";
 
@@ -348,6 +361,15 @@ namespace GACodeGenerator
             }
 
             //
+            // Reverse & Square Magnitude
+            //
+
+            hFileText += $"\t\tvoid Reverse(const {name}& {name.ToLower()}A);\n";
+            hFileText += "\n";
+            hFileText += $"\t\tdouble SquareMagnitude() const;\n";
+            hFileText += "\n";
+
+            //
             // Members
             //
 
@@ -357,7 +379,11 @@ namespace GACodeGenerator
 
             //--------------------------------------------------------------------
 
-            string cppFileText = $"#include \"{name}.h\"\n";
+            string cppFileText = "";
+
+            cppFileText += "// NOTE: This is a generated source file!  Any edits you make will not be preserved.\n";
+            cppFileText += "\n";
+            cppFileText += $"#include \"{name}.h\"\n";
 
             foreach (GAClass gaClass in gaClassList)
                 if (gaClass != this)
@@ -491,6 +517,39 @@ namespace GACodeGenerator
                     }
                 }
             }
+
+            //
+            // Reverse & Square Magnitude
+            //
+
+            string reverseExpression = $"rev({this.GenerateExpression("a")})";
+
+            Result reverseResult = Operand.Evaluate(reverseExpression, context);
+            if(!CanTakeResult(reverseResult, context))
+                throw new Exception($"Could not take reverse result.");
+
+            cppFileText += $"void {name}::Reverse(const {name}& {name.ToLower()}A)\n";
+            cppFileText += "{\n";
+            cppFileText += GenerateCodeForResult(reverseResult, context, this, null);
+            cppFileText += "}\n";
+
+            string squareMagnitudeExpression = $"grade(({this.GenerateExpression("a")}) . rev({this.GenerateExpression("a")}), 0)";
+
+            Result squareMagnitudeResult = Operand.Evaluate(squareMagnitudeExpression, context);
+
+            string squareMagExpResultSumStr = squareMagnitudeResult.output.Print(Operand.Format.PARSEABLE, context);
+
+            string squareMagCodeStr = ReplaceScalarsInExpression(squareMagExpResultSumStr, this, "this", "a");
+
+            cppFileText += "\n";
+            cppFileText += $"double {name}::SquareMagnitude() const\n";
+            cppFileText += "{\n";
+            cppFileText += $"\treturn {squareMagCodeStr};\n";
+            cppFileText += "}\n";
+
+            //
+            // Finally, flush files...
+            //
 
             File.WriteAllText(hFilePath, hFileText);
             File.WriteAllText(cppFilePath, cppFileText);

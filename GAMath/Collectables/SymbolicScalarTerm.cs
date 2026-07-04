@@ -45,6 +45,15 @@ namespace GeometricAlgebra
 
                 if (format == Format.PARSEABLE)
                 {
+                    if(context.unrollPowers)
+                    {
+                        List<string> symbolList = new List<string>();
+                        for(int i = 0; i < exponent; i++)
+                            symbolList.Add(symbol);
+
+                        return "(" + string.Join(" * ", symbolList) + ")";
+                    }
+
                     return string.Format("pow({0},{1})", symbol, exponent);
                 }
                 else if (format == Format.LATEX)
