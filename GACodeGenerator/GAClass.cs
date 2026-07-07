@@ -268,6 +268,8 @@ namespace GACodeGenerator
             hFileText += "\n";
             hFileText += "#pragma once\n";
             hFileText += "\n";
+            hFileText += "#include <functional>\n";
+            hFileText += "\n";
             hFileText += $"namespace {nameSpace}\n";
             hFileText += "{\n";
 
@@ -367,6 +369,16 @@ namespace GACodeGenerator
             hFileText += $"\t\tvoid Reverse(const {name}& {name.ToLower()}A);\n";
             hFileText += "\n";
             hFileText += $"\t\tdouble SquareMagnitude() const;\n";
+            hFileText += "\n";
+
+            //
+            // Matrix Conversion
+            //
+
+            hFileText += "\t\tint GetMatrixSize() const;\n";
+            hFileText += "\t\tvoid ToSquareMatrix(std::function<void(int, int, double)> elementCallback) const;\n";
+            hFileText += "\t\tvoid ToColumnMatrix(std::function<void(int, int, double)> elementCallback) const;\n";
+            hFileText += "\t\tvoid FromColumnMatrix(std::function<void(int, int, double&)> elementCallback);\n";
             hFileText += "\n";
 
             //
@@ -546,6 +558,35 @@ namespace GACodeGenerator
             cppFileText += "{\n";
             cppFileText += $"\treturn {squareMagCodeStr};\n";
             cppFileText += "}\n";
+
+            //
+            // Matrix Conversion
+            //
+
+            cppFileText += "\n";
+            cppFileText += $"int {name}::GetMatrixSize() const\n";
+            cppFileText += "{\n";
+            cppFileText += $"\treturn {this.basisSet.Count};\n";
+            cppFileText += "}\n";
+            cppFileText += "\n";
+
+            cppFileText += $"void {name}::ToSquareMatrix(std::function<void(int, int, double)> elementCallback) const\n";
+            cppFileText += "{\n";
+            cppFileText += "\t// STPTODO: Write this.\n";
+            cppFileText += "}\n";
+            cppFileText += "\n";
+
+            cppFileText += $"void {name}::ToColumnMatrix(std::function<void(int, int, double)> elementCallback) const\n";
+            cppFileText += "{\n";
+            cppFileText += "\t// STPTODO: Write this.\n";
+            cppFileText += "}\n";
+            cppFileText += "\n";
+
+            cppFileText += $"void {name}::FromColumnMatrix(std::function<void(int, int, double&)> elementCallback)\n";
+            cppFileText += "{\n";
+            cppFileText += "\t// STPTODO: Write this.\n";
+            cppFileText += "}\n";
+            cppFileText += "\n";
 
             //
             // Finally, flush files...
