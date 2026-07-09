@@ -27,10 +27,7 @@ namespace GACodeGenerator
             basisElementToMemberMap = new Dictionary<string, string>();
             foreach (string basisElement in basisSet)
             {
-                string scalarName = basisElement.Replace('^', '_');
-                if (char.IsDigit(scalarName[0]))
-                    scalarName = "_" + scalarName;
-
+                string scalarName = this.MakeScalarNameFromBasisElement(basisElement);
                 basisElementToMemberMap.Add(basisElement, scalarName);
             }
 
@@ -45,6 +42,14 @@ namespace GACodeGenerator
 
                 basisElementToOperandMap.Add(basisElement, result.output);
             }
+        }
+
+        private string MakeScalarNameFromBasisElement(string basisElement)
+        {
+            string scalarName = basisElement.Replace('^', '_');
+            if (char.IsDigit(scalarName[0]))
+                scalarName = "_" + scalarName;
+            return scalarName;
         }
 
         private List<string> GetSortedListOfBasisElements()
@@ -79,6 +84,8 @@ namespace GACodeGenerator
                 result = sum;
             }
 
+            Sum standardizedSum = new Sum();
+
             for(int i = 0; i < sum.operandList.Count; i++)
             {
                 if (!(sum.operandList[i] is Blade))
@@ -86,11 +93,28 @@ namespace GACodeGenerator
                     Debug.Assert(sum.operandList[i].Grade == 0);
                     Blade blade = new Blade();
                     blade.scalar = sum.operandList[i];
-                    sum.operandList[i] = blade;
+                    standardizedSum.operandList.Add(blade);
+                }
+                else
+                {
+                    Blade blade = sum.operandList[i] as Blade;
+                    if(blade.scalar is Sum)
+                    {
+                        foreach (Operand operand in (blade.scalar as Sum).operandList)
+                        {
+                            Blade bladeCopy = blade.Copy() as Blade;
+                            bladeCopy.scalar = operand;
+                            standardizedSum.operandList.Add(bladeCopy);
+                        }
+                    }
+                    else
+                    {
+                        standardizedSum.operandList.Add(blade);
+                    }
                 }
             }
 
-            return sum;
+            return standardizedSum;
         }
 
         // Our job here is to determine whether the two given basis elements are a
@@ -385,8 +409,8 @@ namespace GACodeGenerator
                 // We only do this for multivectors, because we need closure for the geometric product.
                 hFileText += "\t\tint GetMatrixSize() const;\n";
                 hFileText += "\t\tvoid ToSquareMatrix(std::function<void(int, int, double)> elementCallback) const;\n";
-                hFileText += "\t\tvoid ToColumnMatrix(std::function<void(int, int, double)> elementCallback) const;\n";
-                hFileText += "\t\tvoid FromColumnMatrix(std::function<void(int, int, double&)> elementCallback);\n";
+                hFileText += "\t\tvoid ToColumnMatrix(std::function<void(int, double)> elementCallback) const;\n";
+                hFileText += "\t\tvoid FromColumnMatrix(std::function<void(int, double&)> elementCallback);\n";
                 hFileText += "\n";
             }
 
@@ -583,19 +607,88 @@ namespace GACodeGenerator
 
                 cppFileText += $"void {name}::ToSquareMatrix(std::function<void(int, int, double)> elementCallback) const\n";
                 cppFileText += "{\n";
-                cppFileText += "\t// STPTODO: Write this.\n";
+
+                string expression = $"({this.GenerateExpression("a")}) * ({this.GenerateExpression("b")})";
+                Result result = Operand.Evaluate(expression, context);
+                Sum resultSum = StandardizeResult(result.output);
+                List<string> basisList = GetSortedListOfBasisElements();
+
+                foreach(Operand resultTerm in resultSum.operandList)
+                {
+                    Operand resultBasisElement = resultTerm.Copy();
+                    Debug.Assert(resultBasisElement is Blade);
+                    (resultBasisElement as Blade).scalar = new NumericScalar(1.0);
+
+                    int row = -1;
+
+                    foreach (var keyValuePair in basisElementToOperandMap)
+                    {
+                        Operand basisElement = keyValuePair.Value;
+                        double sign = 0.0;
+                        if (BasisElementsAreTheSame(basisElement, resultBasisElement, out sign, context))
+                        {
+                            row = basisList.IndexOf(keyValuePair.Key);
+                            break;
+                        }
+                    }
+
+                    Debug.Assert(row != -1);
+
+                    Operand scalarTerm = resultTerm.Copy();
+                    if (scalarTerm is Blade)
+                        scalarTerm = (scalarTerm as Blade).scalar;
+
+                    int col = -1;
+
+                    string scalarTermStr = scalarTerm.Print(Operand.Format.PARSEABLE);
+                    for(int i = this.basisSet.Count - 1; i >= 0; i--)
+                    {
+                        if(scalarTermStr.IndexOf($"b{i}") != -1)
+                        {
+                            col = i;
+                            break;
+                        }
+                    }
+
+                    Debug.Assert(col != -1);
+
+                    GeometricProduct product = new GeometricProduct();
+                    product.operandList.Add(scalarTerm);
+                    product.operandList.Add(new SymbolicScalarTerm($"b{col}", -1));
+                    Operand productResult = Operand.ExhaustEvaluation(product, context);
+
+                    scalarTermStr = productResult.Print(Operand.Format.PARSEABLE);
+
+                    string elementCode = ReplaceScalarsInExpression(scalarTermStr, this, "this", "a");
+                    elementCode = elementCode.Replace("-1", "-1.0");
+
+                    cppFileText += $"\telementCallback({row}, {col}, {elementCode});\n";
+                }
+
                 cppFileText += "}\n";
                 cppFileText += "\n";
 
-                cppFileText += $"void {name}::ToColumnMatrix(std::function<void(int, int, double)> elementCallback) const\n";
+                cppFileText += $"void {name}::ToColumnMatrix(std::function<void(int, double)> elementCallback) const\n";
                 cppFileText += "{\n";
-                cppFileText += "\t// STPTODO: Write this.\n";
+
+                for (int row = 0; row < basisList.Count; row++)
+                {
+                    string basisElementStr = this.MakeScalarNameFromBasisElement(basisList[row]);
+                    cppFileText += $"\telementCallback({row}, this->{basisElementStr});\n";
+                }
+
                 cppFileText += "}\n";
                 cppFileText += "\n";
 
-                cppFileText += $"void {name}::FromColumnMatrix(std::function<void(int, int, double&)> elementCallback)\n";
+                cppFileText += $"void {name}::FromColumnMatrix(std::function<void(int, double&)> elementCallback)\n";
                 cppFileText += "{\n";
-                cppFileText += "\t// STPTODO: Write this.\n";
+
+                for (int row = 0; row < basisList.Count; row++)
+                {
+                    string basisElementStr = this.MakeScalarNameFromBasisElement(basisList[row]);
+                    cppFileText += $"\telementCallback({row}, this->{basisElementStr});\n";
+                }
+
                 cppFileText += "}\n";
                 cppFileText += "\n";
             }
