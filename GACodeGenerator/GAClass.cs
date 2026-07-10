@@ -399,7 +399,7 @@ namespace GACodeGenerator
             // Matrix Conversion
             //
 
-            hFileText += "\t\tint GetMatrixSize() const;\n";
+            hFileText += "\t\tvoid GetMatrixSize(int& numRows, int& numCols) const;\n";
             hFileText += "\n";
             hFileText += "\t\tvoid ToSquareMatrix(std::function<void(int, int, double)> elementCallback) const;\n";
             hFileText += "\t\tvoid ToColumnMatrix(std::function<void(int, double)> elementCallback) const;\n";
@@ -613,6 +613,8 @@ namespace GACodeGenerator
 
             Debug.Assert(gaMultivectorClass != null);
 
+            List<string> basisList = GetSortedListOfBasisElements();
+
             string productExpression = $"({this.GenerateExpression("a")}) * ({this.GenerateExpression("b")})";
             Result productResult = Operand.Evaluate(productExpression, context);
             Sum resultSum = StandardizeResult(productResult.output);
@@ -649,9 +651,10 @@ namespace GACodeGenerator
             Debug.Assert(foundBasisList[0] == "1");
 
             cppFileText += "\n";
-            cppFileText += $"int {name}::GetMatrixSize() const\n";
+            cppFileText += $"void {name}::GetMatrixSize(int& numRows, int& numCols) const\n";
             cppFileText += "{\n";
-            cppFileText += $"\treturn {foundBasisList.Count};\n";
+            cppFileText += $"\tnumRows = {foundBasisList.Count};\n";
+            cppFileText += $"\tnumCols = {basisList.Count};\n";
             cppFileText += "}\n";
             cppFileText += "\n";
 
@@ -714,8 +717,6 @@ namespace GACodeGenerator
             cppFileText += "\n";
             cppFileText += $"void {name}::ToColumnMatrix(std::function<void(int, double)> elementCallback) const\n";
             cppFileText += "{\n";
-
-            List<string> basisList = GetSortedListOfBasisElements();
 
             for (int row = 0; row < basisList.Count; row++)
             {
