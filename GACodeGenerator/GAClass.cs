@@ -292,13 +292,8 @@ namespace GACodeGenerator
             hFileText += "\n";
             hFileText += "#pragma once\n";
             hFileText += "\n";
-
-            if (this.name == "Multivector")
-            {
-                hFileText += "#include <functional>\n";
-                hFileText += "\n";
-            }
-
+            hFileText += "#include <functional>\n";
+            hFileText += "\n";
             hFileText += $"namespace {nameSpace}\n";
             hFileText += "{\n";
 
@@ -404,15 +399,12 @@ namespace GACodeGenerator
             // Matrix Conversion
             //
 
-            if (this.name == "Multivector")
-            {
-                // We only do this for multivectors, because we need closure for the geometric product.
-                hFileText += "\t\tint GetMatrixSize() const;\n";
-                hFileText += "\t\tvoid ToSquareMatrix(std::function<void(int, int, double)> elementCallback) const;\n";
-                hFileText += "\t\tvoid ToColumnMatrix(std::function<void(int, double)> elementCallback) const;\n";
-                hFileText += "\t\tvoid FromColumnMatrix(std::function<void(int, double&)> elementCallback);\n";
-                hFileText += "\n";
-            }
+            hFileText += "\t\tint GetMatrixSize() const;\n";
+            hFileText += "\n";
+            hFileText += "\t\tvoid ToSquareMatrix(std::function<void(int, int, double)> elementCallback) const;\n";
+            hFileText += "\t\tvoid ToColumnMatrix(std::function<void(int, double)> elementCallback) const;\n";
+            hFileText += "\t\tvoid FromColumnMatrix(std::function<void(int, double&)> elementCallback);\n";
+            hFileText += "\n";
 
             //
             // Members
@@ -596,102 +588,7 @@ namespace GACodeGenerator
             // Matrix Conversion
             //
 
-            if (this.name == "Multivector")
-            {
-                cppFileText += "\n";
-                cppFileText += $"int {name}::GetMatrixSize() const\n";
-                cppFileText += "{\n";
-                cppFileText += $"\treturn {this.basisSet.Count};\n";
-                cppFileText += "}\n";
-                cppFileText += "\n";
-
-                cppFileText += $"void {name}::ToSquareMatrix(std::function<void(int, int, double)> elementCallback) const\n";
-                cppFileText += "{\n";
-
-                string expression = $"({this.GenerateExpression("a")}) * ({this.GenerateExpression("b")})";
-                Result result = Operand.Evaluate(expression, context);
-                Sum resultSum = StandardizeResult(result.output);
-                List<string> basisList = GetSortedListOfBasisElements();
-
-                foreach(Operand resultTerm in resultSum.operandList)
-                {
-                    Operand resultBasisElement = resultTerm.Copy();
-                    Debug.Assert(resultBasisElement is Blade);
-                    (resultBasisElement as Blade).scalar = new NumericScalar(1.0);
-
-                    int row = -1;
-
-                    foreach (var keyValuePair in basisElementToOperandMap)
-                    {
-                        Operand basisElement = keyValuePair.Value;
-                        double sign = 0.0;
-                        if (BasisElementsAreTheSame(basisElement, resultBasisElement, out sign, context))
-                        {
-                            row = basisList.IndexOf(keyValuePair.Key);
-                            break;
-                        }
-                    }
-
-                    Debug.Assert(row != -1);
-
-                    Operand scalarTerm = resultTerm.Copy();
-                    if (scalarTerm is Blade)
-                        scalarTerm = (scalarTerm as Blade).scalar;
-
-                    int col = -1;
-
-                    string scalarTermStr = scalarTerm.Print(Operand.Format.PARSEABLE);
-                    for(int i = this.basisSet.Count - 1; i >= 0; i--)
-                    {
-                        if(scalarTermStr.IndexOf($"b{i}") != -1)
-                        {
-                            col = i;
-                            break;
-                        }
-                    }
-
-                    Debug.Assert(col != -1);
-
-                    GeometricProduct product = new GeometricProduct();
-                    product.operandList.Add(scalarTerm);
-                    product.operandList.Add(new SymbolicScalarTerm($"b{col}", -1));
-                    Operand productResult = Operand.ExhaustEvaluation(product, context);
-
-                    scalarTermStr = productResult.Print(Operand.Format.PARSEABLE);
-
-                    string elementCode = ReplaceScalarsInExpression(scalarTermStr, this, "this", "a");
-                    elementCode = elementCode.Replace("-1", "-1.0");
-
-                    cppFileText += $"\telementCallback({row}, {col}, {elementCode});\n";
-                }
-
-                cppFileText += "}\n";
-                cppFileText += "\n";
-
-                cppFileText += $"void {name}::ToColumnMatrix(std::function<void(int, double)> elementCallback) const\n";
-                cppFileText += "{\n";
-
-                for (int row = 0; row < basisList.Count; row++)
-                {
-                    string basisElementStr = this.MakeScalarNameFromBasisElement(basisList[row]);
-                    cppFileText += $"\telementCallback({row}, this->{basisElementStr});\n";
-                }
-
-                cppFileText += "}\n";
-                cppFileText += "\n";
-
-                cppFileText += $"void {name}::FromColumnMatrix(std::function<void(int, double&)> elementCallback)\n";
-                cppFileText += "{\n";
-
-                for (int row = 0; row < basisList.Count; row++)
-                {
-                    string basisElementStr = this.MakeScalarNameFromBasisElement(basisList[row]);
-                    cppFileText += $"\telementCallback({row}, this->{basisElementStr});\n";
-                }
-
-                cppFileText += "}\n";
-                cppFileText += "\n";
-            }
+            this.GenerateMatrixConversionCode(ref cppFileText, gaClassList, context);
 
             //
             // Finally, flush files...
@@ -699,6 +596,147 @@ namespace GACodeGenerator
 
             File.WriteAllText(hFilePath, hFileText);
             File.WriteAllText(cppFilePath, cppFileText);
+        }
+
+        private void GenerateMatrixConversionCode(ref string cppFileText, List<GAClass> gaClassList, Context context)
+        {
+            GAClass gaMultivectorClass = null;
+            int maxBasisSetCount = 0;
+            for(int i = 0; i < gaClassList.Count; i++)
+            {
+                if (gaClassList[i].basisSet.Count > maxBasisSetCount)
+                {
+                    maxBasisSetCount = gaClassList[i].basisSet.Count;
+                    gaMultivectorClass = gaClassList[i];
+                }
+            }
+
+            Debug.Assert(gaMultivectorClass != null);
+
+            string productExpression = $"({this.GenerateExpression("a")}) * ({this.GenerateExpression("b")})";
+            Result productResult = Operand.Evaluate(productExpression, context);
+            Sum resultSum = StandardizeResult(productResult.output);
+            List<string> foundBasisList = new List<string>();
+            HashSet<string> foundBasisSet = new HashSet<string>();
+
+            // Note that for correctness, we assume here that our basis elements
+            // will be found in order of ascending grade.  In particular, we need
+            // the grade zero basis element found first.  That's because the left-most
+            // column of the inverted matrix is assumed to contain our inverse result.
+            foreach (Operand resultTerm in resultSum.operandList)
+            {
+                Operand resultBasisElement = resultTerm.Copy();
+                Debug.Assert(resultBasisElement is Blade);
+                (resultBasisElement as Blade).scalar = new NumericScalar(1.0);
+
+                foreach (var keyValuePair in gaMultivectorClass.basisElementToOperandMap)
+                {
+                    Operand basisElement = keyValuePair.Value;
+                    double sign = 0.0;
+                    if (BasisElementsAreTheSame(basisElement, resultBasisElement, out sign, context))
+                    {
+                        if(!foundBasisSet.Contains(keyValuePair.Key))
+                        {
+                            foundBasisList.Add(keyValuePair.Key);
+                            foundBasisSet.Add(keyValuePair.Key);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            Debug.Assert(foundBasisList.Count > 0);
+            Debug.Assert(foundBasisList[0] == "1");
+
+            cppFileText += "\n";
+            cppFileText += $"int {name}::GetMatrixSize() const\n";
+            cppFileText += "{\n";
+            cppFileText += $"\treturn {foundBasisList.Count};\n";
+            cppFileText += "}\n";
+            cppFileText += "\n";
+
+            cppFileText += $"void {name}::ToSquareMatrix(std::function<void(int, int, double)> elementCallback) const\n";
+            cppFileText += "{\n";
+
+            foreach (Operand resultTerm in resultSum.operandList)
+            {
+                Operand resultBasisElement = resultTerm.Copy();
+                Debug.Assert(resultBasisElement is Blade);
+                (resultBasisElement as Blade).scalar = new NumericScalar(1.0);
+
+                int row = -1;
+
+                foreach (var keyValuePair in gaMultivectorClass.basisElementToOperandMap)
+                {
+                    Operand basisElement = keyValuePair.Value;
+                    double sign = 0.0;
+                    if (BasisElementsAreTheSame(basisElement, resultBasisElement, out sign, context))
+                    {
+                        row = foundBasisList.IndexOf(keyValuePair.Key);
+                        break;
+                    }
+                }
+
+                Debug.Assert(row != -1);
+
+                Operand scalarTerm = resultTerm.Copy();
+                if (scalarTerm is Blade)
+                    scalarTerm = (scalarTerm as Blade).scalar;
+
+                int col = -1;
+
+                string scalarTermStr = scalarTerm.Print(Operand.Format.PARSEABLE);
+                for (int i = this.basisSet.Count - 1; i >= 0; i--)
+                {
+                    if (scalarTermStr.IndexOf($"b{i}") != -1)
+                    {
+                        col = i;
+                        break;
+                    }
+                }
+
+                Debug.Assert(col != -1);
+
+                GeometricProduct product = new GeometricProduct();
+                product.operandList.Add(scalarTerm);
+                product.operandList.Add(new SymbolicScalarTerm($"b{col}", -1));
+                Operand productResultOperand = Operand.ExhaustEvaluation(product, context);
+
+                scalarTermStr = productResultOperand.Print(Operand.Format.PARSEABLE);
+
+                string elementCode = ReplaceScalarsInExpression(scalarTermStr, this, "this", "a");
+                elementCode = elementCode.Replace("-1", "-1.0");
+
+                cppFileText += $"\telementCallback({row}, {col}, {elementCode});\n";
+            }
+
+            cppFileText += "}\n";
+            cppFileText += "\n";
+            cppFileText += $"void {name}::ToColumnMatrix(std::function<void(int, double)> elementCallback) const\n";
+            cppFileText += "{\n";
+
+            List<string> basisList = GetSortedListOfBasisElements();
+
+            for (int row = 0; row < basisList.Count; row++)
+            {
+                string basisElementStr = this.MakeScalarNameFromBasisElement(basisList[row]);
+                cppFileText += $"\telementCallback({row}, this->{basisElementStr});\n";
+            }
+
+            cppFileText += "}\n";
+            cppFileText += "\n";
+
+            cppFileText += $"void {name}::FromColumnMatrix(std::function<void(int, double&)> elementCallback)\n";
+            cppFileText += "{\n";
+
+            for (int row = 0; row < basisList.Count; row++)
+            {
+                string basisElementStr = this.MakeScalarNameFromBasisElement(basisList[row]);
+                cppFileText += $"\telementCallback({row}, this->{basisElementStr});\n";
+            }
+
+            cppFileText += "}\n";
+            cppFileText += "\n";
         }
     }
 }
