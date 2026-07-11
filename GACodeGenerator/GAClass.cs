@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using GeometricAlgebra;
@@ -326,6 +327,24 @@ namespace GACodeGenerator
             hFileText += "\n";
 
             //
+            // Extraction
+            //
+
+            int numExtractions = 0;
+            foreach (GAClass gaClass in gaClassList)
+            {
+                if (!gaClass.basisSet.IsProperSubsetOf(this.basisSet))
+                    continue;
+
+                numExtractions++;
+
+                hFileText += $"\t\tvoid Get{gaClass.name}({gaClass.name}& {gaClass.name.ToLower()}) const;\n";
+            }
+
+            if (numExtractions > 0)
+                hFileText += "\n";
+
+            //
             // Addition/Subtraction
             //
 
@@ -474,6 +493,30 @@ namespace GACodeGenerator
 
                 cppFileText += "}\n";
                 cppFileText += "\n";
+            }
+
+            //
+            // Extraction
+            //
+
+            if (numExtractions > 0)
+            {
+                foreach (GAClass gaClass in gaClassList)
+                {
+                    if (!gaClass.basisSet.IsProperSubsetOf(this.basisSet))
+                        continue;
+
+                    cppFileText += $"void {name}::Get{gaClass.name}({gaClass.name}& {gaClass.name.ToLower()}) const\n";
+                    cppFileText += "{\n";
+
+                    foreach (string basisElement in gaClass.basisSet)
+                    {
+                        string scalarName = MakeScalarNameFromBasisElement(basisElement);
+                        cppFileText += $"\t{gaClass.name.ToLower()}.{scalarName} = this->{scalarName};\n";
+                    }
+
+                    cppFileText += "}\n\n";
+                }
             }
 
             //
