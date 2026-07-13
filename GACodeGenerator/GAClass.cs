@@ -327,6 +327,13 @@ namespace GACodeGenerator
             hFileText += "\n";
 
             //
+            // Equality
+            //
+
+            hFileText += $"\t\tbool IsEqualTo(const {this.name}& {this.name.ToLower()}, double epsilon = 1e-5) const;\n";
+            hFileText += "\n";
+
+            //
             // Extraction
             //
 
@@ -494,6 +501,25 @@ namespace GACodeGenerator
                 cppFileText += "}\n";
                 cppFileText += "\n";
             }
+
+            //
+            // Equality
+            //
+
+            cppFileText += $"bool {this.name}::IsEqualTo(const {this.name}& {this.name.ToLower()}, double epsilon /*= 1e-5*/) const\n";
+            cppFileText += "{\n";
+
+            foreach(string basisElement in this.basisSet)
+            {
+                string scalarVarName = this.MakeScalarNameFromBasisElement(basisElement);
+                cppFileText += $"\tif(::fabs(this->{scalarVarName} - {this.name.ToLower()}.{scalarVarName}) >= epsilon)\n";
+                cppFileText += "\t\treturn false;\n";
+                cppFileText += "\n";
+            }
+
+            cppFileText += "\treturn true;\n";
+            cppFileText += "}\n";
+            cppFileText += "\n";
 
             //
             // Extraction
